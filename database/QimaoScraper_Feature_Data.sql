@@ -1,298 +1,4247 @@
--- ============================================
--- QimaoScraper Feature Data Warehouse
--- 特征数据仓库 - ADS层表结构定义
--- 创建时间: 2025-12-16
--- 描述: 包含8个ADS层特征表的MySQL建表语句
--- ============================================
+/*
+ Navicat Premium Dump SQL
+
+ Source Server         : WSL_MySQL
+ Source Server Type    : MySQL
+ Source Server Version : 80044 (8.0.44-0ubuntu0.24.04.1)
+ Source Host           : 172.31.142.67:3306
+ Source Schema         : QimaoScraper_Feature_Data
+
+ Target Server Type    : MySQL
+ Target Server Version : 80044 (8.0.44-0ubuntu0.24.04.1)
+ File Encoding         : 65001
+
+ Date: 25/12/2025 10:53:25
+*/
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS `QimaoScraper_Feature_Data` 
-DEFAULT CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
-
-USE `QimaoScraper_Feature_Data`;
-
--- ============================================
--- 平台侧 - 2个表
--- ============================================
+-- ----------------------------
+-- Table structure for ads_author_attenuation_effect
+-- ----------------------------
+DROP TABLE IF EXISTS `ads_author_attenuation_effect`;
+CREATE TABLE `ads_author_attenuation_effect`  (
+  `book_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `author` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `status` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `gender_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `peak_popularity` double NULL DEFAULT NULL,
+  `lowest_popularity` double NULL DEFAULT NULL,
+  `avg_attenuation_rate` double NULL DEFAULT NULL,
+  `avg_attenuation_speed` double NULL DEFAULT NULL,
+  `lifecycle_days` int NULL DEFAULT NULL,
+  `avg_score` double NULL DEFAULT NULL,
+  `has_severe_attenuation` int NULL DEFAULT NULL,
+  `total_attenuation` double NULL DEFAULT NULL,
+  `attenuation_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `recommended_new_book_days` double NULL DEFAULT NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for ads_platform_heat
--- 平台侧1: 热度分析（一阶导数、二阶导数、冷启动监测）
+-- Records of ads_author_attenuation_effect
 -- ----------------------------
-DROP TABLE IF EXISTS `ads_platform_heat`;
-CREATE TABLE `ads_platform_heat` (
-  `book_id` VARCHAR(50) NOT NULL COMMENT '小说ID',
-  `title` VARCHAR(255) DEFAULT NULL COMMENT '小说标题',
-  `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
-  `category1_name` VARCHAR(50) DEFAULT NULL COMMENT '一级分类',
-  `category2_name` VARCHAR(50) DEFAULT NULL COMMENT '二级分类',
-  `rank_name` VARCHAR(50) DEFAULT NULL COMMENT '榜单名称',
-  `rank_date` DATE DEFAULT NULL COMMENT '榜单日期',
-  `created_at` TIMESTAMP DEFAULT NULL COMMENT '创建时间',
-  `numeric_popularity` DOUBLE DEFAULT NULL COMMENT '当前热度',
-  `numeric_read_count` DOUBLE DEFAULT NULL COMMENT '当前阅读量',
-  `numeric_score` DOUBLE DEFAULT NULL COMMENT '评分',
-  `status` VARCHAR(20) DEFAULT NULL COMMENT '状态',
-  `gender_type` VARCHAR(10) DEFAULT NULL COMMENT '性别向',
-  `prev_day_popularity` DOUBLE DEFAULT NULL COMMENT '前一天热度',
-  `popularity_diff` DOUBLE DEFAULT NULL COMMENT '热度差值（一阶导数）',
-  `popularity_growth_rate` DOUBLE DEFAULT NULL COMMENT '热度变化率（环比增速%）',
-  `prev_popularity_diff` DOUBLE DEFAULT NULL COMMENT '前一天热度差值',
-  `popularity_acceleration` DOUBLE DEFAULT NULL COMMENT '热度加速度（二阶导数）',
-  `category_avg_growth_rate` DOUBLE DEFAULT NULL COMMENT '同类平均增长率',
-  `is_new_book` INT DEFAULT NULL COMMENT '是否新书（7天内）',
-  `is_high_growth` INT DEFAULT NULL COMMENT '是否高增长',
-  `is_cold_start_quality` INT DEFAULT NULL COMMENT '是否冷启动优质作品',
-  `heat_level` VARCHAR(20) DEFAULT NULL COMMENT '热度等级',
-  KEY `idx_book_date` (`book_id`, `rank_date`),
-  KEY `idx_rank_date` (`rank_date`),
-  KEY `idx_category` (`category1_name`, `gender_type`),
-  KEY `idx_heat_level` (`heat_level`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='平台侧-热度分析表';
-
--- ----------------------------
--- Table structure for ads_platform_ranking_trend
--- 平台侧2: 榜单趋势分析（德不配位识别、转化率）
--- ----------------------------
-DROP TABLE IF EXISTS `ads_platform_ranking_trend`;
-CREATE TABLE `ads_platform_ranking_trend` (
-  `book_id` VARCHAR(50) NOT NULL COMMENT '小说ID',
-  `title` VARCHAR(255) DEFAULT NULL COMMENT '小说标题',
-  `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
-  `rank_name` VARCHAR(50) DEFAULT NULL COMMENT '榜单名称',
-  `category1_name` VARCHAR(50) DEFAULT NULL COMMENT '一级分类',
-  `rank_date` DATE DEFAULT NULL COMMENT '榜单日期',
-  `numeric_popularity` DOUBLE DEFAULT NULL COMMENT '热度',
-  `numeric_read_count` DOUBLE DEFAULT NULL COMMENT '阅读量',
-  `numeric_score` DOUBLE DEFAULT NULL COMMENT '评分',
-  `status` VARCHAR(20) DEFAULT NULL COMMENT '状态',
-  `gender_type` VARCHAR(10) DEFAULT NULL COMMENT '性别向',
-  `prev_read_count` DOUBLE DEFAULT NULL COMMENT '前一期阅读量',
-  `read_count_growth` DOUBLE DEFAULT NULL COMMENT '阅读量增长',
-  `read_count_growth_rate` DOUBLE DEFAULT NULL COMMENT '阅读量增长率%',
-  `ranking_conversion_rate` DOUBLE DEFAULT NULL COMMENT '榜单转化率%',
-  `is_unworthy` INT DEFAULT NULL COMMENT '是否德不配位',
-  `is_high_conversion` INT DEFAULT NULL COMMENT '是否高转化率',
-  `recommend_weight` DOUBLE DEFAULT NULL COMMENT '推荐权重',
-  KEY `idx_book_rank_date` (`book_id`, `rank_name`, `rank_date`),
-  KEY `idx_rank_name` (`rank_name`),
-  KEY `idx_conversion` (`is_high_conversion`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='平台侧-榜单趋势分析表';
-
--- ============================================
--- 作者侧 - 2个表
--- ============================================
+INSERT INTO `ads_author_attenuation_effect` VALUES ('149769', '九阳武神', '我吃面包', '玄幻奇幻', '连载中', 'male', 34.7, 1.2, 3.861671469740634, -107.80499519692604, 731, 9.099999999999996, 1, 96.54178674351584, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('152973', '最强学霸系统', '佛系和尚', '都市', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1651341', '盖世圣医', '林阳', '都市', '已完结', 'male', 268.4, 268.4, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1654596', '退婚后被权爷宠上天', '一川风月', '现代言情', '已完结', 'women', 379.2, 0.7, 3.9926160337552745, -2158.864526823388, 731, 9.699999999999996, 1, 99.81540084388186, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1658839', '穿成孩子妈，奋斗成赢家', '冉阿冉', '现代言情', '已完结', 'women', 1.1, 1.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1669963', '大景巡夜人', '藕池猫咪', '古代言情', '已完结', 'women', 1.2, 1.2, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1675640', '镇天神医', '五杯咖啡', '都市', '连载中', 'male', 355.8, 0.8, 3.9910061832490156, -1771.008993816751, 731, 9.199999999999996, 1, 99.7751545812254, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1678025', '九皇叔的神医毒妃', '柠檬小丸子', '古代言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1683831', '重生八零嫁给全军第一硬汉', '九羊猪猪', '现代言情', '连载中', 'women', 374, 374, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1684297', '规则怪谈，欢迎来到甜蜜的家', '弦泠兮', '幻想言情', '已完结', 'women', 0.7, 0.7, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1697498', '末世天灾，抢艘航母当基地', '封卷残云', '科幻', '已完结', 'male', 460.3, 460.3, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1697715', '被关女子监狱三年，我修炼成仙了', '一只狸猫', '都市', '连载中', 'male', 183.1, 1, 3.97815401419989, -724.4218459858001, 731, 9, 1, 99.45385035499726, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1699328', '大佬归来，假千金她不装了', '骑着猫的小鱼干', '现代言情', '已完结', 'women', 34.7, 34.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1709320', '徒儿，饶了五位绝美师父吧', '不渊', '都市', '已完结', 'male', 207.1, 207.1, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1711646', '阎王下山', '苍月夜', '都市', '连载中', 'male', 34.7, 34.7, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1719564', '重生七零再高嫁', '星月相随', '现代言情', '已完结', 'women', 935.9, 935.9, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1723049', '天门神医', '小楼听雨本尊', '都市', '连载中', 'male', 274.4, 0.5, 3.992711370262391, -2187.2072886297374, 731, 9.199999999999996, 1, 99.81778425655978, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1723450', '被王爷赐死，医妃潇洒转身嫁皇叔', '金银满屋', '古代言情', '已完结', 'women', 0.6, 0.6, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1724453', '妙手大仙医', '金佛', '都市', '连载中', 'male', 686.1, 686.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1725180', '我废柴真千金，会亿点玄学怎么了', '甜幽幽', '现代言情', '已完结', 'women', 0.8, 0.8, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1726987', '大佬十代单传，我为他一胎生四宝', '白生米', '现代言情', '连载中', 'women', 637.9, 637.9, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1729484', '凡尘飞仙', '齐甲', '玄幻奇幻', '连载中', 'male', 345.1, 1.2, 3.986090988119386, -1142.347242345214, 731, 9.300000000000004, 1, 99.65227470298464, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1730259', '踏神界逆九州：废物七小姐权倾天下', '苏音', '幻想言情', '已完结', 'women', 0.3, 0.3, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1737869', '重生七零，搬空敌人仓库去下乡', '六月无花', '现代言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1738575', '直播算命太准，全网蹲守吃瓜', '荷衣', '现代言情', '已完结', 'women', 551.1, 551.1, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1741639', '九零军媳：兵王老公不见面', '香辣小螃蟹', '现代言情', '已完结', 'women', 0.4, 0.4, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1747899', '无敌六皇子', '梁山老鬼', '历史', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1754203', '玲珑塔', '一丝凉意', '玄幻奇幻', '连载中', 'male', 268.4, 0.7, 3.989567809239941, -1525.7247179050457, 731, 9.300000000000004, 1, 99.73919523099852, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1758119', '重生八零，闪婚柔情铁血硬汉', '风四爷', '现代言情', '已完结', 'women', 1.1, 1.1, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1758273', '重生2000：从追求青涩校花同桌开始', '痞子老妖', '都市', '连载中', 'male', 34.7, 34.7, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1759358', '出狱后，我闪婚了植物人大佬', '柠七七', '现代言情', '已完结', 'women', 293.6, 293.6, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1759390', '分手后，捡到一只吸血鬼美少女', '黄泉隼', 'N次元', '已完结', 'male', 318.8, 318.8, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1761352', '易孕体质，七零长嫂凶又甜', '方赢', '现代言情', '已完结', 'women', 0.4, 0.4, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1766962', '苟到炼气10000层，飞升回地球', '拂衣惊雪', '都市', '已完结', 'male', 219.7, 219.7, 0, 0, 731, 8.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1767349', '父皇偷听我心声杀疯了，我负责吃奶', '安已然', '古代言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1767940', '混沌塔', '惊蛰落月', '玄幻奇幻', '连载中', 'male', 582.4, 582.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1771379', '大佬绝嗣！我一夜怀上他两个崽', '相思一顾', '现代言情', '已完结', 'women', 295.1, 295.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1772694', '神尊强宠，废物小姐竟是绝世女帝', '动物园在逃小熊猫', '幻想言情', '已完结', 'women', 0.5, 0.5, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1777995', '将军她是引渡人', '指尖上的行走', '古代言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1780785', '吞天混沌经：开局先吞圣女修为', '一阵乱写', '玄幻奇幻', '连载中', 'male', 255.6, 0.3, 3.9953051643192485, -3400.004694835681, 731, 9.099999999999996, 1, 99.88262910798122, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1781303', '穿书反派：开局挖掉女主至尊骨', '晚风起', '玄幻奇幻', '已完结', 'male', 144.4, 144.4, 0, 0, 731, 8.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1781450', '无限流：在惊悚世界当万人迷', '白日宴火', '幻想言情', '已完结', 'women', 0.4, 0.4, 0, 0, 731, 9.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1802708', '神算真千金，全豪门跪下喊祖宗', '一只肉九', '现代言情', '已完结', 'women', 0.5, 0.5, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1805751', '开局被女土匪看中，我占山为王', '键盘起灰', '历史', '已完结', 'male', 166.1, 166.1, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1806041', '巅峰青云路', '登封造极', '都市', '连载中', 'male', 180.3, 180.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1807740', '末世前中彩票，我囤上亿物资躺赢', '诺禾', '幻想言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1810234', '从女子监狱走出的修仙者', '河图大妖', '都市', '连载中', 'male', 188, 0.3, 3.9936170212765956, -2498.6730496453897, 731, 9, 1, 99.84042553191489, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1810593', '嫁权臣', '有香如故', '古代言情', '已完结', 'women', 0.3, 0.3, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1812053', '警报！龙国出现SSS级修仙者！', '紫枫', '都市', '连载中', 'male', 365.4, 0.4, 3.9956212370005475, -3646.0043787629997, 731, 9.199999999999996, 1, 99.89053092501369, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1817221', '史上最强师父', '炒方便面', '玄幻奇幻', '连载中', 'male', 976.5, 976.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1824987', '凤归', '扶苏公子', '古代言情', '已完结', 'women', 0.7, 0.7, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1828483', '乾坤塔', '新闻工作者', '玄幻奇幻', '已完结', 'male', 306.5, 306.5, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1834789', '警报！真龙出狱！', '红透半边天', '都市', '连载中', 'male', 819.6, 819.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1846315', '小雌性是万人迷，养了一窝毛绒绒', '一个刚正不阿的女人', '幻想言情', '已完结', 'women', 0.9, 0.9, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1851521', '魔女校花从无绯闻，直到遇上了我', '铲子王', '都市', '已完结', 'male', 175.8, 175.8, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1860026', '世子无双', '宁峥', '历史', '连载中', 'male', 909.8, 909.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1861632', '我有一家纸扎铺', '花萝吱吱', '现代言情', '已完结', 'women', 79.5, 0.4, 95.51698113207546, -787.0201257861634, 700, 9.699999999999996, 1, 99.49685534591194, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1863508', '重生1994，逃婚海钓赢麻了！', '林溪', '现代言情', '连载中', 'women', 99.5, 99.5, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1867208', '真福宝挥手粮满仓，全家悔断肠', '朵瑞米发娑', '古代言情', '已完结', 'women', 60.5, 1, 90.47933884297521, 3.9338842975206614, 731, 9.300000000000004, 1, 98.34710743801654, '断崖式衰减', 5.084033613445378);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1870433', '冻死风雪夜，重生真嫡女虐翻全家', '一颗胖梨', '古代言情', '已完结', 'women', 588.1, 588.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1870439', '空间通末世：我囤亿万物资养兵王', '小桃花', '幻想言情', '已完结', 'women', 330.2, 0.3, 91.91641429436703, 3.9963658388855237, 731, 9.599999999999996, 1, 99.90914597213809, '断崖式衰减', 5.004546832373447);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1871052', '为奴十年', '探花大人', '古代言情', '已完结', 'women', 92.6, 92.6, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1871612', '爹爹开门，系窝呀！', '垂耳兔', '古代言情', '已完结', 'women', 236.2, 236.2, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1872576', '我来自上界帝族，成婚当天媳妇跟人跑', '社恐啊社恐', '玄幻奇幻', '已完结', 'male', 236.5, 236.5, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1879266', '封总，太太想跟你离婚很久了', '云中觅', '现代言情', '连载中', 'women', 34.7, 34.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1880127', '出生被活埋，萌宝回京杀疯了', '固夏', '古代言情', '已完结', 'women', 105.4, 0.3, 91.7381404174573, 3.9886148007590134, 731, 9.599999999999996, 1, 99.71537001897534, '断崖式衰减', 5.014272121788772);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1885468', '我医武双绝，体内还有一条龙', '月辰', '都市', '连载中', 'male', 84.6, 0.8, 3.962174940898345, -415.0378250591016, 731, 9, 1, 99.05437352245863, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1888573', '女富婆的超级神医', '狼性佛心', '都市', '已完结', 'male', 64.7, 64.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1888581', '葬仙棺', '执笔人', '玄幻奇幻', '连载中', 'male', 321.4, 321.4, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1889690', '暗恋她的第十一年', '有香如故', '现代言情', '已完结', 'women', 748.6, 748.6, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1891461', '主播万人迷，榜一大哥争着宠', '熊就要有个熊样', '现代言情', '已完结', 'women', 675.1, 675.1, 0, 0, 731, 9.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1916703', '宁嫁牌位不当妾，国公府我说了算', '林拾酒', '古代言情', '已完结', 'women', 143.5, 0.9, 87.44808362369335, -625.8279519938055, 731, 9.5, 1, 99.37282229965156, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1924831', '有帝族背景还开挂，我无敌了！', '不太勇敢', '玄幻奇幻', '连载中', 'male', 385.8, 0.7, 3.992742353551063, -2196.578686217878, 731, 9.099999999999996, 1, 99.81855883877657, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1941553', '我的峥嵘岁月', '牛不易', '都市', '连载中', 'male', 80.7, 0.4, 3.980173482032218, -799.0198265179675, 731, 9.199999999999996, 1, 99.50433705080545, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1945519', '马甲藏不住，假千金炸翻全京圈', '程不言', '现代言情', '已完结', 'women', 462.4, 462.4, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1946350', '玄幻：长生神子，证道何须退婚挖骨！', '王二的刀', '玄幻奇幻', '已完结', 'male', 137.3, 137.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1948025', '夺妻', '将满', '现代言情', '已完结', 'women', 321.2, 321.2, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1948198', '半熟', '槿郗', '现代言情', '连载中', 'women', 88.9, 88.9, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1950540', '傅律师，太太说她不回头了', '荣荣子铱', '现代言情', '连载中', 'women', 118.5, 118.5, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1952077', '一胎又一胎，说好的禁欲指挥官呢？', '望南云慢', '现代言情', '连载中', 'women', 457.9, 457.9, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1954700', '媚君榻', '随山月', '古代言情', '已完结', 'women', 110.2, 0.7, 79.491833030853, -617.7651024112005, 731, 9.699999999999996, 1, 99.36479128856625, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1956592', '一天一造化，苟在仙武成道祖', '日落倾河', '玄幻奇幻', '已完结', 'male', 52.6, 52.6, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1956833', '我就上山打个猎，你让我逐鹿中原？', '张正经', '历史', '连载中', 'male', 173.8, 0.9, 3.9792865362485617, -764.465157908196, 731, 9.199999999999996, 1, 99.48216340621404, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('195958', '盖世神医', '狐颜乱语', '都市', '连载中', 'male', 34.7, 0.8, 3.9077809798270895, -165.59221902017296, 731, 9.300000000000004, 1, 97.69452449567724, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1961152', '太阳神体：从为仙女解毒开始无敌！', '有木', '玄幻奇幻', '连载中', 'male', 82, 0.4, 3.9804878048780483, -812.0195121951218, 731, 9.099999999999996, 1, 99.51219512195121, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1963728', '玄黄鼎', '不做梵高', '玄幻奇幻', '连载中', 'male', 259.1, 259.1, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1963904', '他说不爱，婚后却沦陷了', '如鱼', '现代言情', '连载中', 'women', 319.5, 319.5, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1964672', '顾总，你前妻在科研界杀疯了！', '席宝贝', '现代言情', '连载中', 'women', 220.5, 220.5, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1965987', '被贬边疆，成就最强藩王', '绯雨', '历史', '连载中', 'male', 171.5, 171.5, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1968456', '断绝关系后，觉醒SSS级天赋百分百爆率', '赛博说书人', '都市', '已完结', 'male', 47.4, 47.4, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '都市', '已完结', 'male', 206.8, 206.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1970603', '星际兽世：万人迷小人类深陷修罗场', '含冬小鱼', '幻想言情', '连载中', 'women', 0.3, 0.3, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1970645', '神级刺客，我有一支动物杀手队', '九把火', '玄幻奇幻', '连载中', 'male', 107.8, 0.3, 3.9888682745825603, -1429.344465058751, 731, 9.300000000000004, 1, 99.72170686456401, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1975889', '懂兽语穿六零，家属院里我最行', '情丝入你心', '现代言情', '已完结', 'women', 51.6, 0.8, 78.75968992248059, 3.9379844961240313, 731, 9.699999999999996, 1, 98.44961240310079, '断崖式衰减', 5.078740157480315);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1976002', '续弦小夫人', '江摇舟', '古代言情', '已完结', 'women', 421.4, 421.4, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1978709', '惨死生子夜，重生嫡女屠尽侯府', '南酥青子', '古代言情', '连载中', 'women', 161.6, 1.1, 43.70049504950495, -575.6908190819082, 731, 9.300000000000004, 1, 99.31930693069307, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1978748', '重生61，我带了一座军火库', '小白兔吃萝卜', '都市', '连载中', 'male', 171, 1.1, 3.974269005847953, -613.8439128123338, 731, 9.099999999999996, 1, 99.35672514619883, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1978753', '权臣兼祧两房？郡主重生不嫁了', '景惠', '古代言情', '已完结', 'women', 80.9, 1.1, 63.12978986402969, 3.9456118665018547, 731, 9.599999999999996, 1, 98.64029666254636, '断崖式衰减', 5.06892230576441);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1979319', '邢教练，别太野', '七个菜包', '现代言情', '已完结', 'women', 55.6, 1.2, 74.35971223021582, 3.913669064748201, 731, 9.699999999999996, 1, 97.84172661870502, '断崖式衰减', 5.110294117647059);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1979346', '去父留子后才知，前夫爱的人竟是我', '乐希', '现代言情', '连载中', 'women', 144, 144, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1979356', '阴当', '北派无尽夏', '现代言情', '连载中', 'women', 205.6, 205.6, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1980267', '陆总别作，太太她不要你了', '是空空呀', '现代言情', '连载中', 'women', 88.4, 0.3, 15.945701357466064, -1166.6938159879337, 731, 9.400000000000004, 1, 99.6606334841629, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982358', '天黑请点灯', '罗樵森', '奇闻异事', '连载中', 'male', 157.9, 0.5, 3.9873337555414823, -1255.2126662444584, 731, 9.400000000000004, 1, 99.68334388853705, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982360', '步步登阶', '江湖如梦', '都市', '连载中', 'male', 377.3, 377.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982723', '无敌逍遥侯', '沧海种树', '历史', '连载中', 'male', 132.5, 132.5, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1983530', '厂长收手吧！国家真的压不住了！', '正义反派', '都市', '连载中', 'male', 102.3, 0.6, 3.976539589442815, -674.0234604105572, 731, 9.300000000000004, 1, 99.41348973607037, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1984430', '网游：开局刮刮乐，觉醒唯一SSS天赋', '亦晨', '游戏', '连载中', 'male', 183, 0.7, 3.984699453551913, -1037.7295862607339, 731, 9, 1, 99.61748633879782, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1984439', '炼仙鼎', '在下不求人', '玄幻奇幻', '连载中', 'male', 58.7, 0.7, 3.9522998296422487, -327.4762715989292, 731, 9.199999999999996, 1, 98.80749574105621, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1985055', '摆摊开饭馆，她惊动全京城', '幸运团团', '古代言情', '连载中', 'women', 61.4, 0.7, 7.908794788273616, -342.902745463006, 731, 9.800000000000004, 1, 98.8599348534202, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1989239', '财戒', '嚣张农民', '都市', '连载中', 'male', 238.5, 1.2, 3.979874213836478, -787.0201257861637, 731, 9.099999999999996, 1, 99.49685534591195, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1989600', '掌天图', '四眼秀才', '玄幻奇幻', '连载中', 'male', 325.8, 325.8, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1989835', '刚入截教，听到截教气运在抱怨', '超爱吃甜粽子', '武侠仙侠', '已完结', 'male', 74.9, 74.9, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1992339', '重回七零，搬空养父母家库房下乡了', '暖以沐', '现代言情', '连载中', 'women', 93.8, 93.8, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1992776', '我叫二狗，一条会咬人的狗！', '半解不解', '都市', '已完结', 'male', 32.9, 32.9, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1994117', '婚后上瘾', '卢平凡', '现代言情', '连载中', 'women', 715.2, 715.2, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1996523', '全队笑我是傻子，我反手娶了俏知青！', '红色小晶体', '都市', '已完结', 'male', 44.4, 44.4, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1996931', '不务正夜', '谈栖', '现代言情', '连载中', 'women', 114.8, 114.8, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1996973', '赌石，我的龙瞳能鉴定一切！', '一梅独秀', '都市', '已完结', 'male', 32.5, 32.5, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2002910', '嫁太监？踏破鬼门女帝凤临天下', '狐狸九', '古代言情', '连载中', 'women', 118.8, 118.8, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2004005', '傅总，太太瞒着你生了个童模', '七桉', '现代言情', '连载中', 'women', 55.2, 55.2, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2014120', '雨夜你陪白月光，我让位后你哭啥', '露将熹', '现代言情', '已完结', 'women', 29, 0.7, 66.35862068965515, -153.9073891625616, 731, 9.099999999999996, 1, 97.58620689655173, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2014975', '重生84：九个赔钱货？我把女儿宠上天', '一只大香蕉', '都市', '连载中', 'male', 88.3, 0.7, 3.9682899207248017, -496.6031386507038, 731, 9.199999999999996, 1, 99.20724801812004, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2015177', '喜报！资本家小姐来海岛随军了', '十肆1', '现代言情', '已完结', 'women', 63.6, 0.8, 67.14465408805034, -306.1006289308176, 731, 9.599999999999996, 1, 98.74213836477988, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2016334', '深情失控，他服软低哄别离婚', '林深深', '现代言情', '连载中', 'women', 97, 0.9, 11.888659793814432, 3.962886597938144, 731, 9.400000000000004, 1, 99.0721649484536, '断崖式衰减', 5.046826222684704);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2022495', '情劫', '花小刺', '都市', '连载中', 'male', 82, 0.5, 3.975609756097561, -648.0243902439024, 731, 9.099999999999996, 1, 99.39024390243902, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2023697', '男人野性', '月下冰河', '都市', '连载中', 'male', 262.1, 262.1, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2024150', '玄幻：从炼制合情丹开始长生！', '柿饼吃个糖', '玄幻奇幻', '已完结', 'male', 70.5, 70.5, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2024793', '五年冷婚，我跑路了你发什么疯', '一尾小锦鲤', '现代言情', '连载中', 'women', 118.2, 118.2, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2024794', '武圣看门武王扫地，你嫌我武馆太垃圾？', '白鹫', '都市', '已完结', 'male', 10.9, 10.9, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('202636', '九转星辰诀', '晨弈', '玄幻奇幻', '已完结', 'male', 760.8, 760.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2027735', '三国：我，赤壁周瑜，揽二乔脱离江东', '老骥伏枥', '历史', '已完结', 'male', 29.4, 29.4, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2027737', '向上登攀', '老虎本尊', '都市', '连载中', 'male', 29.4, 1, 3.8639455782312924, -109.73605442176871, 731, 9.099999999999996, 1, 96.5986394557823, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2027742', 'SSSSSSSSSS级狂龙出狱', '成书', '都市', '连载中', 'male', 73.1, 1, 3.945280437756498, -284.4547195622435, 731, 9, 1, 98.63201094391245, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2027749', '刚抽中SSS级天赋，你跟我说游戏停服', '吃猫的鱼仔', '玄幻奇幻', '连载中', 'male', 74.5, 1, 3.946308724832215, -290.0536912751678, 731, 9.199999999999996, 1, 98.65771812080537, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2032046', '守活寡两年去随军，改嫁绝嗣大佬', '糖煵五加', '现代言情', '连载中', 'women', 48.1, 0.4, 3.9667359667359663, -473.03326403326406, 731, 9.5, 1, 99.16839916839916, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2033005', 'SSSSSSSSSSSSSS满级神医', '星空野狼', '都市', '连载中', 'male', 174.7, 174.7, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2033943', '再亲一下，高冷校草诱哄小娇娇', '逸捅天下', '现代言情', '连载中', 'women', 16.5, 16.5, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2034828', '唯一真神', '北冥', '都市', '已完结', 'male', 65.6, 65.6, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2036574', '被贬北凉，我打造了无敌大雪龙骑！', '画虫的小龙', '历史', '已完结', 'male', 24.5, 24.5, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2036642', '暗恋十年，庄先生他藏不住了', '雯锦', '现代言情', '连载中', 'women', 72.6, 72.6, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2037407', '炼妖塔', '霸业', '玄幻奇幻', '连载中', 'male', 2.4, 2.4, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2038910', '你惹她干什么？她修的是杀道啊', '璃焰', '幻想言情', '连载中', 'women', 57, 57, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2040906', '边军悍卒：从鸡蛋换老婆开始！', '黑夜残影', '历史', '已完结', 'male', 23.5, 23.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2041071', '捡个混球当奶爸，炸翻京圈做团宠！', '夜风微微', '现代言情', '连载中', 'women', 3.7, 3.7, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2041092', '无双公子', '小陈叔叔', '历史', '连载中', 'male', 1.6, 1.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2046394', '直播审判罪女！结果全国为她痛哭', '财神爷独生女', '现代言情', '连载中', 'women', 2.1, 2.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2046408', '逆子，开门！你娘回来整顿家风了', '黑葡萄', '古代言情', '连载中', 'women', 5.1, 5.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2047644', '我的钱全捐了，老婆竟是天后', '伤心小呆', '都市', '连载中', 'male', 6.7, 6.7, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2048046', '重生70当猎王', '吴家三少', '都市', '连载中', 'male', 1.8, 1.8, 0, 0, 731, 8, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2050780', '渣夫骗我领假证，转身携千亿资产嫁权少', '唐小糖', '现代言情', '连载中', 'women', 133.9, 133.9, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2051697', '末世，从吞尸体开始进化', '只是小脑虎', '科幻', '连载中', 'male', 42.4, 0.4, 3.9622641509433962, -416.0377358490566, 731, 9.199999999999996, 1, 99.05660377358491, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2052700', '小司机的美女总裁老婆', '最爱老板娘', '都市', '连载中', 'male', 91.8, 0.5, 3.9782135076252723, -726.4217864923746, 731, 9.099999999999996, 1, 99.45533769063181, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2052703', '双生兄弟要换亲？我稳做侯门主母', '林拾酒', '古代言情', '连载中', 'women', 75.1, 75.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2052832', '北地悍枭', '狼太孤', '历史', '连载中', 'male', 30.3, 30.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2052834', '魂穿吕布：貂蝉离间弑父？那是我亲爹！', '八方来才', '历史', '连载中', 'male', 8.8, 8.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2053254', '混沌神鼎：从为女帝解毒开始无敌', '战神宇哥', '玄幻奇幻', '连载中', 'male', 3.3, 3.3, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2053900', '下山后，漂亮姐姐蠢蠢欲动', '神笔马丁爷', '都市', '连载中', 'male', 3, 3, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2054284', '快穿：我要当绝嗣大佬独生女', '挽书', '幻想言情', '连载中', 'women', 0.7, 0.7, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2054306', '无敌皇子：从边关开始制霸天下！', '大内低手', '历史', '连载中', 'male', 3, 3, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2055377', '你偏心，我改嫁！赶紧喊我小婶婶', '江梧蘅', '现代言情', '连载中', 'women', 4.3, 4.3, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2055380', '哑奴带崽改嫁，清冷权臣悔疯了', '桐原雪穗穗穗穗', '古代言情', '连载中', 'women', 2, 2, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2055904', '被沈家抛弃后，真千金她马甲炸翻全球', '鹿笙', '现代言情', '连载中', 'women', 3, 3, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2057069', '穿书八零，养崽训夫我手拿把掐', '菠萝小微', '现代言情', '连载中', 'women', 1.6, 1.6, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2057851', '从把傲娇室友捧成娱乐天后开始', '罗宝爱花卷', '都市', '连载中', 'male', 1.9, 1.9, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2058468', '快穿：小狐狸她漂亮但能打', '十一肆', '幻想言情', '连载中', 'women', 3.3, 3.3, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2059102', '让你求生，你竟在疯狂摸尸？', '半山闲客', '都市', '连载中', 'male', 5.9, 5.9, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2059742', '带球上门后，我成陆少心尖宠', '幸夷', '现代言情', '连载中', 'women', 6.4, 6.4, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2060184', '开局娶女囚，我成就最强悍卒', '青衫酌酒', '历史', '连载中', 'male', 6.4, 6.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2060462', '七零闪婚不见面，带娃炸翻家属院', '桃桃宝宝', '现代言情', '连载中', 'women', 38.3, 38.3, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2060801', '穿成反派，开局迎娶主角未婚妻', '毛毛超爱吃', '玄幻奇幻', '连载中', 'male', 1.1, 1.1, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2060816', '重生78：我靠岛赶海，带全家暴富！', '夕墨沉烟', '都市', '连载中', 'male', 2.7, 2.7, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061257', '重生七零：我家老祖宗能通古今', '烟花璀璨', '现代言情', '连载中', 'women', 1.9, 1.9, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061268', '结婚三年不同房，离婚后她显怀了', '墨堑', '现代言情', '连载中', 'women', 5.2, 5.2, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061856', '王府里来了个捡破烂的崽崽', '三颗小石头', '古代言情', '连载中', 'women', 140.5, 140.5, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061931', '八零：渣夫骗婚娶大嫂，我转身嫁首长', '锦禾', '现代言情', '连载中', 'women', 18.5, 18.5, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061932', '九零带崽寻亲，被绝嗣大佬宠疯了', '树梢上', '现代言情', '连载中', 'women', 10.8, 10.8, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062265', '换父兄后流放？真千金成了边疆团宠', '君染染', '古代言情', '连载中', 'women', 5.2, 5.2, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062279', '考中状元又怎样，我娘是长公主', '汐家锦锂', '古代言情', '连载中', 'women', 0.5, 0.5, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062370', '边疆发男人，从被罪女买走开始！', '陈火火', '历史', '连载中', 'male', 3, 3, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062422', '惨死认亲日，嫡女夺回凤命杀疯了', '雪落听风', '古代言情', '连载中', 'women', 14.1, 14.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062428', '99次逃婚后，她攀上了京圈权贵', '栗子甜豆糕', '现代言情', '连载中', 'women', 1.6, 1.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062825', '捡漏！', '外八字', '都市', '连载中', 'male', 1.4, 1.4, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062835', '小貔貅掉七零军区大院，被全军抢着宠', '加菲不是猫', '现代言情', '连载中', 'women', 2.6, 2.6, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063300', '五个大佬命里缺我，我只管吃奶', '舒展v', '现代言情', '连载中', 'women', 1.6, 1.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('206343', '恐怖复苏之全球武装怪胎', '老郭在此', '科幻', '已完结', 'male', 602.2, 602.2, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063608', '边疆老卒，御赐老婆后我越活越勇', '月光大妖怪', '历史', '连载中', 'male', 10.9, 10.9, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063976', '都市情劫', '御龙', '都市', '连载中', 'male', 3, 3, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064308', '妖魔乱世逢灾年，我每日一卦粮肉满仓', '灶食', '玄幻奇幻', '连载中', 'male', 1.8, 1.8, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064344', '都市绝品神医', '就爱吃牛肉', '都市', '连载中', 'male', 3.9, 3.9, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064353', '八零随军：退婚神医被绝嗣大佬宠上天', '煎bingo子', '现代言情', '连载中', 'women', 5.5, 5.5, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064964', '规则怪谈：我的超能力给诡异整破防了', 'fishlike', '幻想言情', '连载中', 'women', 0.7, 0.7, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064972', '当我捡漏古董后，前女友后悔了', '大金拿', '都市', '连载中', 'male', 1.5, 1.5, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064995', '重回六十年代，从挖何首乌开始', '巍巍青山', '都市', '连载中', 'male', 3.1, 3.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064998', '开局抄家，姐姐抢着去流放', '一个豆包', '古代言情', '连载中', 'women', 4.7, 4.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065348', '父兄拿我当草，随母改嫁断亲当皇后', '饱福福', '古代言情', '连载中', 'women', 2, 2, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065813', '开局捉奸，傍上权臣好孕来', '雨过阳光', '古代言情', '连载中', 'women', 3.3, 3.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065885', '重生85：带猫咪去赶海，狂宠九个女儿', '咸鱼咸鱼', '都市', '连载中', 'male', 4.1, 4.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065888', '解春衫', '随山月', '古代言情', '连载中', 'women', 122, 122, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065894', '神医下山：美女总裁非我不嫁', '月下无人', '都市', '连载中', 'male', 5, 5, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065959', '让我进京当质子，我开局带兵强掳花魁', '有点刺挠', '历史', '连载中', 'male', 5.5, 5.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066484', '四合院：从技术员到人生赢家', '辰语', 'N次元', '连载中', 'male', 2.5, 2.5, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066492', '空间系统穿七零，肥妻暴瘦暴富样样行', '慕荣华', '现代言情', '连载中', 'women', 3.2, 3.2, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066494', '换嫁绝嗣大佬，我胎胎多宝赢麻了', '猫猫鱼吃果果', '现代言情', '连载中', 'women', 3, 3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066505', '侯府捡的小福星，全城大佬争着宠', '鱼芽', '古代言情', '连载中', 'women', 6.4, 6.4, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066841', '混元书', '枫如江画', '玄幻奇幻', '连载中', 'male', 2.3, 2.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066874', '七五：虎妞为伴，再收个落难大小姐', '任性的狮子', '都市', '连载中', 'male', 4.1, 4.1, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067420', '年代：开局一把小猎枪，娇妻貌美肉满仓', '钓鱼捞', '都市', '连载中', 'male', 6, 6, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067715', '嫌我劳改犯？我神医身份曝光了', '瓜神驾到', '都市', '连载中', 'male', 2.2, 2.2, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067718', '四合院：开局猎户，邻居喝风我吃肉！', '刚烈的汉子', 'N次元', '连载中', 'male', 5.2, 5.2, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('207105', '傲世潜龙', '西装暴徒', '都市', '连载中', 'male', 34.7, 34.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2071506', '开局玉女宗，被仙子挑走当人丹', '三明治', '玄幻奇幻', '连载中', 'male', 2, 2, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2072331', '假嫡女重生想抢婚？再嫁你也得下跪', '木怜青', '古代言情', '连载中', 'women', 1.9, 1.9, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2072337', '开局撞破皇帝女儿身', '拉满弓月', '历史', '连载中', 'male', 1.4, 1.4, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2072619', '长生：从寿元零点一年开始', '馀杯', '玄幻奇幻', '连载中', 'male', 8, 8, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2073050', '权力巅峰：SSSS级村书记！', '荒苑爆红', '都市', '连载中', 'male', 3.9, 3.9, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2073625', '我都人间武圣了，你让我当傀儡皇帝？', '小呀小馒头', '玄幻奇幻', '连载中', 'male', 0.8, 0.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074086', '偏护寡嫂不成婚？扇完巴掌嫁权臣', '喵大仙儿', '古代言情', '连载中', 'women', 0.6, 0.6, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074090', '挖我灵根？重生后新师门待我如宝', '动物园在逃小熊猫', '幻想言情', '连载中', 'women', 2.4, 2.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074181', '权力巅峰：从市委大秘开始', '鹏鹏君本尊', '都市', '连载中', 'male', 4.8, 4.8, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074192', '影帝高冷捂不热？那就离婚！', '兔子不爱吃胡萝卜', '现代言情', '连载中', 'women', 2.4, 2.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074218', '贪恋她', '谢九笙', '现代言情', '连载中', 'women', 0.7, 0.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074327', '御堂春事', '荞麦十二画', '古代言情', '连载中', 'women', 0.8, 0.8, 0, 0, 731, 8, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074330', '穿成六零小炮灰，大小姐带物资养兵王', '娮小夕', '现代言情', '连载中', 'women', 0.7, 0.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074333', '一掌退大帝，你说他是杂役弟子？', '百万单机王', '玄幻奇幻', '连载中', 'male', 1.2, 1.2, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074412', '和初恋官宣后，装瘸前夫气得站起来了', '青时序', '现代言情', '连载中', 'women', 1.8, 0.7, 51.33333333333332, -1.3968253968253976, 731, 9.199999999999996, 0, 61.111111111111114, '快速衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2075109', '四合院：从火车列车员开始', '我家有母老虎', 'N次元', '连载中', 'male', 3.3, 3.3, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2075347', '被退婚五次，她嫁残王夫君却躺赢', '瓜田立夏', '古代言情', '连载中', 'women', 2.5, 2.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2075352', '资本家假千金，搬空家产嫁糙汉', '韶光煮雪', '现代言情', '连载中', 'women', 2.4, 2.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2075975', 'SSSSSSS级医武至尊', '大盘鸡仙尊', '都市', '连载中', 'male', 2.9, 2.9, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076487', '极品九千岁：我在后宫无法无天！', '莫不愁', '历史', '连载中', 'male', 2.5, 2.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076863', '换宗门，当团宠，师妹她修生钱道', '金池', '幻想言情', '连载中', 'women', 1.8, 1.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076866', '竹马护资本家小姐，重生改嫁他急了！', '枝云梦', '现代言情', '连载中', 'women', 2.8, 2.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2077580', '裴大人，表小姐她又跑了', '蓝莓爆珠', '古代言情', '连载中', 'women', 2.3, 2.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2077779', '规则怪谈：我能找出错误的规则', '老猫写文', '奇闻异事', '连载中', 'male', 2.3, 2.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2077960', '刚下山，全球大佬跪迎我回家', '霜叶红于二月花', '都市', '连载中', 'male', 2.4, 2.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2078304', '转生狗妖，我在万世轮回成仙！', '六尺七寸', '玄幻奇幻', '连载中', 'male', 2, 2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2078351', '四合院：开局爆锤众禽', '沉鱼', 'N次元', '连载中', 'male', 2.2, 2.2, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('208594', '吞天圣帝', '枫落忆痕', '玄幻奇幻', '连载中', 'male', 483.6, 1.1, 3.9909015715467326, -1750.5545529739074, 731, 9.099999999999996, 1, 99.77253928866831, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('208898', '极品小侯爷', '梦入山河', '历史', '已完结', 'male', 676.5, 676.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('209888', '重回1991', '南三石', '都市', '已完结', 'male', 581.2, 581.2, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('209898', '我能采集万物', '存叶', '科幻', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('210771', '万古龙帝', '拓跋流云', '玄幻奇幻', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('211115', '都市逍遥天医', '星空野狼', '都市', '已完结', 'male', 435.9, 435.9, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213092', '吞噬古帝', '黑白仙鹤', '玄幻奇幻', '连载中', 'male', 34.7, 34.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213190', '阴阳鲁班咒', '一气三元', '奇闻异事', '已完结', 'male', 226.6, 226.6, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213697', '葬天神帝', '我爱弹棉花', '玄幻奇幻', '连载中', 'male', 526.9, 0.6, 3.9954450559878527, -3504.6712216106785, 731, 9.099999999999996, 1, 99.88612639969632, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('214783', '山野诡闻笔记', '吴大胆', '奇闻异事', '已完结', 'male', 414, 414, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '都市', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('214890', '混沌天尊', '新闻工作者', '玄幻奇幻', '已完结', 'male', 315.1, 315.1, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('215067', '九转修罗诀', '李中有梦', '玄幻奇幻', '已完结', 'male', 309.7, 309.7, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('215169', '寒门枭士', '北川', '历史', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('215243', '第一瞳术师', '喵喵大人', '幻想言情', '已完结', 'women', 34.7, 0.8, 15.631123919308358, -161.68443804034587, 731, 9.800000000000004, 1, 97.69452449567724, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('215780', '绝世强龙', '张龙虎', '都市', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('216404', '荒古武神', '化十', '玄幻奇幻', '连载中', 'male', 527.2, 527.2, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('217822', '天命成凰', '赵小球', '古代言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('218179', '天命风水神相', '半盏清茶', '奇闻异事', '已完结', 'male', 59.1, 59.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('219660', '臭保镖，求你放过我们吧！', '流水不逝', '都市', '已完结', 'male', 270.3, 270.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('151584', '极品戒指', '淮阴小侯', '都市', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1647094', '九转吞天诀', '萧逆天', '玄幻奇幻', '连载中', 'male', 323.7, 0.9, 3.9888785912882296, -1430.6777880753787, 731, 9.099999999999996, 1, 99.72196478220575, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1648167', '开局截胡五虎上将', '孔明很愁', '历史', '已完结', 'male', 775.3, 775.3, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1648172', '仙棺，神墟，剑无敌！', '千年老龟', '玄幻奇幻', '连载中', 'male', 359.2, 1.1, 3.987750556792873, -1298.1940676250251, 731, 9, 1, 99.69376391982182, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '游戏', '已完结', 'male', 709.5, 709.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1653604', '我的冰山女神老婆', '冰城妖玉', '都市', '已完结', 'male', 853.2, 853.2, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1654986', '团宠小师妹才是真大佬', '千金兔', '幻想言情', '已完结', 'women', 0.7, 0.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1655407', '鸿蒙霸体诀', '鱼初见', '玄幻奇幻', '连载中', 'male', 791.6, 791.6, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1665743', '皇室奶团萌翻全京城', '司司', '古代言情', '已完结', 'women', 0.8, 0.8, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1666957', '重生后我顶替了前夫白月光', '九九月', '现代言情', '已完结', 'women', 0.9, 0.9, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1670199', '我的养成系女友', '佛系和尚', '都市', '已完结', 'male', 509.7, 509.7, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1672578', '逃荒后三岁福宝被团宠了', '时好', '古代言情', '已完结', 'women', 0.5, 0.5, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1672801', '太古吞天诀', '心无尘', '玄幻奇幻', '已完结', 'male', 183.7, 183.7, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1673461', '三个缩小版大佬带百亿资产上门', '一轮玫瑰', '现代言情', '已完结', 'women', 0.6, 0.6, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '现代言情', '已完结', 'women', 982.5, 0.7, 3.997150127226463, 3.997150127226463, 731, 9.599999999999996, 1, 99.92875318066157, '断崖式衰减', 5.003564880831126);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1684583', '春棠欲醉', '锦一', '古代言情', '已完结', 'women', 34.7, 34.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1689214', '藏起孕肚离婚，郁总全球疯找', '苏小鱼', '现代言情', '已完结', 'women', 1.2, 1.2, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1693832', '超神玩家', '失落叶', '游戏', '已完结', 'male', 444.1, 444.1, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '都市', '已完结', 'male', 199.6, 199.6, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1706674', '开局麒麟肾，吓哭九个绝色娇妻', '神级大牛', '都市', '已完结', 'male', 494.6, 494.6, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1730848', '徒儿快下山，你师姐等不及了', '雨落狂流', '都市', '已完结', 'male', 139.8, 139.8, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1738577', '女神的逍遥狂医', '东方天策', '都市', '已完结', 'male', 176.5, 176.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1761978', '葬神棺', '浮生一诺', '玄幻奇幻', '连载中', 'male', 34.7, 34.7, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1763089', '喜棺开，百鬼散，王妃她从地狱来', '一碗佛跳墙', '古代言情', '已完结', 'women', 34.7, 34.7, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1763673', '捉奸当天，豪门继承人拉我去领证', '慕容悠然', '现代言情', '连载中', 'women', 378.7, 378.7, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1764505', '我团宠小师妹，嚣张点怎么了', '瑰夏', '幻想言情', '已完结', 'women', 365, 365, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1764634', '七零：最硬糙汉被媳妇撩红了眼', '一尾小锦鲤', '现代言情', '已完结', 'women', 34.7, 34.7, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1765545', '轻熟', '乌木桃枝', '现代言情', '已完结', 'women', 0.8, 0.8, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1768764', '出阳神', '罗樵森', '奇闻异事', '已完结', 'male', 296.9, 296.9, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1771336', '王妃她五行缺德', '棠花落', '古代言情', '已完结', 'women', 0.4, 0.4, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1776773', '第一召唤师', '喵喵大人', '幻想言情', '已完结', 'women', 405.6, 405.6, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1778388', '灵骨被夺，帝女她觉醒神脉杀回来了', '澜岸', '幻想言情', '已完结', 'women', 1.1, 1.1, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1780456', '混沌鼎', '鬼疯子', '玄幻奇幻', '已完结', 'male', 121.6, 121.6, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1783142', '天剑神狱', '叶问', '玄幻奇幻', '已完结', 'male', 91.5, 91.5, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1801623', '帝国皇太子，老子不干了！', '灰色小猫', '历史', '已完结', 'male', 338.6, 338.6, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1802216', '诱她，一夜成瘾', '壹鹿小跑', '现代言情', '已完结', 'women', 549.9, 549.9, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1803024', '神算萌妻：傅太太才是玄学真大佬', '易小升', '现代言情', '已完结', 'women', 34.7, 34.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1803136', '第一凤女', '十二妖', '古代言情', '已完结', 'women', 34.7, 34.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1803283', '皇叔借点功德，王妃把符画猛了', '安卿心', '古代言情', '连载中', 'women', 34.7, 34.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1804346', '绝世天命大反派', '金裘花马', '玄幻奇幻', '连载中', 'male', 834.3, 0.7, 3.9966438930840225, -4759.431927535487, 731, 9, 1, 99.91609732710056, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1809333', '网游：我召唤的骷髅全是位面之子？', '禅心道骨', '游戏', '已完结', 'male', 220.1, 220.1, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1809361', '逍遥四公子', '修果', '历史', '连载中', 'male', 34.7, 34.7, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1815020', '巅峰权途', '争渡', '都市', '连载中', 'male', 436.2, 436.2, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1819118', '八零养崽：清冷美人被科研大佬宠上天！', '桔子阿宝', '现代言情', '已完结', 'women', 1.2, 1.2, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1830569', '凤池生春', '秦安安', '古代言情', '已完结', 'women', 527.5, 527.5, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1830570', '世子先别死，夫人有喜了', '沙拉薯条', '古代言情', '已完结', 'women', 34.7, 34.7, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1833599', '枭龙出山', '轩仔', '都市', '连载中', 'male', 81.6, 0.6, 3.9705882352941178, -536.0294117647059, 731, 9.099999999999996, 1, 99.26470588235294, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1837360', '昭春意', '犹鱼丝', '古代言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1838037', '典狱长大人深不可测！', '黄泉隼', '都市', '已完结', 'male', 187.9, 187.9, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1838355', '离婚后，前妻姐崩溃了', '洛王', '都市', '已完结', 'male', 620.3, 620.3, 0, 0, 731, 8.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1840296', '夫君清心寡欲，我却连生三胎', '米团开花', '古代言情', '已完结', 'women', 296.4, 296.4, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1844850', '饥荒年，我囤货娇养了古代大将军', '苜肉', '古代言情', '连载中', 'women', 34.7, 34.7, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1847406', '此夜逢君', '晨露嫣然', '古代言情', '已完结', 'women', 1, 1, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1848642', '离婚吧，真当我是废物啊', '凝望之影', '都市', '已完结', 'male', 103.6, 103.6, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1848650', '夜火缠绵', '骨子鱼', '现代言情', '已完结', 'women', 1.1, 1.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1850556', '让我娶傻千金，你又回来求我离婚？', '摸鱼小将', '都市', '连载中', 'male', 161.7, 0.3, 3.992578849721707, -2148.0074211502783, 731, 9.099999999999996, 1, 99.81447124304268, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1850695', '炼神鼎', '秋月梧桐', '玄幻奇幻', '连载中', 'male', 193.6, 0.3, 3.9938016528925617, -2573.339531680441, 731, 9, 1, 99.84504132231405, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1853441', '春华照灼', '蝉不知雪', '古代言情', '已完结', 'women', 131.2, 0.6, 95.5609756097561, -866.6849593495934, 700, 9.699999999999996, 1, 99.54268292682927, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1854610', '八零娇女一撒娇，高冷军少领证了', '白茶流萤', '现代言情', '连载中', 'women', 510.4, 510.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1857847', '重生再嫁皇胄，我只想乱帝心夺凤位', '月下小兔', '古代言情', '连载中', 'women', 593, 593, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1858392', '咬春靥', '空酒瓶', '古代言情', '已完结', 'women', 327.1, 327.1, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1858924', '无间令', '无间之令', '古代言情', '已完结', 'women', 346.9, 1.1, 91.7082732776016, 3.987316229460939, 731, 9.300000000000004, 1, 99.68290573652348, '断崖式衰减', 5.015905147484096);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1863729', '断亲不伺候了，哥哥们破产睡天桥', '红十三', '现代言情', '已完结', 'women', 566.4, 566.4, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1864493', '打到北极圈了，你让我继承皇位？', '橡皮泥', '历史', '连载中', 'male', 300.5, 0.7, 3.9906821963394346, -1709.152174946518, 731, 9.300000000000004, 1, 99.76705490848586, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1867139', '师叔，你的法宝太不正经了', '李别浪', '玄幻奇幻', '连载中', 'male', 482.9, 1, 3.991716711534479, -1923.6082832884654, 731, 9.400000000000004, 1, 99.79291778836198, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1871638', '你迎娶平妻？我带崽入宫当皇后', '虎金金', '古代言情', '已完结', 'women', 370.5, 0.4, 91.90067476383267, 3.9956815114709854, 731, 9.599999999999996, 1, 99.89203778677464, '断崖式衰减', 5.005403944879762);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1872563', '为奴三年后，整个侯府跪求我原谅', '莫小弃', '古代言情', '连载中', 'women', 34.7, 34.7, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1873655', '重生八零：离婚后被军少宠上天', '小白蛇', '现代言情', '已完结', 'women', 607.4, 607.4, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1875137', '断绝关系后，我的召唤兽全是黑暗生物', '可破', '都市', '已完结', 'male', 294.3, 294.3, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1876687', '和离前夜，她重生回了出嫁前', '柳程安', '古代言情', '已完结', 'women', 434.1, 434.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1879542', '我宫斗冠军，矜贵世子俯首称臣', '唐荔枝', '古代言情', '已完结', 'women', 676.9, 676.9, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1882743', '郡主她百鬼送嫁，少将军敢娶吗？', '一碗佛跳墙', '古代言情', '已完结', 'women', 159.6, 0.5, 91.71177944862154, 3.987468671679198, 731, 9.800000000000004, 1, 99.68671679197995, '断崖式衰减', 5.015713387806411);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1882754', '边军悍卒', '木有金箍', '历史', '连载中', 'male', 552, 552, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1885415', '再睁眼！高冷女知青在我怀里哭唧唧', '九伐', '都市', '已完结', 'male', 88.3, 88.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1893629', '捡了小福星后，将军府旺疯了', '树己不树人', '古代言情', '已完结', 'women', 69, 0.6, 91.20000000000002, 3.965217391304348, 731, 9.5, 1, 99.1304347826087, '断崖式衰减', 5.0438596491228065);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1929412', '重生：清纯转校生表白我，校花哭惨了', '一缕微光', '都市', '已完结', 'male', 81.6, 81.6, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1936358', '大楚第一逍遥王', '打得你喵喵叫', '历史', '连载中', 'male', 77.8, 0.9, 3.953727506426735, -337.824050271351, 731, 9, 1, 98.84318766066838, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1941048', '全能真千金归来，发现家人住狗窝', '温小浅', '现代言情', '已完结', 'women', 67, 0.3, 87.60597014925372, -881.3691542288559, 731, 9.400000000000004, 1, 99.55223880597015, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1946790', '谁说校花高冷？这校花可太甜软了', '佛系和尚', '都市', '已完结', 'male', 107.2, 107.2, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1949070', '孩子谁爱生谁生，我勾帝心夺凤位', '爱吃石榴', '古代言情', '连载中', 'women', 382.1, 1.1, 59.82727034807644, -1377.4775760748016, 731, 9.599999999999996, 1, 99.71211724679404, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1949695', '被贵妃配给太监当对食后', '沙子', '古代言情', '连载中', 'women', 487.4, 1.2, 27.93106278210915, -1612.6863630146358, 731, 9.5, 1, 99.75379565038982, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1957149', '出宫前夜，沦为暴君掌中物', '素律', '古代言情', '连载中', 'women', 341, 341, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1959895', '十二只SSS级鬼宠，你管这叫差班生', '洛青澜', '都市', '已完结', 'male', 104, 104, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1960821', '雪夜活埋后，我夺了假千金凤命', '柠檬小丸子', '古代言情', '连载中', 'women', 136.8, 136.8, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1960964', '从小媳妇要传宗接代开始', '断章', '历史', '连载中', 'male', 202.6, 0.3, 3.994076999012833, -2693.3392563343205, 731, 9.199999999999996, 1, 99.85192497532083, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1965108', '召诸神，踏万界，天命帝女逆乾坤', '澜岸', '幻想言情', '连载中', 'women', 74.8, 74.8, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1968483', '霍总，太太不复婚，只改嫁！', '相思一顾', '现代言情', '连载中', 'women', 63.9, 1.1, 35.38028169014085, -220.5013515436051, 731, 9.5, 1, 98.27856025039124, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1968910', '全家夺我军功，重生嫡女屠了满门', '我吃饱饱', '古代言情', '连载中', 'women', 467.6, 467.6, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1971248', '在恋综当老六？一句泡面仙人全网暴火', '肉包打狗', '都市', '已完结', 'male', 80, 80, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1971590', '众仙俯首', '咸鱼老白', '玄幻奇幻', '连载中', 'male', 184.1, 0.4, 3.991309071156979, -1833.0086909288427, 731, 9.400000000000004, 1, 99.78272677892448, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1975352', '叉腰腰，全家都是我捡来哒！', '柠檬鱼头', '幻想言情', '连载中', 'women', 195.3, 0.8, 47.80337941628263, -964.5327700972863, 731, 9.699999999999996, 1, 99.59037378392217, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1976312', '观音泥', '溪芝', '现代言情', '连载中', 'women', 2.3, 2.3, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('197810', '都市最狂医仙', '花小刺', '都市', '已完结', 'male', 789.8, 789.8, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '武侠仙侠', '已完结', 'male', 65.9, 65.9, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982193', '我的26岁女总裁', '卧龙岗小弟', '都市', '已完结', 'male', 69.5, 69.5, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982371', '你宠白月光，我收凤印你急什么', '江墨甜', '古代言情', '连载中', 'women', 62.6, 62.6, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982718', '真没必要让我重生', '刘大咪', '都市', '已完结', 'male', 30.5, 30.5, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1988961', '重生1984：我靠赶海打渔成首富', '菠萝炒饭', '都市', '连载中', 'male', 172.9, 172.9, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1989780', '权力医途', '端午', '都市', '连载中', 'male', 189.3, 189.3, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1991675', '我赚够两千就下播，榜一大哥却急了', '哼哼哈哈', '现代言情', '连载中', 'women', 251.7, 251.7, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1991811', '错良缘', '雨山雪', '古代言情', '已完结', 'women', 61.8, 61.8, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1994128', '搬空婆家离婚后，被八零京少宠上天', '猫爱锅包肉', '现代言情', '已完结', 'women', 35.5, 0.7, 70.58028169014086, -191.0148893360161, 731, 9.5, 1, 98.0281690140845, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1994174', '恶婆婆重生后，怂包儿媳被宠成宝！', '洇鹤', '古代言情', '连载中', 'women', 3.8, 3.8, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1994365', '高门长媳', 'Ms腊肠', '古代言情', '已完结', 'women', 63.1, 63.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2003997', '末世囤货养崽，从娘胎开始旺妈咪', '小桃花', '幻想言情', '已完结', 'women', 46.9, 0.6, 71.07889125799572, -300.76901208244493, 731, 9.599999999999996, 1, 98.72068230277186, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('200456', '在他深情中陨落', '浮生三千', '现代言情', '已完结', 'women', 0.3, 0.3, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2004996', '仙侣', '鬼疯子', '武侠仙侠', '连载中', 'male', 106.3, 0.7, 3.973659454374412, -599.454911974197, 731, 8.900000000000004, 1, 99.3414863593603, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2007504', '结婚三年喊错名，成对家老公了你哭什么', '木易未央', '都市', '已完结', 'male', 20.5, 20.5, 0, 0, 731, 8.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2010008', '高武校长，我的实力是全校总和！', '邯郸财阀', '都市', '连载中', 'male', 122.9, 0.2, 3.9934906427990233, -2450.006509357201, 731, 9.300000000000004, 1, 99.83726606997558, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2012529', '极品女神赖上我', '陈行者', '都市', '连载中', 'male', 173.7, 173.7, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2014122', '于他怀中轻颤', '苏晚舟', '现代言情', '连载中', 'women', 80.9, 0.7, 55.51545117428924, 3.965389369592089, 731, 9.599999999999996, 1, 99.13473423980223, '断崖式衰减', 5.043640897755611);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2014393', '掌门怀孕，关我一个杂役什么事', '雨夜终曲', '玄幻奇幻', '连载中', 'male', 253.9, 253.9, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2015371', '再近点，就失控了', '雪泥', '现代言情', '连载中', 'women', 274.3, 274.3, 0, 0, 731, 9.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2018535', '洪荒：我屡出毒计，十二祖巫劝我冷静！', '橘黄的橙子', '武侠仙侠', '已完结', 'male', 47.3, 47.3, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2019227', '随母改嫁旺新家，重生嫡女嘎嘎乱杀', '三十嘉', '古代言情', '连载中', 'women', 87.7, 1.2, 31.562143671607757, -280.4427974154314, 731, 9.599999999999996, 1, 98.63169897377423, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2020570', '重生70：让你守门，你整了个蘑菇云？', '历史小尘埃', '都市', '已完结', 'male', 20.7, 20.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2020674', '从市委大秘到权力之巅', '洗礼先生', '都市', '连载中', 'male', 34.7, 0.3, 3.965417867435159, -454.70124879923156, 731, 9.099999999999996, 1, 99.13544668587897, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2021927', '西游：取经？关我混沌魔猿什么事！', '南木北树', '武侠仙侠', '已完结', 'male', 69.7, 69.7, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2021943', '诱哄，假千金被禁欲商总拉去领证了', '雾里重逢', '现代言情', '已完结', 'women', 47.2, 0.4, 63.45762711864406, 3.9661016949152543, 731, 9.699999999999996, 1, 99.15254237288136, '断崖式衰减', 5.042735042735043);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('202630', '道门诡谈', '李十一', '奇闻异事', '已完结', 'male', 155.7, 155.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2027063', '敲骨吸髓？重生另选家人宠我如宝', '清砚', '古代言情', '连载中', 'women', 138.2, 138.2, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2028957', '桃花劫', '推窗望岳', '都市', '连载中', 'male', 224.8, 224.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2029607', '我的道侣是诸天第一女帝', '虎眸', '玄幻奇幻', '连载中', 'male', 4.2, 4.2, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2029739', '穿成恶毒继母，手握空间灵泉养崽崽', 'YJ紫霞仙子', '古代言情', '连载中', 'women', 3, 3, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2032899', '让你当书童，你成大夏文圣', '炫迈', '历史', '连载中', 'male', 61.9, 0.5, 3.9676898222940222, -487.2323101777059, 731, 9, 1, 99.19224555735056, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2038328', '重生不嫁高门后，高冷权臣追疯了！', '溪午闻钟', '古代言情', '连载中', 'women', 2.9, 2.9, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2038351', '公府上下宠我如宝，养兄一家后悔了', '钱多多君', '古代言情', '连载中', 'women', 2.8, 2.8, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2038385', 'SSSSSSSSSSSSS级镇狱狂龙', '封情老衲', '都市', '连载中', 'male', 101.9, 1.1, 3.9568204121687933, -362.5886341332857, 731, 9.099999999999996, 1, 98.92051030421983, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2040657', '末世抢机缘：我的我的都是我的！', '文鳐', '幻想言情', '连载中', 'women', 4.1, 4.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2044077', '妾本丝萝，只图钱帛', '锅包又又又', '古代言情', '连载中', 'women', 23.4, 23.4, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2046282', '人生赢家', '烟云客横渡积水潭', '都市', '连载中', 'male', 4.5, 4.5, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2046772', '纵情人生', '一缕微光', '都市', '连载中', 'male', 38.4, 0.9, 3.90625, -162.76041666666663, 731, 9, 1, 97.65625, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2048050', '抢我婚约嫁太子？我携孕肚嫁皇帝', '缓缓归', '古代言情', '连载中', 'women', 50.9, 50.9, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2048060', '从酒肆杂役开始武道化圣', '为你傲视蒼穹', '玄幻奇幻', '连载中', 'male', 6.8, 6.8, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2052699', '主播甜又野，六个顶级大佬缠着宠', '墨如金', '现代言情', '连载中', 'women', 0.5, 0.5, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2053703', '三年同房两次，要离婚他跪求复合', '一只小甜饼', '现代言情', '连载中', 'women', 37.8, 37.8, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2053895', '带崽搬空婆家，易孕娇女随军被亲哭', '金岁岁', '现代言情', '连载中', 'women', 22.6, 22.6, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2053898', '他的小撩精', '街灯读我', '现代言情', '连载中', 'women', 111.6, 0.6, 47.741935483870975, -732.0430107526882, 731, 9.699999999999996, 1, 99.46236559139786, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2054267', '三年婚姻喂了狗，二嫁律师宠疯了', '炎热的夏天', '现代言情', '连载中', 'women', 1.7, 1.7, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2054313', '阴阳塔', '水管开花', '玄幻奇幻', '连载中', 'male', 11.2, 11.2, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2055375', '姜医生，贺总约你去民政局', '江月何年', '现代言情', '连载中', 'women', 6.4, 6.4, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2056878', '大小姐重生选夫，小小硬汉拿捏拿捏', '暖宝宝爱吃饭', '现代言情', '连载中', 'women', 9.2, 9.2, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2057124', '靠私房菜名震京城，凤印上门了！', '宋九九', '古代言情', '连载中', 'women', 6.9, 6.9, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2057468', '权力巅峰：从县委大院开始', '今晚吃鸡', '都市', '连载中', 'male', 9, 9, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2057573', '窃医术，夺至亲？神医嫡女杀疯了！', '九汐公子', '古代言情', '连载中', 'women', 1, 1, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2059138', '救命！求生综里看风水，爆火全网', '桑桑籽', '现代言情', '连载中', 'women', 2.3, 2.3, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2059139', '听懂兽语后，被皇家全员团宠了', '桃酥', '古代言情', '连载中', 'women', 4.3, 4.3, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2059140', '戍边斥候：从奉旨传宗接代开始！', '般若菠萝', '历史', '连载中', 'male', 5, 5, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2060174', '转职：我死亡天灾，站起来为了你的君主', '懒惰的帅比', '都市', '连载中', 'male', 3, 3, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2060180', '科举：开局官府发妻，卷成状元', '明月天衣', '历史', '连载中', 'male', 3.1, 3.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2060824', '让你当狱长，没让你把神魔改造成卷王', '最怕取名字', '玄幻奇幻', '连载中', 'male', 1.1, 1.1, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061260', '七零读心，掏空家产带福宝寻夫随军', '沫沫无闻', '现代言情', '连载中', 'women', 5.1, 5.1, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061262', '哑巴小向导，被七个顶级哨兵缠上了', '疯麦', '幻想言情', '连载中', 'women', 0.4, 0.4, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061266', '边荒小吏', '东门吹牛', '历史', '连载中', 'male', 2.7, 2.7, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061267', '边军枭卒：从领媳妇开始皇图霸业', '凉小城', '历史', '连载中', 'male', 1.9, 1.9, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061269', '七零美人二嫁后，随军西北撩硬汉', '一然', '现代言情', '连载中', 'women', 0.4, 0.4, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061794', '开局送老婆，我成了众仙之父！', '西地那非', '玄幻奇幻', '连载中', 'male', 4, 4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061800', '重生1985，我靠万物标签赶海发家', '吃不完的荔枝', '都市', '连载中', 'male', 1.4, 1.4, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061849', '官府发男人，绝色罪女抬我回家', '凶名赫赫', '历史', '连载中', 'male', 5.2, 5.2, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2061854', '恐怖时代：从斩诡开始永生不死', '戒律', '都市', '连载中', 'male', 2.1, 2.1, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062320', '随母改嫁换新爹，拖油瓶成了团宠', '萝兹萝丝', '现代言情', '连载中', 'women', 4.3, 4.3, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062787', '镇世龙王，你说他是废物赘婿？', '小只气球', '都市', '连载中', 'male', 1.5, 1.5, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062788', '穿越大唐：从驿站小卒到帝国巨擘', '亲爱的葡萄', '历史', '连载中', 'male', 1.7, 1.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062836', '重回七零：跟着小白脸爸进城吃软饭', '巫颜', '现代言情', '连载中', 'women', 4.2, 4.2, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063237', '怀孕生女他不管，提离婚他崩溃了', '凌淮', '现代言情', '连载中', 'women', 0.6, 0.6, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063605', '九阴九阳', '仗剑修真', '玄幻奇幻', '连载中', 'male', 28, 28, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063611', '小蘑菇今天也在吃软饭', '垂耳兔', '古代言情', '连载中', 'women', 4.3, 4.3, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063933', '网游：进化万物，我成唯一至高神！', '苍月翔', '游戏', '连载中', 'male', 3.2, 3.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064055', '挺孕肚离婚二嫁财阀，渣前夫悔疯了', '一颗胖梨', '现代言情', '连载中', 'women', 19.5, 19.5, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065349', '每日情报：乱世边军一小兵', '推拿医生', '历史', '连载中', 'male', 1.4, 1.4, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065792', '边军老卒，从娶媳妇开始横扫六国！', '齐天小圣', '历史', '连载中', 'male', 3.1, 3.1, 0, 0, 731, 8.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065877', '医路情劫', '微微狂笑', '都市', '连载中', 'male', 4.8, 4.8, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065893', '太监无双', '水山', '历史', '连载中', 'male', 3.4, 3.4, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066872', '离婚后，从幼儿园会演开始爆火全网', '烂番薯', '都市', '连载中', 'male', 4.1, 4.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2066875', '种田修仙：从随机刷新词条开始', '浪兰飞山', '玄幻奇幻', '连载中', 'male', 1.7, 1.7, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067201', '掏空仇家空间流放，亲爹一家悔哭', '景惠', '古代言情', '连载中', 'women', 15, 15, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067310', '问鼎：从选调警员到权力巅峰', '叶少华', '都市', '连载中', 'male', 2.8, 2.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067312', '网游：开局一条龙服务', '黑白相间', '游戏', '连载中', 'male', 5.1, 5.1, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067421', '你爱绿茶我让位，再嫁大佬你别跪', '落雪颂梅', '现代言情', '连载中', 'women', 2.2, 2.2, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2070054', '穿成恶女向导，七个顶级哨兵疯抢！', '贰一陆', '幻想言情', '连载中', 'women', 2.6, 2.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2071753', '全球异能觉醒，我修肉身横推万古', '笔下再生', '都市', '连载中', 'male', 3.3, 3.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2072940', '第五年重逢，驰先生再度失控', '锦锦不是妖', '现代言情', '连载中', 'women', 8.8, 0.5, 22.63636363636364, -58.854545454545466, 731, 9.900000000000004, 1, 94.31818181818183, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2073165', '被他吻时心动', '玛丽苏狗蛋', '现代言情', '连载中', 'women', 3.5, 3.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2073577', '人在废丹房，我以丹药证道成仙！', '伽蓝之梦', '玄幻奇幻', '连载中', 'male', 35.5, 35.5, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2073626', '万倍返还！我靠荒野求生养活龙国', '年年有玉', '玄幻奇幻', '连载中', 'male', 1.3, 1.3, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074077', '开局一辆垃圾车，假千金杀穿末世', '温念君', '幻想言情', '连载中', 'women', 1.4, 0.6, 11.428571428571427, 2.2857142857142856, 731, 9.199999999999996, 0, 57.14285714285714, '快速衰减', 8.75);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074179', '混沌吞天诀', '凭虚御风', '玄幻奇幻', '连载中', 'male', 2.1, 2.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074326', '萌兽驾到，京圈大佬集体翘班洗奶瓶', '听听不听', '现代言情', '连载中', 'women', 0.7, 0.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074363', '被逼自刎，嫡女重生撕婚书覆皇朝', '柠檬小丸子', '古代言情', '连载中', 'women', 3.1, 3.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074393', '乱世荒年：从打猎开始无限抽奖', '可破', '历史', '连载中', 'male', 2.2, 2.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074395', '断绝关系？我转身科举成状元！', '天霸', '历史', '连载中', 'male', 2, 2, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074408', '全星际都想rua元帅的小奶崽', '未礼', '幻想言情', '连载中', 'women', 2.6, 2.6, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074459', '重生2006，从被白富美包车开始', '隔壁小王本尊', '都市', '连载中', 'male', 2.1, 2.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074462', '七零孕妻进军营，野痞兵王缠吻不休', '玖甜妹子', '现代言情', '连载中', 'women', 4.6, 4.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074544', '年代军工：让你当厂长，你整出了蘑菇蛋', '三鹿天下', '都市', '连载中', 'male', 2.6, 2.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074547', '请神弼马温，被嘲猴子D级神官？', '黑鱼鱼鱼鱼', '都市', '连载中', 'male', 2.2, 2.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2075172', '穿成掌勺丫鬟，我把病秧子喂活了', '水中有鱼', '古代言情', '连载中', 'women', 0.8, 0.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076380', '女子监狱出真龙，出狱后全球震动', '我非良人', '都市', '连载中', 'male', 3.9, 3.9, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076400', '镇荒印', '李中有梦', '玄幻奇幻', '连载中', 'male', 2.1, 2.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076478', '狂野都市', '大丙', '都市', '连载中', 'male', 1.6, 1.6, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076479', '净身出户后，大佬全部身家求复合', '夜微雨', '现代言情', '连载中', 'women', 0.9, 0.9, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076498', '一觉醒来三年后，七零长姐凶又甜', '叫我富贵叭', '现代言情', '连载中', 'women', 2.4, 2.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076502', '斗罗V：人面魔蛛，多子多福', '龙小君', 'N次元', '连载中', 'male', 4.5, 4.5, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2076515', '乾元混沌塔', '织花明路', '玄幻奇幻', '连载中', 'male', 1.9, 1.9, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2077477', '上界帝子你敢甩，我娶女帝你哭什么？', '墨白', '玄幻奇幻', '连载中', 'male', 2.4, 2.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2078333', '边境反贼：从解救女囚开始', '女帝', '历史', '连载中', 'male', 3.2, 3.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2078905', '夺我灵泉空间？掏空资产嫁京少爽翻天', '桃乐漫', '现代言情', '连载中', 'women', 1.1, 1.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2079417', '经常杀人的朋友', '魂燚', '都市', '连载中', 'male', 3.6, 3.6, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('208897', '极品天师', '月下冰河', '都市', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('210772', '都市之最强仙医', '夫子', '都市', '已完结', 'male', 534.5, 534.5, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213108', '都市全能医圣', '玖月天', '都市', '已完结', 'male', 181.7, 181.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213189', '混沌剑帝', '运也', '玄幻奇幻', '已完结', 'male', 905.8, 905.8, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213502', '小皇叔腹黑又难缠', '一碧榶榶', '古代言情', '已完结', 'women', 0.6, 0.6, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213692', '武帝归来', '修果', '都市', '已完结', 'male', 948, 948, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('213853', '极品小相师', '大丙', '都市', '已完结', 'male', 185, 185, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('214147', '阴阳诡匠', '洛小阳', '奇闻异事', '已完结', 'male', 259.2, 259.2, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('214514', '活人阴差', '末日诗人', '奇闻异事', '已完结', 'male', 546.1, 546.1, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('215264', '都市战狼', '荆南', '都市', '已完结', 'male', 415.2, 415.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('215476', '学霸女王马甲多', '灰夫人', '现代言情', '已完结', 'women', 0.8, 0.8, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('215874', '吞天造化经', '鬼疯子', '玄幻奇幻', '已完结', 'male', 757.7, 757.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('216054', '极品小道长', '任公独钓', '奇闻异事', '已完结', 'male', 124.4, 124.4, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('217267', '民间诡闻实录之阴阳先生', '罗樵森', '奇闻异事', '已完结', 'male', 428.5, 428.5, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('217770', '全师门就我一个废柴', '白木木', '幻想言情', '已完结', 'women', 34.7, 1, 15.538904899135447, 3.884726224783862, 731, 9.800000000000004, 1, 97.11815561959655, '断崖式衰减', 5.148367952522255);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('219040', '极道剑尊', '二十七杯酒', '玄幻奇幻', '连载中', 'male', 872.4, 1.1, 3.994956441999083, -3164.368679921637, 731, 9.199999999999996, 1, 99.87391104997707, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('219310', '全世界都玩异能只有我修仙', '缘起云涌', 'N次元', '已完结', 'male', 126.1, 126.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('219498', '君夫人的马甲层出不穷', '荷衣', '现代言情', '已完结', 'women', 825.6, 1.2, 15.976744186046512, 3.994186046511628, 731, 9.699999999999996, 1, 99.8546511627907, '断崖式衰减', 5.0072780203784575);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('221137', '网游之全服公敌', '黑白相间', '游戏', '已完结', 'male', 715.9, 715.9, 0, 0, 731, 9.300000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1655967', '吞噬九重天', '屠刀成佛', '玄幻奇幻', '连载中', 'male', 360.3, 360.3, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1658048', '六年后，我携四个幼崽炸翻前夫家', '相思一顾', '现代言情', '连载中', 'women', 34.7, 34.7, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1669371', '吞天神帝', '小三叔', '玄幻奇幻', '已完结', 'male', 106.5, 106.5, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1694124', '女总裁的贴身龙帅', '枯木封雨', '都市', '已完结', 'male', 50.1, 50.1, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1710753', '舔狗反派只想苟，女主不按套路走！', '我是愤怒', '都市', '连载中', 'male', 34.7, 34.7, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1780393', '蛇骨阴香', '北派无尽夏', '现代言情', '已完结', 'women', 0.3, 0.3, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1807804', '重启2008：从拯救绝色女老师开始逆袭', '封尘往昔', '都市', '已完结', 'male', 384.9, 384.9, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1836527', '凰宫梦', '蓝九九', '古代言情', '连载中', 'women', 938.4, 938.4, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1837399', '圣手大医仙', '带刺的毛球', '都市', '已完结', 'male', 30.7, 30.7, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1839533', '锦帐春深', '温流', '古代言情', '已完结', 'women', 494.9, 494.9, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1850580', '我非池中物', '夜泊秦淮', '都市', '连载中', 'male', 115, 0.3, 3.9895652173913043, -1525.343768115942, 731, 9.099999999999996, 1, 99.73913043478261, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1851542', '麒麟出世，师父让我下山去结婚', '御龙', '都市', '已完结', 'male', 85, 85, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1864909', '将军活不过仨月，换亲后我旺他百年', '不知绿', '古代言情', '已完结', 'women', 138.1, 138.1, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1868453', '噬神鼎', '三千晴空', '玄幻奇幻', '连载中', 'male', 235.5, 1.1, 3.981316348195329, -848.3823200154409, 731, 8.900000000000004, 1, 99.53290870488323, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1873716', '换嫁给绝嗣太子后我连生三胎', '昔也', '古代言情', '已完结', 'women', 100.9, 0.6, 91.45292368681866, 3.976214073339941, 731, 9.5, 1, 99.40535183349853, '断崖式衰减', 5.029910269192422);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1873810', '换婚病危世子，她一胎三宝赢麻了', '雨过阳光', '古代言情', '已完结', 'women', 401.1, 0.6, 91.86237845923706, 3.9940164547494392, 731, 9.599999999999996, 1, 99.85041136873598, '断崖式衰减', 5.007490636704119);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1880008', '吞天神体：从仙女奉献开始无敌', '南云月', '玄幻奇幻', '连载中', 'male', 70.8, 0.2, 3.9887005649717513, -1408.0112994350281, 731, 9.199999999999996, 1, 99.71751412429379, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1887846', '七零美人到西北，硬汉红温了', '棠元', '现代言情', '已完结', 'women', 236, 236, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1924828', '还不起人情债，我只好当她男朋友了', '无色', '都市', '连载中', 'male', 145.7, 145.7, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1927415', '离婚三天：我冷淡至极，他索吻成瘾', '风羽轻轻', '现代言情', '连载中', 'women', 224.5, 224.5, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1946720', '1977，开局女知青以身相许', '家有十猫', '都市', '连载中', 'male', 185.2, 0.9, 3.9805615550755937, -815.1305495560354, 731, 9, 1, 99.51403887688984, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1948430', '重生60：从深山打猎开始致富', 'KITTT', '都市', '连载中', 'male', 80.9, 1.1, 3.9456118665018547, -286.23620631531634, 731, 9.300000000000004, 1, 98.64029666254636, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1956587', '五岁萌妃炸京城，我阿娘是侯府真千金', '幻想鱼', '古代言情', '已完结', 'women', 116.9, 0.9, 83.35329341317365, -507.61714665906277, 731, 9.599999999999996, 1, 99.23011120615911, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1965109', '守寡重生，送断袖夫君下黄泉', '指尖上的行走', '古代言情', '已完结', 'women', 37, 0.7, 78.4864864864865, -199.57992277992275, 731, 9.699999999999996, 1, 98.1081081081081, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('197091', '民间诡闻实录', '罗樵森', '奇闻异事', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1977771', '傅总，夫人不想当首富太太了', '蓝尧', '现代言情', '连载中', 'women', 187.6, 187.6, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1978758', '小姑奶奶下山了，在桥洞底下摆摊算命', '骑着猫的小鱼干', '现代言情', '连载中', 'women', 117.8, 1.1, 35.66383701188455, -416.43833924988417, 731, 9.699999999999996, 1, 99.06621392190154, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1981956', '柔弱医修今天也在背地里暴打魔尊', '白木木', '幻想言情', '连载中', 'women', 263.9, 263.9, 0, 0, 731, 9.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982356', '渣夫别跪了，夫人嫁顶级大佬啦', '乐恩', '现代言情', '连载中', 'women', 704.5, 704.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1982967', '厉总，太太在外面有两个私生子', '十里山河', '现代言情', '已完结', 'women', 94.7, 94.7, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1994507', '权力争锋', '东流无歇', '都市', '连载中', 'male', 37, 0.7, 3.9243243243243238, -203.50424710424707, 731, 9.099999999999996, 1, 98.1081081081081, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('1995023', '边关兵王', '青岳', '历史', '连载中', 'male', 347.1, 347.1, 0, 0, 731, 9.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2011930', '末世别人砍丧尸，我在房车炫美食', '槿花篱', '幻想言情', '连载中', 'women', 41.7, 41.7, 0, 0, 731, 9.699999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2016384', '冷婚五年，离婚夜他却失控了', '温见鹿', '现代言情', '连载中', 'women', 0.9, 0.9, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2024797', '七零资本娇小姐，下放后硬汉宠上天', '梅才华', '现代言情', '连载中', 'women', 7.8, 7.8, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2027484', '领证爽约？我转嫁你哥哭什么', '欧橙', '现代言情', '连载中', 'women', 126.2, 126.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2028796', '陛下管管吧，六皇子又发疯了！', '追风boy', '历史', '已完结', 'male', 14.2, 14.2, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2029029', '离婚后，我权势滔天，你哭什么', '水门绅士', '都市', '连载中', 'male', 181.6, 181.6, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2047215', '皇后谁爱当谁当，我嫁权臣横着走', '素手摘星', '古代言情', '连载中', 'women', 8.1, 8.1, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2052831', '长生从助仙子修行开始', '勿问', '玄幻奇幻', '连载中', 'male', 3, 3, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2053789', '权力沉浮', '空中鹰', '都市', '连载中', 'male', 6.1, 6.1, 0, 0, 731, 8.800000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2055000', '快穿好孕美人，绝嗣反派黑化了', '虞忧', '幻想言情', '连载中', 'women', 3.4, 3.4, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2055374', '七零美人要离婚，冷面军少他急了', '钱小二', '现代言情', '连载中', 'women', 28.6, 0.8, 7.776223776223776, -131.2237762237762, 731, 9.5, 1, 97.2027972027972, '断崖式衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2057569', '领主：我招募的士兵怎么都是玩家', '禅心道骨', '玄幻奇幻', '连载中', 'male', 9.7, 9.7, 0, 0, 731, 9.5, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2057884', '神级捡漏王：无良校花逼我去扯证', '李卯卯', '都市', '连载中', 'male', 5.3, 5.3, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2062363', '离婚后，我转嫁大佬你哭什么？', '舒子曦', '现代言情', '连载中', 'women', 1.5, 0.5, 45.33333333333332, -2.6666666666666674, 731, 8.599999999999996, 0, 66.66666666666666, '快速衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063290', '让我做外室？我另嫁你哭什么', '皎皎朗月', '古代言情', '连载中', 'women', 2.4, 2.4, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2063306', '重返二十岁心动，他才是白月光', '浮景', '现代言情', '连载中', 'women', 1.1, 1.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064747', '都市狠人', '北冥鱼', '都市', '连载中', 'male', 5.6, 5.6, 0, 0, 731, 9.099999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2064966', '成全他和青梅后，我却成了白月光', '墨墨卿卿', '现代言情', '连载中', 'women', 36.1, 36.1, 0, 0, 731, 9.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065274', '英雄本色', '疯十八', '都市', '连载中', 'male', 1.4, 1.4, 0, 0, 731, 8.599999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065353', '只剩七天寿命？先休渣夫再杀全家', '南山野', '古代言情', '连载中', 'women', 0.8, 0.8, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065807', '重生下乡：我才不当冤大头！', '清蒸大白蛆', '都市', '连载中', 'male', 13.2, 13.2, 0, 0, 731, 8.900000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065879', '一天暴涨一年修为，你说你后悔了？', '小陈little', '都市', '连载中', 'male', 4.2, 4.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2065896', '重生孕肚藏福宝，灾年养崽掀族祠', '瑞侈', '古代言情', '连载中', 'women', 3.5, 3.5, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067244', '开局杀敌爆属性，我功力滔天', '潇湘烨雨', '玄幻奇幻', '连载中', 'male', 2.7, 2.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067317', '夫人拒不原谅，高冷渣夫失控了', '严以妃', '现代言情', '连载中', 'women', 2.3, 2.3, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2067319', '闪婚后，老公竟是我大学教授', '多多美', '现代言情', '连载中', 'women', 2, 1, 42, 0, 731, 8.400000000000004, 0, 50, '快速衰减', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074368', '职路扶摇', '桑迪', '都市', '连载中', 'male', 1.3, 1.3, 0, 0, 731, 8.400000000000004, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2074390', '错虐白月光，祁总跪地求复合', '鹿景景', '现代言情', '连载中', 'women', 1.7, 1.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2075201', '魔道神豪携亿万魔晶，在两界杀疯了', '风九元', '玄幻奇幻', '连载中', 'male', 1.7, 1.7, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('2077743', '灾荒年捡回姐妹花，我粮肉满仓！', '小小月月落落', '历史', '连载中', 'male', 3.1, 3.1, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '科幻', '已完结', 'male', 34.7, 34.7, 0, 0, 731, 9, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('222157', '我有神级收益系统', '不是蚊子', '都市', '已完结', 'male', 921.2, 921.2, 0, 0, 731, 9.199999999999996, 0, 0, '稳定型', 90);
+INSERT INTO `ads_author_attenuation_effect` VALUES ('222767', '离婚后她惊艳了世界', '明婳', '现代言情', '连载中', 'women', 34.7, 0.5, 7.884726224783861, -269.6576368876081, 731, 9.599999999999996, 1, 98.55907780979827, '断崖式衰减', 90);
 
 -- ----------------------------
 -- Table structure for ads_author_reason
--- 作者侧1: 热度原因分析（关键词归因、字数区间）
 -- ----------------------------
 DROP TABLE IF EXISTS `ads_author_reason`;
-CREATE TABLE `ads_author_reason` (
-  `category1_name` VARCHAR(50) NOT NULL COMMENT '一级分类',
-  `category2_name` VARCHAR(50) NOT NULL COMMENT '二级分类',
-  `words_range` VARCHAR(50) NOT NULL COMMENT '字数区间',
-  `status` VARCHAR(20) NOT NULL COMMENT '连载状态',
-  `has_hot_keywords` INT NOT NULL COMMENT '是否包含热门关键词',
-  `is_golden_range` INT NOT NULL COMMENT '是否黄金字数区间',
-  `book_count` BIGINT DEFAULT NULL COMMENT '作品数量',
-  `avg_popularity` DOUBLE DEFAULT NULL COMMENT '平均热度',
-  `avg_score` DOUBLE DEFAULT NULL COMMENT '平均评分',
-  `avg_words` DOUBLE DEFAULT NULL COMMENT '平均字数',
-  `avg_intro_length` DOUBLE DEFAULT NULL COMMENT '平均简介长度',
-  `avg_title_length` DOUBLE DEFAULT NULL COMMENT '平均标题长度',
-  `heat_index` DOUBLE DEFAULT NULL COMMENT '热度指数',
-  KEY `idx_category` (`category1_name`, `category2_name`),
-  KEY `idx_words_range` (`words_range`),
-  KEY `idx_keywords` (`has_hot_keywords`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='作者侧-热度原因分析表';
+CREATE TABLE `ads_author_reason`  (
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category2_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `words_range` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `status` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `has_hot_keywords` int NULL DEFAULT NULL,
+  `is_golden_range` int NULL DEFAULT NULL,
+  `book_count` bigint NULL DEFAULT NULL,
+  `avg_popularity` double NULL DEFAULT NULL,
+  `avg_score` double NULL DEFAULT NULL,
+  `avg_words` double NULL DEFAULT NULL,
+  `avg_intro_length` double NULL DEFAULT NULL,
+  `avg_title_length` double NULL DEFAULT NULL,
+  `heat_index` double NULL DEFAULT NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for ads_author_attenuation_effect
--- 作者侧2: 热度衰减效应（完结后衰减曲线）
+-- Records of ads_author_reason
 -- ----------------------------
-DROP TABLE IF EXISTS `ads_author_attenuation_effect`;
-CREATE TABLE `ads_author_attenuation_effect` (
-  `book_id` VARCHAR(50) NOT NULL COMMENT '小说ID',
-  `title` VARCHAR(255) DEFAULT NULL COMMENT '小说标题',
-  `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
-  `category1_name` VARCHAR(50) DEFAULT NULL COMMENT '一级分类',
-  `status` VARCHAR(20) DEFAULT NULL COMMENT '连载状态',
-  `gender_type` VARCHAR(10) DEFAULT NULL COMMENT '性别向',
-  `peak_popularity` DOUBLE DEFAULT NULL COMMENT '峰值热度',
-  `lowest_popularity` DOUBLE DEFAULT NULL COMMENT '最低热度',
-  `avg_attenuation_rate` DOUBLE DEFAULT NULL COMMENT '平均衰减率%',
-  `avg_attenuation_speed` DOUBLE DEFAULT NULL COMMENT '平均衰减速度%',
-  `lifecycle_days` INT DEFAULT NULL COMMENT '生命周期天数',
-  `avg_score` DOUBLE DEFAULT NULL COMMENT '平均评分',
-  `has_severe_attenuation` INT DEFAULT NULL COMMENT '是否严重衰减',
-  `total_attenuation` DOUBLE DEFAULT NULL COMMENT '总衰减幅度%',
-  `attenuation_type` VARCHAR(20) DEFAULT NULL COMMENT '衰减类型',
-  `recommended_new_book_days` DOUBLE DEFAULT NULL COMMENT '建议推出新书天数',
-  PRIMARY KEY (`book_id`),
-  KEY `idx_author` (`author`),
-  KEY `idx_attenuation_type` (`attenuation_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='作者侧-热度衰减效应表';
-
--- ============================================
--- 用户侧 - 2个表
--- ============================================
-
--- ----------------------------
--- Table structure for ads_user_layered_recommendation
--- 用户侧1: 分层推荐（圈层爆款、相对热度）
--- ----------------------------
-DROP TABLE IF EXISTS `ads_user_layered_recommendation`;
-CREATE TABLE `ads_user_layered_recommendation` (
-  `book_id` VARCHAR(50) NOT NULL COMMENT '小说ID',
-  `title` VARCHAR(255) DEFAULT NULL COMMENT '小说标题',
-  `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
-  `category1_name` VARCHAR(50) DEFAULT NULL COMMENT '一级分类',
-  `category2_name` VARCHAR(50) DEFAULT NULL COMMENT '二级分类',
-  `gender_type` VARCHAR(10) DEFAULT NULL COMMENT '性别向',
-  `numeric_popularity` DOUBLE DEFAULT NULL COMMENT '热度',
-  `numeric_score` DOUBLE DEFAULT NULL COMMENT '评分',
-  `numeric_read_count` DOUBLE DEFAULT NULL COMMENT '阅读量',
-  `status` VARCHAR(20) DEFAULT NULL COMMENT '状态',
-  `category_heat_rank` INT DEFAULT NULL COMMENT '分类内热度排名',
-  `subcategory_heat_rank` INT DEFAULT NULL COMMENT '细分类内热度排名',
-  `category_avg_popularity` DOUBLE DEFAULT NULL COMMENT '分类平均热度',
-  `relative_heat` DOUBLE DEFAULT NULL COMMENT '相对热度',
-  `is_niche_hit` INT DEFAULT NULL COMMENT '是否圈层爆款',
-  `is_high_score_niche` INT DEFAULT NULL COMMENT '是否高分小众',
-  `niche_recommendation_score` DOUBLE DEFAULT NULL COMMENT '推荐分（圈层内）',
-  `recommendation_level` VARCHAR(20) DEFAULT NULL COMMENT '推荐等级',
-  KEY `idx_book` (`book_id`),
-  KEY `idx_category_gender` (`category1_name`, `gender_type`),
-  KEY `idx_recommendation_level` (`recommendation_level`),
-  KEY `idx_niche_hit` (`is_niche_hit`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='用户侧-分层推荐表';
-
--- ----------------------------
--- Table structure for ads_user_avoid_pitfalls
--- 用户侧2: 避坑指南（刷榜识别、高热低分预警）
--- ----------------------------
-DROP TABLE IF EXISTS `ads_user_avoid_pitfalls`;
-CREATE TABLE `ads_user_avoid_pitfalls` (
-  `book_id` VARCHAR(50) NOT NULL COMMENT '小说ID',
-  `title` VARCHAR(255) DEFAULT NULL COMMENT '小说标题',
-  `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
-  `category1_name` VARCHAR(50) DEFAULT NULL COMMENT '一级分类',
-  `category2_name` VARCHAR(50) DEFAULT NULL COMMENT '二级分类',
-  `rank_name` VARCHAR(50) DEFAULT NULL COMMENT '榜单名称',
-  `gender_type` VARCHAR(10) DEFAULT NULL COMMENT '性别向',
-  `numeric_popularity` DOUBLE DEFAULT NULL COMMENT '热度',
-  `numeric_score` DOUBLE DEFAULT NULL COMMENT '评分',
-  `numeric_read_count` DOUBLE DEFAULT NULL COMMENT '阅读量',
-  `rank_date` DATE DEFAULT NULL COMMENT '榜单日期',
-  `heat_score_ratio` DOUBLE DEFAULT NULL COMMENT '热度评分比',
-  `is_high_heat_low_score` INT DEFAULT NULL COMMENT '是否高热低分',
-  `is_suspicious_boost` INT DEFAULT NULL COMMENT '是否可疑刷榜',
-  `read_conversion` DOUBLE DEFAULT NULL COMMENT '阅读转化率%',
-  `is_low_conversion` INT DEFAULT NULL COMMENT '是否低转化',
-  `risk_level` VARCHAR(20) DEFAULT NULL COMMENT '风险等级',
-  `recommendation_weight` DOUBLE DEFAULT NULL COMMENT '推荐权重',
-  `avoidance_advice` VARCHAR(100) DEFAULT NULL COMMENT '避坑建议',
-  KEY `idx_book` (`book_id`),
-  KEY `idx_risk_level` (`risk_level`),
-  KEY `idx_suspicious` (`is_suspicious_boost`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='用户侧-避坑指南表';
-
--- ============================================
--- 资本侧 - 2个表
--- ============================================
-
--- ----------------------------
--- Table structure for ads_capital_ltv
--- 资本侧1: IP长尾价值计算（热度积分累积、改编适配度）
--- ----------------------------
-DROP TABLE IF EXISTS `ads_capital_ltv`;
-CREATE TABLE `ads_capital_ltv` (
-  `book_id` VARCHAR(50) NOT NULL COMMENT '小说ID',
-  `title` VARCHAR(255) DEFAULT NULL COMMENT '小说标题',
-  `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
-  `category1_name` VARCHAR(50) DEFAULT NULL COMMENT '一级分类',
-  `category2_name` VARCHAR(50) DEFAULT NULL COMMENT '二级分类',
-  `status` VARCHAR(20) DEFAULT NULL COMMENT '连载状态',
-  `gender_type` VARCHAR(10) DEFAULT NULL COMMENT '性别向',
-  `total_heat_integral` DOUBLE DEFAULT NULL COMMENT '热度积分（累积热度）',
-  `avg_popularity` DOUBLE DEFAULT NULL COMMENT '平均热度',
-  `peak_popularity` DOUBLE DEFAULT NULL COMMENT '峰值热度',
-  `lowest_popularity` DOUBLE DEFAULT NULL COMMENT '最低热度',
-  `appearance_count` BIGINT DEFAULT NULL COMMENT '上榜次数',
-  `first_rank_date` DATE DEFAULT NULL COMMENT '首次上榜日期',
-  `latest_rank_date` DATE DEFAULT NULL COMMENT '最近上榜日期',
-  `avg_score` DOUBLE DEFAULT NULL COMMENT '平均评分',
-  `avg_read_count` DOUBLE DEFAULT NULL COMMENT '平均阅读量',
-  `total_words` DOUBLE DEFAULT NULL COMMENT '总字数',
-  `lifecycle_days` INT DEFAULT NULL COMMENT '生命周期天数',
-  `daily_avg_heat` DOUBLE DEFAULT NULL COMMENT '日均热度',
-  `heat_volatility` DOUBLE DEFAULT NULL COMMENT '热度波动率',
-  `heat_stability` DOUBLE DEFAULT NULL COMMENT '热度稳定性',
-  `ip_type` VARCHAR(20) DEFAULT NULL COMMENT 'IP类型',
-  `ltv_score` DOUBLE DEFAULT NULL COMMENT 'LTV分数',
-  `ip_value_level` VARCHAR(10) DEFAULT NULL COMMENT 'IP价值等级',
-  `adaptation_suggestion` VARCHAR(50) DEFAULT NULL COMMENT '改编建议',
-  PRIMARY KEY (`book_id`),
-  KEY `idx_author` (`author`),
-  KEY `idx_ip_value_level` (`ip_value_level`),
-  KEY `idx_ip_type` (`ip_type`),
-  KEY `idx_ltv_score` (`ltv_score`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='资本侧-IP长尾价值计算表';
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '超长篇(80-150万)', '已完结', 0, 0, 15, 130.6, 9.626666666666667, 1158933.3333333333, 0, 9.2, 0.0001306);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '东方玄幻', '超长篇(80-150万)', '已完结', 0, 0, 2, 190.45, 8.75, 1074350, 0, 15.5, 0.00019045);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '超长篇(80-150万)', '已完结', 0, 0, 10, 171.91000000000003, 9.469999999999999, 1119910, 0, 10.5, 0.00017191000000000003);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '巨著(>150万)', '连载中', 1, 0, 2, 276.7, 9.1, 3577200, 0, 13, 0.0002767);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '权谋天下', '超长篇(80-150万)', '已完结', 0, 0, 1, 0.7, 9.4, 1210100, 0, 2, 0.0000007);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '未来科幻', '超长篇(80-150万)', '已完结', 0, 0, 1, 0.9, 9.8, 850800, 0, 15, 0.0000009000000000000001);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '现代悬疑', '巨著(>150万)', '已完结', 0, 0, 2, 0.35, 9.649999999999999, 1936300, 0, 5.5, 0.00000035);
+INSERT INTO `ads_author_reason` VALUES ('都市', '商战职场', '长篇(50-80万)', '连载中', 0, 1, 3, 162.73333333333335, 8.899999999999999, 617766.6666666666, 0, 3.6666666666666665, 0.00016273333333333335);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '巨著(>150万)', '已完结', 1, 0, 1, 935.9, 9.7, 2151000, 0, 7, 0.0009358999999999999);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '玄幻仙侠', '巨著(>150万)', '已完结', 0, 0, 8, 96.875, 9.712499999999999, 3131262.5, 0, 11.125, 0.000096875);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '巨著(>150万)', '连载中', 0, 0, 4, 131.65, 9.075, 2336800, 0, 10.25, 0.00013165);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '青春校园', '超长篇(80-150万)', '已完结', 0, 0, 1, 462.4, 9.8, 1003900, 0, 14, 0.00046239999999999996);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '超长篇(80-150万)', '已完结', 0, 0, 3, 48.5, 9.033333333333333, 1086433.3333333333, 0, 12, 0.0000485);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '异世幻想', '中篇(20-50万)', '连载中', 0, 0, 1, 0.3, 9.6, 435400, 0, 16, 0.0000003);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '长篇(50-80万)', '已完结', 0, 0, 1, 10.9, 9, 650100, 0, 18, 0.0000109);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '中篇(20-50万)', '连载中', 0, 0, 23, 5.886956521739131, 9.073913043478262, 340382.60869565216, 0, 13.434782608695652, 0.000005886956521739131);
+INSERT INTO `ads_author_reason` VALUES ('历史', '穿越历史', '中篇(20-50万)', '连载中', 0, 0, 2, 5.9, 8.8, 440150, 0, 16.5, 0.0000059);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '都市奇幻', '巨著(>150万)', '已完结', 0, 0, 1, 551.1, 9.7, 2303900, 0, 13, 0.0005511);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '巨著(>150万)', '已完结', 0, 0, 5, 250.11999999999998, 9.2, 3246080, 0, 8, 0.00025012);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '巨著(>150万)', '已完结', 0, 0, 2, 0.8, 9.649999999999999, 2134050, 0, 15, 0.0000008000000000000001);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '长篇(50-80万)', '已完结', 1, 0, 1, 1.1, 9.6, 779599.9999999999, 0, 14, 0.0000011);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '职场情缘', '超长篇(80-150万)', '已完结', 0, 0, 2, 1, 9.75, 1032650, 0, 4.5, 0.000001);
+INSERT INTO `ads_author_reason` VALUES ('游戏', '虚拟网游', '巨著(>150万)', '连载中', 0, 0, 1, 183, 9, 1561399.9999999998, 0, 18, 0.000183);
+INSERT INTO `ads_author_reason` VALUES ('历史', '穿越历史', '超长篇(80-150万)', '已完结', 0, 0, 1, 29.4, 9, 1060600, 0, 17, 0.0000294);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '异世大陆', '长篇(50-80万)', '连载中', 0, 1, 1, 74.5, 9.2, 713500, 0, 18, 0.0000745);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '超长篇(80-150万)', '已完结', 0, 0, 1, 23.5, 9.2, 1188500, 0, 14, 0.0000235);
+INSERT INTO `ads_author_reason` VALUES ('都市', '乡村生活', '中篇(20-50万)', '连载中', 1, 0, 3, 5.8999999999999995, 8.566666666666668, 453233.3333333333, 0, 12.333333333333334, 0.000005899999999999999);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '中篇(20-50万)', '连载中', 0, 0, 8, 2.8125, 8.625, 355550, 0, 10.625, 0.0000028125);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '中篇(20-50万)', '连载中', 1, 0, 3, 4.766666666666667, 8.833333333333334, 358533.3333333333, 0, 15.666666666666666, 0.000004766666666666666);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '玄幻仙侠', '短篇(<20万)', '连载中', 0, 0, 1, 1.8, 9.2, 184600, 0, 15, 0.0000018000000000000001);
+INSERT INTO `ads_author_reason` VALUES ('奇闻异事', '奇门秘术', '巨著(>150万)', '已完结', 0, 0, 4, 293.52500000000003, 9.5, 2659475, 0, 6.5, 0.00029352500000000005);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '巨著(>150万)', '已完结', 0, 0, 10, 157.25, 9.540000000000001, 2431530, 0, 12.1, 0.00015725);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '超长篇(80-150万)', '连载中', 0, 0, 3, 354.0333333333333, 9.4, 930800, 0, 15.666666666666666, 0.0003540333333333333);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '超长篇(80-150万)', '连载中', 0, 0, 5, 180.54000000000002, 9.139999999999999, 1219560, 0, 8.6, 0.00018054000000000003);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '巨著(>150万)', '连载中', 0, 0, 1, 34.7, 9.3, 7724200, 0, 4, 0.0000347);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '超长篇(80-150万)', '连载中', 0, 0, 4, 130.9, 9.35, 1186975, 0, 12.75, 0.0001309);
+INSERT INTO `ads_author_reason` VALUES ('都市', '商战职场', '超长篇(80-150万)', '连载中', 0, 0, 2, 101.55, 9.05, 1258200, 0, 5.5, 0.00010155);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '长篇(50-80万)', '连载中', 0, 1, 1, 48.1, 9.5, 648500, 0, 15, 0.000048100000000000004);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '中篇(20-50万)', '连载中', 0, 0, 17, 14.494117647058822, 9.176470588235293, 359141.17647058825, 0, 13.588235294117647, 0.000014494117647058821);
+INSERT INTO `ads_author_reason` VALUES ('科幻', '末世危机', '长篇(50-80万)', '连载中', 0, 1, 1, 42.4, 9.2, 621900, 0, 11, 0.0000424);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '无限快穿', '中篇(20-50万)', '连载中', 0, 0, 4, 2.025, 8.8, 329425, 0, 14, 0.000002025);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '中篇(20-50万)', '连载中', 1, 0, 5, 2.44, 8.84, 315560, 0, 11.8, 0.00000244);
+INSERT INTO `ads_author_reason` VALUES ('N次元', '衍生同人', '中篇(20-50万)', '连载中', 0, 0, 5, 3.54, 8.7, 347180, 0, 13, 0.00000354);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '巨著(>150万)', '已完结', 1, 0, 2, 425.54999999999995, 9.25, 5411850, 0, 5, 0.00042554999999999996);
+INSERT INTO `ads_author_reason` VALUES ('奇闻异事', '奇门秘术', '超长篇(80-150万)', '已完结', 0, 0, 4, 149.6, 9.325, 1079775, 0, 4.75, 0.0001496);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '超长篇(80-150万)', '已完结', 1, 0, 1, 0.9, 9.1, 1427700, 0, 12, 0.0000009000000000000001);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '巨著(>150万)', '已完结', 0, 0, 2, 354.29999999999995, 8.95, 1607200, 0, 13, 0.00035429999999999994);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '中篇(20-50万)', '已完结', 0, 0, 1, 63.1, 9.5, 366100, 0, 4, 0.0000631);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '中篇(20-50万)', '已完结', 0, 0, 1, 0.4, 9.7, 367200, 0, 16, 0.00000040000000000000003);
+INSERT INTO `ads_author_reason` VALUES ('N次元', '原生幻想', '超长篇(80-150万)', '已完结', 1, 0, 1, 126.1, 9.2, 1435100, 0, 12, 0.0001261);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '超长篇(80-150万)', '已完结', 1, 0, 2, 25.6, 9, 1221950, 0, 13, 0.000025600000000000002);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '末世求生', '长篇(50-80万)', '已完结', 0, 0, 1, 0.6, 9.6, 735900, 0, 15, 0.0000006);
+INSERT INTO `ads_author_reason` VALUES ('武侠仙侠', '幻想修真', '超长篇(80-150万)', '连载中', 0, 0, 1, 106.3, 8.9, 1413100, 0, 2, 0.0001063);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '青春校园', '长篇(50-80万)', '连载中', 0, 1, 1, 274.3, 9.9, 788900, 0, 8, 0.0002743);
+INSERT INTO `ads_author_reason` VALUES ('武侠仙侠', '上古洪荒', '长篇(50-80万)', '已完结', 0, 0, 1, 69.7, 9, 622100, 0, 16, 0.0000697);
+INSERT INTO `ads_author_reason` VALUES ('都市', '商战职场', '中篇(20-50万)', '连载中', 0, 0, 2, 2.95, 8.75, 396450, 0, 4, 0.00000295);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '巨著(>150万)', '连载中', 0, 0, 2, 34.7, 9.2, 2130100, 0, 15, 0.0000347);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '玄幻仙侠', '巨著(>150万)', '连载中', 0, 0, 1, 74.8, 9.7, 1613899.9999999998, 0, 15, 0.0000748);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '超长篇(80-150万)', '已完结', 0, 0, 2, 35.3, 8.85, 1029200, 0, 13, 0.0000353);
+INSERT INTO `ads_author_reason` VALUES ('都市', '灵气复苏', '中篇(20-50万)', '连载中', 0, 0, 1, 2.1, 8.4, 441800, 0, 14, 0.0000021000000000000002);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '末世求生', '短篇(<20万)', '连载中', 0, 0, 1, 0.6, 9.2, 112800, 0, 15, 0.0000006);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '巨著(>150万)', '连载中', 0, 0, 4, 277.75, 9.625, 2461750, 0, 11.5, 0.00027775);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '巨著(>150万)', '连载中', 1, 0, 2, 530.3, 9.5, 1867750, 0, 15.5, 0.0005302999999999999);
+INSERT INTO `ads_author_reason` VALUES ('都市', '官场', '超长篇(80-150万)', '连载中', 0, 0, 3, 87, 9.1, 992300, 0, 6, 0.000087);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '超长篇(80-150万)', '已完结', 1, 0, 1, 0.7, 9.7, 1019000, 0, 13, 0.0000007);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '种田经商', '中篇(20-50万)', '连载中', 1, 0, 1, 3.5, 9.2, 275300, 0, 15, 0.0000035);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '权谋天下', '中篇(20-50万)', '连载中', 0, 0, 1, 8.1, 9.5, 377299.99999999994, 0, 15, 0.0000081);
+INSERT INTO `ads_author_reason` VALUES ('都市', '商战职场', '中篇(20-50万)', '连载中', 1, 0, 1, 5.6, 9.1, 305000, 0, 4, 0.0000056);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '超长篇(80-150万)', '已完结', 1, 0, 3, 203.16666666666666, 9.666666666666666, 1297966.6666666667, 0, 13.666666666666666, 0.00020316666666666665);
+INSERT INTO `ads_author_reason` VALUES ('都市', '热血校园', '巨著(>150万)', '连载中', 1, 0, 1, 34.7, 9.3, 4274600, 0, 18, 0.0000347);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '巨著(>150万)', '已完结', 0, 0, 8, 263.88750000000005, 9.125000000000002, 3527787.5, 0, 9.5, 0.00026388750000000004);
+INSERT INTO `ads_author_reason` VALUES ('都市', '官场', '巨著(>150万)', '连载中', 0, 0, 2, 308.25, 9.25, 3604500, 0, 4.5, 0.00030825);
+INSERT INTO `ads_author_reason` VALUES ('都市', '热血校园', '巨著(>150万)', '已完结', 0, 0, 3, 240.0666666666667, 9.5, 2703533.3333333335, 0, 11, 0.00024006666666666668);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '长篇(50-80万)', '连载中', 0, 1, 8, 140.0875, 9.3625, 626925, 0, 13, 0.0001400875);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '东方玄幻', '超长篇(80-150万)', '已完结', 1, 0, 1, 70.5, 9, 845600, 0, 14, 0.0000705);
+INSERT INTO `ads_author_reason` VALUES ('都市', '明星娱乐', '中篇(20-50万)', '连载中', 0, 0, 3, 4.233333333333333, 9.066666666666666, 418000, 0, 14.333333333333334, 0.000004233333333333333);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '中篇(20-50万)', '连载中', 0, 0, 18, 7.561111111111111, 9.172222222222224, 356538.8888888889, 0, 15.555555555555555, 0.000007561111111111111);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '中篇(20-50万)', '连载中', 0, 0, 9, 3.7333333333333334, 9, 312244.44444444444, 0, 14.222222222222221, 0.0000037333333333333333);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '王朝争霸', '短篇(<20万)', '连载中', 0, 0, 1, 0.8, 9.2, 192700, 0, 17, 0.0000008000000000000001);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '东方玄幻', '巨著(>150万)', '连载中', 0, 0, 26, 357.4884615384615, 9.149999999999999, 5208553.846153846, 0, 5.538461538461538, 0.00035748846153846146);
+INSERT INTO `ads_author_reason` VALUES ('都市', '热血校园', '巨著(>150万)', '已完结', 1, 0, 1, 34.7, 9.5, 3723300, 0, 6, 0.0000347);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '无限快穿', '超长篇(80-150万)', '已完结', 0, 0, 2, 0.55, 9.850000000000001, 1168800, 0, 13, 0.00000055);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '巨著(>150万)', '连载中', 0, 0, 6, 232.01666666666665, 9.466666666666667, 3989966.6666666665, 0, 13.166666666666666, 0.00023201666666666665);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '超长篇(80-150万)', '已完结', 0, 0, 9, 59.85555555555555, 9.688888888888888, 1126577.7777777778, 0, 10.222222222222221, 0.00005985555555555555);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '超长篇(80-150万)', '连载中', 0, 0, 11, 200.6090909090909, 9.454545454545455, 1125445.4545454546, 0, 11, 0.0002006090909090909);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '超长篇(80-150万)', '连载中', 1, 0, 2, 1.15, 9.45, 921250, 0, 15, 0.00000115);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '超长篇(80-150万)', '连载中', 1, 0, 1, 171, 9.1, 1339800, 0, 13, 0.000171);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '都市奇幻', '超长篇(80-150万)', '连载中', 0, 0, 2, 103.35, 9.75, 1029100, 0, 9.5, 0.00010334999999999999);
+INSERT INTO `ads_author_reason` VALUES ('奇闻异事', '奇门秘术', '巨著(>150万)', '连载中', 0, 0, 1, 157.9, 9.4, 1917100, 0, 5, 0.00015790000000000002);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '超长篇(80-150万)', '已完结', 0, 0, 2, 51.2, 9.05, 1110550, 0, 10.5, 0.000051200000000000004);
+INSERT INTO `ads_author_reason` VALUES ('都市', '乡村生活', '超长篇(80-150万)', '已完结', 0, 0, 1, 44.4, 8.8, 1001600, 0, 17, 0.0000444);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '长篇(50-80万)', '连载中', 0, 1, 3, 113.19999999999999, 9.033333333333333, 760200, 0, 14.333333333333334, 0.00011319999999999999);
+INSERT INTO `ads_author_reason` VALUES ('都市', '乡村生活', '中篇(20-50万)', '连载中', 0, 0, 3, 4.3999999999999995, 9.066666666666665, 340066.6666666667, 0, 16, 0.000004399999999999999);
+INSERT INTO `ads_author_reason` VALUES ('都市', '官场', '中篇(20-50万)', '连载中', 0, 0, 5, 5.32, 9.079999999999998, 397360, 0, 11, 0.00000532);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '娱乐明星', '中篇(20-50万)', '连载中', 0, 0, 2, 2.3499999999999996, 8.899999999999999, 285800, 0, 14, 0.0000023499999999999995);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '中篇(20-50万)', '连载中', 0, 0, 4, 2.4499999999999997, 9.05, 250950, 0, 9.5, 0.00000245);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '东方玄幻', '短篇(<20万)', '连载中', 0, 0, 2, 1.6, 8.899999999999999, 195050, 0, 14.5, 0.0000016000000000000001);
+INSERT INTO `ads_author_reason` VALUES ('奇闻异事', '恐怖灵异', '短篇(<20万)', '连载中', 0, 0, 1, 2.3, 9.2, 198400, 0, 14, 0.0000023);
+INSERT INTO `ads_author_reason` VALUES ('都市', '商战职场', '巨著(>150万)', '已完结', 0, 0, 1, 581.2, 9.3, 5581700, 0, 6, 0.0005812);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '巨著(>150万)', '连载中', 1, 0, 2, 236.75, 9.6, 3813500, 0, 13.5, 0.00023675);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '长篇(50-80万)', '已完结', 0, 0, 1, 0.3, 9.7, 523900, 0, 3, 0.0000003);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '巨著(>150万)', '已完结', 1, 0, 1, 588.1, 9.5, 1895600, 0, 15, 0.0005881);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '青春校园', '中篇(20-50万)', '连载中', 0, 0, 2, 8.8, 9.399999999999999, 390050, 0, 14, 0.0000088);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '长篇(50-80万)', '连载中', 0, 1, 2, 46.1, 9.1, 718100, 0, 8, 0.0000461);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '种田经商', '中篇(20-50万)', '连载中', 0, 0, 4, 7.5249999999999995, 9.125, 367475, 0, 15.5, 0.000007524999999999999);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '短篇(<20万)', '连载中', 1, 0, 1, 2.8, 9.2, 197700, 0, 17, 0.0000028);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '巨著(>150万)', '已完结', 0, 0, 4, 9.425, 9.65, 2542450, 0, 5.5, 0.000009425);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '巨著(>150万)', '已完结', 0, 0, 7, 127.51428571428573, 9.4, 2187442.8571428573, 0, 7.571428571428571, 0.00012751428571428574);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '末世求生', '超长篇(80-150万)', '已完结', 0, 0, 2, 0.65, 9.6, 1023950, 0, 15, 0.00000065);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '巨著(>150万)', '连载中', 0, 0, 5, 399.91999999999996, 9.26, 2626920, 0, 7.8, 0.00039991999999999995);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '种田经商', '巨著(>150万)', '已完结', 0, 0, 2, 0.75, 9.5, 2091450, 0, 12.5, 0.00000075);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '诸天万界', '超长篇(80-150万)', '已完结', 1, 0, 1, 137.3, 9.2, 1086700, 0, 17, 0.0001373);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '长篇(50-80万)', '已完结', 0, 0, 2, 19.35, 8.95, 603700, 0, 15, 0.000019350000000000003);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '中篇(20-50万)', '连载中', 0, 0, 18, 3.5777777777777775, 8.91111111111111, 347627.77777777775, 0, 12.5, 0.0000035777777777777775);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '中篇(20-50万)', '连载中', 1, 0, 2, 2.8499999999999996, 8.75, 434350, 0, 16, 0.00000285);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '巨著(>150万)', '连载中', 0, 0, 12, 249.12499999999997, 9.133333333333333, 3909316.6666666665, 0, 7.916666666666667, 0.000249125);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '超长篇(80-150万)', '已完结', 0, 0, 6, 45.56666666666666, 9.583333333333334, 1085600, 0, 13.833333333333334, 0.000045566666666666665);
+INSERT INTO `ads_author_reason` VALUES ('N次元', '原生幻想', '巨著(>150万)', '已完结', 0, 0, 1, 318.8, 9.5, 2805899.9999999995, 0, 14, 0.0003188);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '娱乐明星', '超长篇(80-150万)', '已完结', 0, 0, 1, 675.1, 9.9, 977600, 0, 13, 0.0006751);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '东方玄幻', '超长篇(80-150万)', '连载中', 0, 0, 3, 147.9, 9.133333333333333, 991766.6666666666, 0, 14.666666666666666, 0.00014790000000000002);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '超长篇(80-150万)', '连载中', 0, 0, 3, 187.20000000000002, 9.200000000000001, 1038533.3333333334, 0, 7, 0.00018720000000000002);
+INSERT INTO `ads_author_reason` VALUES ('都市', '乡村生活', '超长篇(80-150万)', '连载中', 1, 0, 2, 84.6, 9.25, 1103650, 0, 16, 0.0000846);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '玄幻仙侠', '长篇(50-80万)', '连载中', 0, 1, 1, 57, 9.6, 522200, 0, 14, 0.000057);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '长篇(50-80万)', '连载中', 0, 1, 2, 107.8, 9.55, 556300, 0, 13.5, 0.00010779999999999999);
+INSERT INTO `ads_author_reason` VALUES ('历史', '穿越历史', '巨著(>150万)', '已完结', 0, 0, 1, 775.3, 9.1, 4845700, 0, 8, 0.0007752999999999999);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '长篇(50-80万)', '已完结', 0, 0, 1, 1.1, 9.5, 700100, 0, 4, 0.0000011);
+INSERT INTO `ads_author_reason` VALUES ('都市', '灵气复苏', '超长篇(80-150万)', '已完结', 0, 0, 1, 104, 9.2, 1189600, 0, 17, 0.000104);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '巨著(>150万)', '连载中', 1, 0, 1, 172.9, 9, 1527700, 0, 16, 0.0001729);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '异世大陆', '中篇(20-50万)', '连载中', 0, 0, 4, 12.625, 9.1, 376725, 0, 14.75, 0.000012625);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '短篇(<20万)', '连载中', 1, 0, 1, 3.1, 9.2, 197399.99999999997, 0, 15, 0.0000031);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '超长篇(80-150万)', '连载中', 0, 0, 3, 107.3, 9, 1049600, 0, 12, 0.00010729999999999999);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '异世大陆', '中篇(20-50万)', '连载中', 1, 0, 1, 1.7, 8.6, 261700.00000000003, 0, 14, 0.0000017);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '年代重生', '短篇(<20万)', '连载中', 0, 0, 2, 3.5, 9.2, 191750, 0, 15.5, 0.0000035);
+INSERT INTO `ads_author_reason` VALUES ('历史', '架空历史', '短篇(<20万)', '连载中', 0, 0, 1, 3.2, 9.2, 186200, 0, 12, 0.0000032000000000000003);
+INSERT INTO `ads_author_reason` VALUES ('都市', '热血校园', '超长篇(80-150万)', '已完结', 0, 0, 1, 107.2, 9.6, 1153200, 0, 15, 0.0001072);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '宫闱宅斗', '长篇(50-80万)', '连载中', 1, 1, 1, 138.2, 9.5, 628100, 0, 15, 0.0001382);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '末世求生', '中篇(20-50万)', '连载中', 0, 0, 1, 4.1, 9.5, 488300, 0, 15, 0.0000041);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '未来科幻', '中篇(20-50万)', '连载中', 0, 0, 3, 1.8666666666666665, 8.799999999999999, 292366.6666666667, 0, 15.333333333333334, 0.0000018666666666666664);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '总裁豪门', '短篇(<20万)', '连载中', 0, 0, 3, 1.3, 8.933333333333334, 188700, 0, 15, 0.0000013);
+INSERT INTO `ads_author_reason` VALUES ('游戏', '虚拟网游', '巨著(>150万)', '已完结', 0, 0, 4, 522.4, 9.3, 2803725, 0, 9.25, 0.0005224);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '异世大陆', '巨著(>150万)', '连载中', 0, 0, 1, 834.3, 9, 1969400, 0, 7, 0.0008343);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '长篇(50-80万)', '已完结', 1, 0, 1, 434.1, 9.5, 630300, 0, 13, 0.00043410000000000003);
+INSERT INTO `ads_author_reason` VALUES ('都市', '热血校园', '超长篇(80-150万)', '已完结', 1, 0, 1, 81.6, 9.4, 1208600, 0, 17, 0.00008159999999999999);
+INSERT INTO `ads_author_reason` VALUES ('都市', '明星娱乐', '超长篇(80-150万)', '已完结', 0, 0, 1, 80, 9.1, 1273900, 0, 17, 0.00008);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '现代悬疑', '中篇(20-50万)', '连载中', 0, 0, 1, 2.3, 8.6, 384500, 0, 3, 0.0000023);
+INSERT INTO `ads_author_reason` VALUES ('武侠仙侠', '上古洪荒', '巨著(>150万)', '已完结', 0, 0, 2, 56.6, 9.05, 2355100, 0, 16, 0.0000566);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '中篇(20-50万)', '连载中', 1, 0, 1, 2.9, 8.4, 440200.00000000006, 0, 16, 0.0000028999999999999998);
+INSERT INTO `ads_author_reason` VALUES ('历史', '穿越历史', '中篇(20-50万)', '连载中', 1, 0, 1, 1.7, 9.2, 305500, 0, 15, 0.0000017);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '种田经商', '短篇(<20万)', '连载中', 0, 0, 1, 0.8, 9.2, 193299.99999999997, 0, 15, 0.0000008000000000000001);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '职场情缘', '中篇(20-50万)', '连载中', 0, 0, 1, 1, 8.4, 249500, 0, 13, 0.000001);
+INSERT INTO `ads_author_reason` VALUES ('都市', '商战职场', '巨著(>150万)', '已完结', 1, 0, 1, 384.9, 9, 2341800, 0, 19, 0.0003849);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '末世求生', '长篇(50-80万)', '连载中', 0, 1, 1, 41.7, 9.7, 771600, 0, 15, 0.000041700000000000004);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '巨著(>150万)', '已完结', 0, 0, 13, 225.24615384615385, 9.069230769230769, 2943776.923076923, 0, 9.615384615384615, 0.00022524615384615385);
+INSERT INTO `ads_author_reason` VALUES ('科幻', '末世危机', '巨著(>150万)', '已完结', 0, 0, 4, 282.975, 9.100000000000001, 4396400, 0, 9.5, 0.00028297500000000003);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '东方玄幻', '巨著(>150万)', '已完结', 0, 0, 12, 328.8500000000001, 9.025, 4964191.666666667, 0, 4.916666666666667, 0.0003288500000000001);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '长篇(50-80万)', '连载中', 0, 1, 1, 61.4, 9.8, 696400, 0, 12, 0.0000614);
+INSERT INTO `ads_author_reason` VALUES ('武侠仙侠', '上古洪荒', '超长篇(80-150万)', '已完结', 0, 0, 1, 74.9, 9.2, 1291900, 0, 14, 0.0000749);
+INSERT INTO `ads_author_reason` VALUES ('玄幻奇幻', '东方玄幻', '中篇(20-50万)', '连载中', 0, 0, 19, 4.636842105263158, 8.863157894736842, 366005.2631578947, 0, 10.157894736842104, 0.000004636842105263158);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高手', '中篇(20-50万)', '连载中', 1, 0, 1, 3.9, 8.8, 473800, 0, 6, 0.0000039);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '玄幻仙侠', '中篇(20-50万)', '连载中', 1, 0, 1, 2.4, 9.2, 309600, 0, 15, 0.0000024);
+INSERT INTO `ads_author_reason` VALUES ('奇闻异事', '恐怖灵异', '巨著(>150万)', '已完结', 0, 0, 2, 386.35, 9.25, 4202299.999999999, 0, 4.5, 0.00038635000000000004);
+INSERT INTO `ads_author_reason` VALUES ('现代言情', '都市奇幻', '超长篇(80-150万)', '已完结', 0, 0, 1, 34.7, 9.7, 1351300, 0, 15, 0.0000347);
+INSERT INTO `ads_author_reason` VALUES ('古代言情', '古代情缘', '长篇(50-80万)', '已完结', 0, 0, 1, 0.5, 9.8, 549300, 0, 15, 0.0000005);
+INSERT INTO `ads_author_reason` VALUES ('幻想言情', '玄幻仙侠', '超长篇(80-150万)', '连载中', 0, 0, 2, 132.35, 9.75, 1103300, 0, 14, 0.00013235);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '巨著(>150万)', '已完结', 1, 0, 4, 606.8, 9.100000000000001, 5214200, 0, 6.75, 0.0006068);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市高武', '超长篇(80-150万)', '连载中', 0, 0, 1, 122.9, 9.3, 1209800, 0, 15, 0.0001229);
+INSERT INTO `ads_author_reason` VALUES ('游戏', '虚拟网游', '中篇(20-50万)', '连载中', 0, 0, 2, 4.15, 9.25, 304400, 0, 13, 0.00000415);
+INSERT INTO `ads_author_reason` VALUES ('都市', '都市生活', '中篇(20-50万)', '连载中', 0, 0, 1, 2.6, 9.2, 322100, 0, 18, 0.0000026);
 
 -- ----------------------------
 -- Table structure for ads_capital_future_purchasing_power
--- 资本侧2: 粉丝粘性与购买力验证（ARPU分析）
 -- ----------------------------
 DROP TABLE IF EXISTS `ads_capital_future_purchasing_power`;
-CREATE TABLE `ads_capital_future_purchasing_power` (
-  `book_id` VARCHAR(50) NOT NULL COMMENT '小说ID',
-  `title` VARCHAR(255) DEFAULT NULL COMMENT '小说标题',
-  `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
-  `category1_name` VARCHAR(50) DEFAULT NULL COMMENT '一级分类',
-  `gender_type` VARCHAR(10) DEFAULT NULL COMMENT '性别向',
-  `avg_arpu` DOUBLE DEFAULT NULL COMMENT '平均ARPU指标',
-  `max_arpu` DOUBLE DEFAULT NULL COMMENT '最大ARPU指标',
-  `avg_fan_quality` DOUBLE DEFAULT NULL COMMENT '平均粉丝质量指数',
-  `has_payment_rank` INT DEFAULT NULL COMMENT '是否上过付费榜',
-  `is_high_arpu_book` INT DEFAULT NULL COMMENT '是否高ARPU作品',
-  `avg_score` DOUBLE DEFAULT NULL COMMENT '平均评分',
-  `avg_read_count` DOUBLE DEFAULT NULL COMMENT '平均阅读量',
-  `avg_popularity` DOUBLE DEFAULT NULL COMMENT '平均热度',
-  `appearance_count` BIGINT DEFAULT NULL COMMENT '出现次数',
-  `fan_value_score` DOUBLE DEFAULT NULL COMMENT '综合粉丝价值评分',
-  `investment_value_level` VARCHAR(10) DEFAULT NULL COMMENT '投资价值等级',
-  `investment_recommendation` VARCHAR(50) DEFAULT NULL COMMENT '投资建议',
-  PRIMARY KEY (`book_id`),
-  KEY `idx_author` (`author`),
-  KEY `idx_investment_level` (`investment_value_level`),
-  KEY `idx_high_arpu` (`is_high_arpu_book`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
-COMMENT='资本侧-粉丝粘性与购买力验证表';
+CREATE TABLE `ads_capital_future_purchasing_power`  (
+  `book_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `author` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `gender_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `avg_arpu` double NULL DEFAULT NULL,
+  `max_arpu` double NULL DEFAULT NULL,
+  `avg_fan_quality` double NULL DEFAULT NULL,
+  `has_payment_rank` int NULL DEFAULT NULL,
+  `is_high_arpu_book` int NULL DEFAULT NULL,
+  `avg_score` double NULL DEFAULT NULL,
+  `avg_read_count` double NULL DEFAULT NULL,
+  `avg_popularity` double NULL DEFAULT NULL,
+  `appearance_count` bigint NULL DEFAULT NULL,
+  `fan_value_score` double NULL DEFAULT NULL,
+  `investment_value_level` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `investment_recommendation` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
--- ============================================
--- 初始化完成提示
--- ============================================
-SELECT 'QimaoScraper Feature Data Warehouse initialized successfully!' AS message;
-SELECT 'Created 8 ADS layer tables:' AS message;
-SELECT '  [Platform] ads_platform_heat' AS message;
-SELECT '  [Platform] ads_platform_ranking_trend' AS message;
-SELECT '  [Author] ads_author_reason' AS message;
-SELECT '  [Author] ads_author_attenuation_effect' AS message;
-SELECT '  [User] ads_user_layered_recommendation' AS message;
-SELECT '  [User] ads_user_avoid_pitfalls' AS message;
-SELECT '  [Capital] ads_capital_ltv' AS message;
-SELECT '  [Capital] ads_capital_future_purchasing_power' AS message;
+-- ----------------------------
+-- Records of ads_capital_future_purchasing_power
+-- ----------------------------
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1647094', '九转吞天诀', '萧逆天', '玄幻奇幻', 'male', 43.772957746478866, 45.59154929577465, 43.772957746478866, 0, 0, 9.099999999999998, 7.099999999999999, 310.78799999999995, 25, 0.5321836619718309, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1665743', '皇室奶团萌翻全京城', '司司', '古代言情', 'women', 0.1666666666666667, 0.16666666666666669, 0.1666666666666667, 0, 0, 9.700000000000001, 4.799999999999999, 0.8, 25, 0.19533333333333336, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1669963', '大景巡夜人', '藕池猫咪', '古代言情', 'women', 0.6666666666666665, 0.6666666666666666, 0.6666666666666665, 0, 0, 9.799999999999999, 1.8000000000000005, 1.1999999999999997, 25, 0.2013333333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1675640', '镇天神医', '五杯咖啡', '都市', 'male', 27.772357723577244, 28.926829268292682, 27.772357723577244, 0, 0, 9.200000000000001, 12.3, 341.6000000000001, 25, 0.406178861788618, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1724453', '妙手大仙医', '金佛', '都市', 'male', 38.11666666666667, 38.11666666666667, 38.11666666666667, 0, 0, 9.2, 18, 686.1000000000001, 25, 0.48893333333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1738575', '直播算命太准，全网蹲守吃瓜', '荷衣', '现代言情', 'women', 93.40677966101694, 93.40677966101694, 93.40677966101694, 0, 0, 9.700000000000003, 5.9, 551.1000000000001, 25, 0.9412542372881355, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1765545', '轻熟', '乌木桃枝', '现代言情', 'women', 0.31999999999999995, 0.32, 0.31999999999999995, 0, 0, 9.799999999999997, 2.5, 0.8, 25, 0.19855999999999996, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1767940', '混沌塔', '惊蛰落月', '玄幻奇幻', 'male', 18.08695652173913, 18.08695652173913, 18.08695652173913, 0, 0, 9.2, 32.199999999999996, 582.3999999999999, 25, 0.32869565217391306, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1837360', '昭春意', '犹鱼丝', '古代言情', 'women', 0.4, 0.4, 0.4, 0, 0, 9.7, 2.5, 1, 25, 0.19720000000000001, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1837399', '圣手大医仙', '带刺的毛球', '都市', 'male', 27.909090909090907, 27.909090909090907, 27.909090909090907, 0, 0, 8.900000000000002, 1.0999999999999996, 30.699999999999992, 25, 0.4012727272727273, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1850580', '我非池中物', '夜泊秦淮', '都市', 'male', 13.144285714285715, 13.69047619047619, 13.144285714285715, 0, 0, 9.099999999999998, 8.400000000000002, 110.412, 25, 0.2871542857142857, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1871052', '为奴十年', '探花大人', '古代言情', 'women', 37.040000000000006, 37.04, 37.040000000000006, 0, 0, 9.700000000000003, 2.5, 92.6, 25, 0.4903200000000001, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1871612', '爹爹开门，系窝呀！', '垂耳兔', '古代言情', 'women', 44.566037735849065, 44.56603773584906, 44.566037735849065, 0, 0, 9.799999999999997, 5.299999999999999, 236.19999999999996, 25, 0.5525283018867925, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1946720', '1977，开局女知青以身相许', '家有十猫', '都市', 'male', 12.793381294964028, 13.323741007194243, 12.793381294964028, 0, 0, 9, 13.900000000000004, 177.828, 25, 0.28234705035971225, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1946790', '谁说校花高冷？这校花可太甜软了', '佛系和尚', '都市', 'male', 56.42105263157895, 56.42105263157895, 56.42105263157895, 0, 0, 9.599999999999998, 1.8999999999999997, 107.20000000000003, 25, 0.6433684210526316, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1961152', '太阳神体：从为仙女解毒开始无敌！', '有木', '玄幻奇幻', 'male', 19.684, 20.5, 19.684, 0, 0, 9.099999999999998, 4, 78.736, 25, 0.339472, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1976312', '观音泥', '溪芝', '现代言情', 'women', 22.999999999999996, 22.999999999999996, 22.999999999999996, 0, 0, 8.599999999999998, 0.1, 2.3, 25, 0.35599999999999987, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '武侠仙侠', 'male', 27.45833333333333, 27.458333333333336, 27.45833333333333, 0, 0, 9.200000000000003, 2.3999999999999995, 65.89999999999998, 25, 0.4036666666666667, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1994128', '搬空婆家离婚后，被八零京少宠上天', '猫爱锅包肉', '现代言情', 'women', 4.973333333333332, 16.904761904761905, 4.973333333333332, 0, 0, 9.5, 2.1000000000000005, 10.443999999999994, 25, 0.22978666666666664, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1994365', '高门长媳', 'Ms腊肠', '古代言情', 'women', 16.605263157894736, 16.605263157894736, 16.605263157894736, 0, 0, 9.5, 3.7999999999999994, 63.100000000000016, 25, 0.32284210526315793, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1996973', '赌石，我的龙瞳能鉴定一切！', '一梅独秀', '都市', 'male', 10.833333333333332, 10.833333333333334, 10.833333333333332, 0, 0, 9, 3, 32.5, 25, 0.26666666666666666, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('200456', '在他深情中陨落', '浮生三千', '现代言情', 'women', 0.15789473684210528, 0.15789473684210525, 0.15789473684210528, 0, 0, 9.700000000000003, 1.8999999999999997, 0.29999999999999993, 25, 0.19526315789473692, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2012529', '极品女神赖上我', '陈行者', '都市', 'male', 7.454935622317594, 7.4549356223175955, 7.454935622317594, 0, 0, 9, 23.300000000000008, 173.7, 25, 0.23963948497854076, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2014120', '雨夜你陪白月光，我让位后你哭啥', '露将熹', '现代言情', 'women', 9.755999999999995, 29, 9.755999999999995, 0, 0, 9.099999999999998, 1, 9.755999999999995, 25, 0.26004799999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2015177', '喜报！资本家小姐来海岛随军了', '十肆1', '现代言情', 'women', 4.097254901960785, 12.47058823529412, 4.097254901960785, 0, 0, 9.599999999999998, 5.100000000000001, 20.896000000000008, 25, 0.22477803921568623, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2027063', '敲骨吸髓？重生另选家人宠我如宝', '清砚', '古代言情', 'women', 3.6657824933687007, 3.6657824933686998, 3.6657824933687007, 0, 0, 9.5, 37.69999999999999, 138.20000000000005, 25, 0.2193262599469496, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2028796', '陛下管管吧，六皇子又发疯了！', '追风boy', '历史', 'male', 17.749999999999996, 17.749999999999996, 17.749999999999996, 0, 0, 9, 0.8, 14.199999999999998, 25, 0.32199999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2029739', '穿成恶毒继母，手握空间灵泉养崽崽', 'YJ紫霞仙子', '古代言情', 'women', 30, 30, 30, 0, 0, 8.400000000000002, 0.1, 3, 25, 0.40800000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2040657', '末世抢机缘：我的我的都是我的！', '文鳐', '幻想言情', 'women', 13.666666666666664, 13.666666666666666, 13.666666666666664, 0, 0, 9.5, 0.29999999999999993, 4.100000000000001, 25, 0.29933333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2046282', '人生赢家', '烟云客横渡积水潭', '都市', 'male', 9, 9, 9, 0, 0, 8.900000000000002, 0.5, 4.5, 25, 0.25000000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2046394', '直播审判罪女！结果全国为她痛哭', '财神爷独生女', '现代言情', 'women', 21, 21, 21, 0, 0, 9.200000000000003, 0.1, 2.1000000000000005, 25, 0.35200000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2052699', '主播甜又野，六个顶级大佬缠着宠', '墨如金', '现代言情', 'women', 5, 5, 5, 0, 0, 8.599999999999998, 0.1, 0.5, 25, 0.21199999999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2053898', '他的小撩精', '街灯读我', '现代言情', 'women', 3.1524324324324313, 6.032432432432432, 3.1524324324324313, 0, 0, 9.7, 18.5, 58.32000000000002, 25, 0.21921945945945945, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2053900', '下山后，漂亮姐姐蠢蠢欲动', '神笔马丁爷', '都市', 'male', 10, 10, 10, 0, 0, 8.400000000000002, 0.29999999999999993, 3, 25, 0.24800000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2056878', '大小姐重生选夫，小小硬汉拿捏拿捏', '暖宝宝爱吃饭', '现代言情', 'women', 2.7878787878787885, 2.7878787878787876, 2.7878787878787885, 0, 0, 9.3, 3.2999999999999994, 9.2, 25, 0.20830303030303032, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2057573', '窃医术，夺至亲？神医嫡女杀疯了！', '九汐公子', '古代言情', 'women', 0.24390243902439032, 0.24390243902439027, 0.24390243902439032, 0, 0, 9.400000000000002, 4.100000000000001, 1, 25, 0.18995121951219518, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2060174', '转职：我死亡天灾，站起来为了你的君主', '懒惰的帅比', '都市', 'male', 15, 15, 15, 0, 0, 8.400000000000002, 0.2, 3, 25, 0.28800000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061794', '开局送老婆，我成了众仙之父！', '西地那非', '玄幻奇幻', 'male', 8, 8, 8, 0, 0, 9.2, 0.5, 4, 25, 0.248, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064964', '规则怪谈：我的超能力给诡异整破防了', 'fishlike', '幻想言情', 'women', 6.999999999999999, 6.999999999999999, 6.999999999999999, 0, 0, 8.599999999999998, 0.1, 0.7, 25, 0.22799999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065349', '每日情报：乱世边军一小兵', '推拿医生', '历史', 'male', 13.999999999999998, 13.999999999999998, 13.999999999999998, 0, 0, 8.599999999999998, 0.1, 1.4, 25, 0.2839999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065893', '太监无双', '水山', '历史', 'male', 5.666666666666665, 5.666666666666667, 5.666666666666665, 0, 0, 9.099999999999998, 0.5999999999999999, 3.399999999999999, 25, 0.22733333333333328, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074090', '挖我灵根？重生后新师门待我如宝', '动物园在逃小熊猫', '幻想言情', 'women', 8, 8, 8, 0, 0, 9.2, 0.29999999999999993, 2.3999999999999995, 25, 0.248, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074390', '错虐白月光，祁总跪地求复合', '鹿景景', '现代言情', 'women', 17, 17, 17, 0, 0, 9.200000000000003, 0.1, 1.6999999999999995, 25, 0.32000000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074547', '请神弼马温，被嘲猴子D级神官？', '黑鱼鱼鱼鱼', '都市', 'male', 22, 22, 22, 0, 0, 9.200000000000001, 0.1, 2.1999999999999993, 25, 0.36000000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2077477', '上界帝子你敢甩，我娶女帝你哭什么？', '墨白', '玄幻奇幻', 'male', 11.999999999999998, 11.999999999999998, 11.999999999999998, 0, 0, 9.200000000000003, 0.2, 2.3999999999999995, 25, 0.28, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213697', '葬天神帝', '我爱弹棉花', '玄幻奇幻', 'male', 75.49970149253733, 78.64179104477611, 75.49970149253733, 0, 0, 9.099999999999998, 6.700000000000002, 505.8479999999999, 25, 0.7859976119402986, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('216054', '极品小道长', '任公独钓', '奇闻异事', 'male', 155.5, 155.5, 155.5, 0, 0, 9.3, 0.8000000000000002, 124.40000000000002, 25, 1.43, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('219040', '极道剑尊', '二十七杯酒', '玄幻奇幻', 'male', 52.34674999999999, 54.525, 52.34674999999999, 0, 0, 9.2, 16, 837.5479999999999, 25, 0.6027739999999999, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1684583', '春棠欲醉', '锦一', '古代言情', 'women', 1.6844660194174752, 1.6844660194174756, 1.6844660194174752, 0, 0, 9.700000000000001, 20.6, 34.69999999999999, 25, 0.20747572815533982, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '都市', 'male', 33.26666666666666, 33.266666666666666, 33.26666666666666, 0, 0, 9.099999999999998, 6, 199.59999999999994, 25, 0.4481333333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1711646', '阎王下山', '苍月夜', '都市', 'male', 1.445833333333333, 1.4458333333333335, 1.445833333333333, 0, 0, 8.900000000000002, 24, 34.699999999999996, 25, 0.18956666666666672, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1723450', '被王爷赐死，医妃潇洒转身嫁皇叔', '金银满屋', '古代言情', 'women', 0.15789473684210528, 0.15789473684210525, 0.15789473684210528, 0, 0, 9.5, 3.7999999999999994, 0.5999999999999999, 25, 0.19126315789473686, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1730848', '徒儿快下山，你师姐等不及了', '雨落狂流', '都市', 'male', 66.57142857142857, 66.57142857142857, 66.57142857142857, 0, 0, 9.099999999999998, 2.1000000000000005, 139.8, 25, 0.7145714285714285, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1754203', '玲珑塔', '一丝凉意', '玄幻奇幻', 'male', 28.954157303370785, 30.15730337078651, 28.954157303370785, 0, 0, 9.299999999999999, 8.900000000000002, 257.69200000000006, 25, 0.4176332584269663, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1763673', '捉奸当天，豪门继承人拉我去领证', '慕容悠然', '现代言情', 'women', 19.321428571428566, 19.32142857142857, 19.321428571428566, 0, 0, 9.400000000000002, 19.6, 378.6999999999999, 25, 0.3425714285714286, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1772694', '神尊强宠，废物小姐竟是绝世女帝', '动物园在逃小熊猫', '幻想言情', 'women', 0.16129032258064518, 0.16129032258064516, 0.16129032258064518, 0, 0, 9.599999999999998, 3.100000000000001, 0.5, 25, 0.1932903225806451, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1778388', '灵骨被夺，帝女她觉醒神脉杀回来了', '澜岸', '幻想言情', 'women', 0.4230769230769231, 0.4230769230769231, 0.4230769230769231, 0, 0, 9.700000000000003, 2.6000000000000005, 1.0999999999999996, 25, 0.19738461538461544, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1781450', '无限流：在惊悚世界当万人迷', '白日宴火', '幻想言情', 'women', 0.12121212121212124, 0.12121212121212123, 0.12121212121212124, 0, 0, 9.900000000000002, 3.2999999999999994, 0.4, 25, 0.19896969696969705, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1807740', '末世前中彩票，我囤上亿物资躺赢', '诺禾', '幻想言情', 'women', 0.588235294117647, 0.5882352941176471, 0.588235294117647, 0, 0, 9.599999999999998, 1.6999999999999995, 1, 25, 0.19670588235294112, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1809333', '网游：我召唤的骷髅全是位面之子？', '禅心道骨', '游戏', 'male', 146.7333333333333, 146.73333333333332, 146.7333333333333, 0, 0, 9.4, 1.5, 220.09999999999997, 25, 1.3618666666666663, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1812053', '警报！龙国出现SSS级修仙者！', '紫枫', '都市', 'male', 52.35820895522389, 54.537313432835816, 52.35820895522389, 0, 0, 9.2, 6.700000000000002, 350.79999999999995, 25, 0.6028656716417911, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1891461', '主播万人迷，榜一大哥争着宠', '熊就要有个熊样', '现代言情', 'women', 87.67532467532466, 87.67532467532467, 87.67532467532466, 0, 0, 9.9, 7.700000000000001, 675.1, 25, 0.8994025974025972, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1924828', '还不起人情债，我只好当她男朋友了', '无色', '都市', 'male', 31.67391304347826, 31.67391304347826, 31.67391304347826, 0, 0, 9, 4.6, 145.7, 25, 0.43339130434782613, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1941048', '全能真千金归来，发现家人住狗窝', '温小浅', '现代言情', 'women', 4.370526315789474, 35.26315789473684, 4.370526315789474, 0, 0, 9.400000000000002, 1.8999999999999997, 8.304000000000004, 25, 0.22296421052631585, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1950540', '傅律师，太太说她不回头了', '荣荣子铱', '现代言情', 'women', 18.809523809523807, 18.80952380952381, 18.809523809523807, 0, 0, 9.400000000000002, 6.299999999999998, 118.5, 25, 0.3384761904761905, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1963904', '他说不爱，婚后却沦陷了', '如鱼', '现代言情', 'women', 9.181034482758621, 9.181034482758621, 9.181034482758621, 0, 0, 9.5, 34.80000000000001, 319.5, 25, 0.263448275862069, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '都市', 'male', 30.865671641791042, 30.865671641791046, 30.865671641791042, 0, 0, 9.2, 6.700000000000002, 206.80000000000004, 25, 0.4309253731343283, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1970603', '星际兽世：万人迷小人类深陷修罗场', '含冬小鱼', '幻想言情', 'women', 0.5999999999999999, 0.6, 0.5999999999999999, 0, 0, 9.599999999999998, 0.5, 0.29999999999999993, 25, 0.19679999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('197091', '民间诡闻实录', '罗樵森', '奇闻异事', 'male', 4.1309523809523805, 4.130952380952381, 4.1309523809523805, 0, 0, 9.599999999999998, 8.400000000000002, 34.69999999999999, 25, 0.225047619047619, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1978753', '权臣兼祧两房？郡主重生不嫁了', '景惠', '古代言情', 'women', 19.885333333333335, 53.93333333333334, 19.885333333333335, 0, 0, 9.599999999999998, 1.5, 29.828000000000007, 25, 0.35108266666666665, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1981956', '柔弱医修今天也在背地里暴打魔尊', '白木木', '幻想言情', 'women', 15.615384615384617, 15.615384615384615, 15.615384615384617, 0, 0, 9.799999999999999, 16.900000000000002, 263.90000000000003, 25, 0.3209230769230769, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982358', '天黑请点灯', '罗樵森', '奇闻异事', 'male', 21.657714285714288, 22.557142857142857, 21.657714285714288, 0, 0, 9.400000000000002, 7, 151.604, 25, 0.36126171428571435, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982360', '步步登阶', '江湖如梦', '都市', 'male', 7.993644067796611, 7.99364406779661, 7.993644067796611, 0, 0, 9.200000000000003, 47.2, 377.3000000000001, 25, 0.24794915254237293, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1996931', '不务正夜', '谈栖', '现代言情', 'women', 15.105263157894738, 15.105263157894738, 15.105263157894738, 0, 0, 9.3, 7.599999999999999, 114.79999999999997, 25, 0.3068421052631579, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2014393', '掌门怀孕，关我一个杂役什么事', '雨夜终曲', '玄幻奇幻', 'male', 8.216828478964402, 8.216828478964402, 8.216828478964402, 0, 0, 9, 30.899999999999995, 253.90000000000006, 25, 0.24573462783171524, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2014975', '重生84：九个赔钱货？我把女儿宠上天', '一只大香蕉', '都市', 'male', 15.142142857142856, 15.767857142857144, 15.142142857142856, 0, 0, 9.200000000000001, 5.6, 84.79599999999999, 25, 0.3051371428571429, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2016384', '冷婚五年，离婚夜他却失控了', '温见鹿', '现代言情', 'women', 0.75, 0.75, 0.75, 0, 0, 9, 1.1999999999999997, 0.9000000000000002, 25, 0.18600000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('202630', '道门诡谈', '李十一', '奇闻异事', 'male', 111.21428571428571, 111.21428571428571, 111.21428571428571, 0, 0, 9.2, 1.4, 155.7, 25, 1.0737142857142856, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2028957', '桃花劫', '推窗望岳', '都市', 'male', 5.564356435643565, 5.564356435643565, 5.564356435643565, 0, 0, 9.2, 40.39999999999999, 224.80000000000004, 25, 0.22851485148514852, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2044077', '妾本丝萝，只图钱帛', '锅包又又又', '古代言情', 'women', 16.71428571428572, 16.714285714285715, 16.71428571428572, 0, 0, 9.599999999999998, 1.4, 23.4, 25, 0.3257142857142857, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2054284', '快穿：我要当绝嗣大佬独生女', '挽书', '幻想言情', 'women', 0.38888888888888895, 0.38888888888888884, 0.38888888888888895, 0, 0, 9.400000000000002, 1.8000000000000005, 0.7, 25, 0.19111111111111118, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2057468', '权力巅峰：从县委大院开始', '今晚吃鸡', '都市', 'male', 6.923076923076922, 6.9230769230769225, 6.923076923076922, 0, 0, 9.099999999999998, 1.3000000000000003, 9, 25, 0.23738461538461536, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2059742', '带球上门后，我成陆少心尖宠', '幸夷', '现代言情', 'women', 7.111111111111113, 7.111111111111112, 7.111111111111113, 0, 0, 9.5, 0.9000000000000002, 6.4, 25, 0.2468888888888889, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('206343', '恐怖复苏之全球武装怪胎', '老郭在此', '科幻', 'male', 669.1111111111112, 669.1111111111112, 669.1111111111112, 0, 0, 9.400000000000002, 0.9000000000000002, 602.1999999999998, 25, 5.540888888888889, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064308', '妖魔乱世逢灾年，我每日一卦粮肉满仓', '灶食', '玄幻奇幻', 'male', 18, 18, 18, 0, 0, 8.400000000000002, 0.1, 1.8000000000000005, 25, 0.31200000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065274', '英雄本色', '疯十八', '都市', 'male', 13.999999999999998, 13.999999999999998, 13.999999999999998, 0, 0, 8.599999999999998, 0.1, 1.4, 25, 0.2839999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066841', '混元书', '枫如江画', '玄幻奇幻', 'male', 4.600000000000001, 4.6, 4.600000000000001, 0, 0, 9.200000000000003, 0.5, 2.3000000000000007, 25, 0.22080000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067244', '开局杀敌爆属性，我功力滔天', '潇湘烨雨', '玄幻奇幻', 'male', 9.000000000000002, 9.000000000000002, 9.000000000000002, 0, 0, 9.200000000000001, 0.29999999999999993, 2.7, 25, 0.25600000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2071753', '全球异能觉醒，我修肉身横推万古', '笔下再生', '都市', 'male', 8.249999999999998, 8.249999999999998, 8.249999999999998, 0, 0, 9.200000000000003, 0.4, 3.2999999999999994, 25, 0.25, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2072331', '假嫡女重生想抢婚？再嫁你也得下跪', '木怜青', '古代言情', 'women', 18.999999999999996, 18.999999999999996, 18.999999999999996, 0, 0, 8.599999999999998, 0.1, 1.8999999999999997, 25, 0.32399999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2072940', '第五年重逢，驰先生再度失控', '锦锦不是妖', '现代言情', 'women', 1.8400000000000005, 2.3783783783783785, 1.8400000000000005, 0, 0, 9.900000000000002, 3.7000000000000006, 6.808, 25, 0.21272000000000008, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074192', '影帝高冷捂不热？那就离婚！', '兔子不爱吃胡萝卜', '现代言情', 'women', 8, 8, 8, 0, 0, 9.2, 0.29999999999999993, 2.3999999999999995, 25, 0.248, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074395', '断绝关系？我转身科举成状元！', '天霸', '历史', 'male', 20, 20, 20, 0, 0, 8.400000000000002, 0.1, 2, 25, 0.32800000000000007, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074459', '重生2006，从被白富美包车开始', '隔壁小王本尊', '都市', 'male', 7.000000000000001, 7.000000000000001, 7.000000000000001, 0, 0, 9.200000000000001, 0.29999999999999993, 2.1000000000000005, 25, 0.24000000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074544', '年代军工：让你当厂长，你整出了蘑菇蛋', '三鹿天下', '都市', 'male', 6.5, 6.5, 6.5, 0, 0, 9.200000000000001, 0.4, 2.6000000000000005, 25, 0.23600000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076479', '净身出户后，大佬全部身家求复合', '夜微雨', '现代言情', 'women', 9, 9, 9, 0, 0, 8.400000000000002, 0.1, 0.9000000000000002, 25, 0.24000000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076498', '一觉醒来三年后，七零长姐凶又甜', '叫我富贵叭', '现代言情', 'women', 5.999999999999999, 5.999999999999999, 5.999999999999999, 0, 0, 9.200000000000001, 0.4, 2.3999999999999995, 25, 0.23200000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076502', '斗罗V：人面魔蛛，多子多福', '龙小君', 'N次元', 'male', 9, 9, 9, 0, 0, 8.799999999999997, 0.5, 4.5, 25, 0.24799999999999994, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2077779', '规则怪谈：我能找出错误的规则', '老猫写文', '奇闻异事', 'male', 11.499999999999998, 11.499999999999998, 11.499999999999998, 0, 0, 9.2, 0.2, 2.3, 25, 0.27599999999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2078351', '四合院：开局爆锤众禽', '沉鱼', 'N次元', 'male', 7.333333333333332, 7.333333333333334, 7.333333333333332, 0, 0, 8.599999999999998, 0.29999999999999993, 2.1999999999999993, 25, 0.23066666666666663, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213853', '极品小相师', '大丙', '都市', 'male', 102.77777777777781, 102.77777777777777, 102.77777777777781, 0, 0, 9.3, 1.8000000000000005, 185, 25, 1.0082222222222224, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '都市', 'male', 4.28395061728395, 4.283950617283951, 4.28395061728395, 0, 0, 9.700000000000003, 8.099999999999998, 34.69999999999999, 25, 0.22827160493827164, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('219660', '臭保镖，求你放过我们吧！', '流水不逝', '都市', 'male', 142.26315789473688, 142.26315789473685, 142.26315789473688, 0, 0, 9.200000000000001, 1.8999999999999997, 270.30000000000007, 25, 1.3221052631578951, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1689214', '藏起孕肚离婚，郁总全球疯找', '苏小鱼', '现代言情', 'women', 0.7499999999999999, 0.7499999999999999, 0.7499999999999999, 0, 0, 9.4, 1.6, 1.2, 25, 0.19400000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1694124', '女总裁的贴身龙帅', '枯木封雨', '都市', 'male', 50.10000000000001, 50.1, 50.10000000000001, 0, 0, 9, 1, 50.10000000000001, 25, 0.5808000000000001, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1719564', '重生七零再高嫁', '星月相随', '现代言情', 'women', 110.10588235294115, 110.10588235294118, 110.10588235294115, 0, 0, 9.7, 8.5, 935.8999999999997, 25, 1.074847058823529, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1738577', '女神的逍遥狂医', '东方天策', '都市', 'male', 126.07142857142858, 126.07142857142858, 126.07142857142858, 0, 0, 9.200000000000003, 1.4, 176.5, 25, 1.1925714285714286, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1766962', '苟到炼气10000层，飞升回地球', '拂衣惊雪', '都市', 'male', 199.72727272727272, 199.7272727272727, 199.72727272727272, 0, 0, 8.5, 1.0999999999999996, 219.69999999999996, 25, 1.7678181818181815, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1776773', '第一召唤师', '喵喵大人', '幻想言情', 'women', 73.74545454545455, 73.74545454545455, 73.74545454545455, 0, 0, 9.7, 5.5, 405.6, 25, 0.7839636363636364, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1783142', '天剑神狱', '叶问', '玄幻奇幻', 'male', 57.1875, 57.1875, 57.1875, 0, 0, 9.099999999999998, 1.6000000000000003, 91.5, 25, 0.6395, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1828483', '乾坤塔', '新闻工作者', '玄幻奇幻', 'male', 72.97619047619048, 72.97619047619047, 72.97619047619048, 0, 0, 8.900000000000002, 4.200000000000001, 306.5, 25, 0.7618095238095239, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1830569', '凤池生春', '秦安安', '古代言情', 'women', 40.89147286821706, 40.89147286821705, 40.89147286821706, 0, 0, 9.7, 12.900000000000004, 527.5, 25, 0.5211317829457365, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1839533', '锦帐春深', '温流', '古代言情', 'women', 83.88135593220339, 83.88135593220338, 83.88135593220339, 0, 0, 9.700000000000001, 5.9, 494.8999999999999, 25, 0.8650508474576272, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1860026', '世子无双', '宁峥', '历史', 'male', 56.86249999999999, 56.8625, 56.86249999999999, 0, 0, 9.2, 16, 909.7999999999998, 25, 0.6389, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1864493', '打到北极圈了，你让我继承皇位？', '橡皮泥', '历史', 'male', 25.08765217391304, 26.130434782608695, 25.08765217391304, 0, 0, 9.3, 11.5, 288.508, 25, 0.38670121739130436, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1887846', '七零美人到西北，硬汉红温了', '棠元', '现代言情', 'women', 46.27450980392157, 46.274509803921575, 46.27450980392157, 0, 0, 9.700000000000003, 5.100000000000001, 236, 25, 0.5641960784313725, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1889690', '暗恋她的第十一年', '有香如故', '现代言情', 'women', 62.38333333333334, 62.38333333333333, 62.38333333333334, 0, 0, 9.799999999999999, 12, 748.6000000000003, 25, 0.6950666666666666, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1946350', '玄幻：长生神子，证道何须退婚挖骨！', '王二的刀', '玄幻奇幻', 'male', 76.27777777777779, 76.27777777777779, 76.27777777777779, 0, 0, 9.2, 1.8000000000000005, 137.3, 25, 0.7942222222222224, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1957149', '出宫前夜，沦为暴君掌中物', '素律', '古代言情', 'women', 20.792682926829265, 20.79268292682927, 20.792682926829265, 0, 0, 9.400000000000002, 16.400000000000006, 341, 25, 0.3543414634146342, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1960964', '从小媳妇要传宗接代开始', '断章', '历史', 'male', 21.612000000000002, 22.51111111111111, 21.612000000000002, 0, 0, 9.2, 9, 194.50799999999995, 25, 0.356896, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1971248', '在恋综当老六？一句泡面仙人全网暴火', '肉包打狗', '都市', 'male', 47.058823529411754, 47.05882352941177, 47.058823529411754, 0, 0, 9.099999999999998, 1.6999999999999995, 80, 25, 0.5584705882352939, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1971590', '众仙俯首', '咸鱼老白', '玄幻奇幻', 'male', 14.027936507936511, 14.61111111111111, 14.027936507936511, 0, 0, 9.400000000000002, 12.599999999999996, 176.75199999999998, 25, 0.30022349206349214, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1978748', '重生61，我带了一座军火库', '小白兔吃萝卜', '都市', 'male', 14.793153153153158, 15.405405405405405, 14.793153153153158, 0, 0, 9.099999999999998, 11.099999999999996, 164.204, 25, 0.3003452252252252, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1994117', '婚后上瘾', '卢平凡', '现代言情', 'women', 10.93577981651376, 10.935779816513762, 10.93577981651376, 0, 0, 9.599999999999998, 65.39999999999998, 715.2, 25, 0.27948623853211, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1996523', '全队笑我是傻子，我反手娶了俏知青！', '红色小晶体', '都市', 'male', 55.49999999999999, 55.49999999999999, 55.49999999999999, 0, 0, 8.799999999999997, 0.8, 44.399999999999984, 25, 0.6199999999999999, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2010008', '高武校长，我的实力是全校总和！', '邯郸财阀', '都市', 'male', 20.700350877192985, 21.56140350877193, 20.700350877192985, 0, 0, 9.3, 5.700000000000002, 117.992, 25, 0.3516028070175439, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2021943', '诱哄，假千金被禁欲商总拉去领证了', '雾里重逢', '现代言情', 'women', 5.22666666666667, 14.303030303030305, 5.22666666666667, 0, 0, 9.7, 3.2999999999999994, 17.247999999999994, 25, 0.23581333333333337, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2033005', 'SSSSSSSSSSSSSS满级神医', '星空野狼', '都市', 'male', 8.439613526570048, 8.439613526570048, 8.439613526570048, 0, 0, 9, 20.699999999999996, 174.7, 25, 0.2475169082125604, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2033943', '再亲一下，高冷校草诱哄小娇娇', '逸捅天下', '现代言情', 'women', 8.25, 8.25, 8.25, 0, 0, 9.599999999999998, 2, 16.5, 25, 0.25799999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2034828', '唯一真神', '北冥', '都市', 'male', 29.81818181818181, 29.818181818181813, 29.81818181818181, 0, 0, 9.099999999999998, 2.1999999999999993, 65.60000000000002, 25, 0.42054545454545444, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2046408', '逆子，开门！你娘回来整顿家风了', '黑葡萄', '古代言情', 'women', 12.749999999999998, 12.749999999999998, 12.749999999999998, 0, 0, 9.200000000000003, 0.4, 5.100000000000001, 25, 0.28600000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2047644', '我的钱全捐了，老婆竟是天后', '伤心小呆', '都市', 'male', 33.5, 33.5, 33.5, 0, 0, 8.799999999999997, 0.2, 6.700000000000002, 25, 0.44399999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2048060', '从酒肆杂役开始武道化圣', '为你傲视蒼穹', '玄幻奇幻', 'male', 11.333333333333332, 11.333333333333334, 11.333333333333332, 0, 0, 9.099999999999998, 0.5999999999999999, 6.799999999999998, 25, 0.2726666666666666, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2052831', '长生从助仙子修行开始', '勿问', '玄幻奇幻', 'male', 10, 10, 10, 0, 0, 8.599999999999998, 0.29999999999999993, 3, 25, 0.25199999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2057069', '穿书八零，养崽训夫我手拿把掐', '菠萝小微', '现代言情', 'women', 16, 16, 16, 0, 0, 8.599999999999998, 0.1, 1.6, 25, 0.29999999999999993, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2059139', '听懂兽语后，被皇家全员团宠了', '桃酥', '古代言情', 'women', 7.166666666666668, 7.166666666666667, 7.166666666666668, 0, 0, 9.400000000000002, 0.5999999999999999, 4.299999999999999, 25, 0.2453333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061268', '结婚三年不同房，离婚后她显怀了', '墨堑', '现代言情', 'women', 5.777777777777777, 5.777777777777778, 5.777777777777777, 0, 0, 8.400000000000002, 0.9000000000000002, 5.200000000000001, 25, 0.21422222222222226, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064747', '都市狠人', '北冥鱼', '都市', 'male', 2.9473684210526305, 2.9473684210526314, 2.9473684210526305, 0, 0, 9.099999999999998, 1.8999999999999997, 5.6, 25, 0.205578947368421, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065894', '神医下山：美女总裁非我不嫁', '月下无人', '都市', 'male', 6.25, 6.25, 6.25, 0, 0, 8.799999999999997, 0.8, 5, 25, 0.22599999999999992, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066875', '种田修仙：从随机刷新词条开始', '浪兰飞山', '玄幻奇幻', 'male', 17, 17, 17, 0, 0, 8.599999999999998, 0.1, 1.6999999999999995, 25, 0.30799999999999994, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074179', '混沌吞天诀', '凭虚御风', '玄幻奇幻', 'male', 7.000000000000001, 7.000000000000001, 7.000000000000001, 0, 0, 9.200000000000003, 0.29999999999999993, 2.1000000000000005, 25, 0.24000000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2075201', '魔道神豪携亿万魔晶，在两界杀疯了', '风九元', '玄幻奇幻', 'male', 5.666666666666666, 5.666666666666667, 5.666666666666666, 0, 0, 9.2, 0.29999999999999993, 1.6999999999999995, 25, 0.22933333333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076866', '竹马护资本家小姐，重生改嫁他急了！', '枝云梦', '现代言情', 'women', 4.666666666666666, 4.666666666666667, 4.666666666666666, 0, 0, 9.200000000000003, 0.5999999999999999, 2.8, 25, 0.22133333333333338, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2077960', '刚下山，全球大佬跪迎我回家', '霜叶红于二月花', '都市', 'male', 5.999999999999999, 5.999999999999999, 5.999999999999999, 0, 0, 9.2, 0.4, 2.3999999999999995, 25, 0.23199999999999998, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2078333', '边境反贼：从解救女囚开始', '女帝', '历史', 'male', 5.333333333333335, 5.333333333333334, 5.333333333333335, 0, 0, 9.200000000000003, 0.5999999999999999, 3.2, 25, 0.22666666666666674, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('211115', '都市逍遥天医', '星空野狼', '都市', 'male', 311.3571428571428, 311.35714285714283, 311.3571428571428, 0, 0, 9.299999999999997, 1.4, 435.8999999999999, 25, 2.676857142857142, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('219310', '全世界都玩异能只有我修仙', '缘起云涌', 'N次元', 'male', 90.07142857142858, 90.07142857142857, 90.07142857142858, 0, 0, 9.2, 1.4, 126.09999999999998, 25, 0.9045714285714286, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('149769', '九阳武神', '我吃面包', '玄幻奇幻', 'male', 2.0592592592592593, 2.1419753086419755, 2.0592592592592593, 0, 0, 9.099999999999998, 16.199999999999996, 33.36, 25, 0.19847407407407405, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('152973', '最强学霸系统', '佛系和尚', '都市', 'male', 20.41176470588235, 20.411764705882355, 20.41176470588235, 0, 0, 9.5, 1.6999999999999995, 34.69999999999999, 25, 0.3532941176470588, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1678025', '九皇叔的神医毒妃', '柠檬小丸子', '古代言情', 'women', 0.2941176470588235, 0.29411764705882354, 0.2941176470588235, 0, 0, 9.5, 3.399999999999999, 1, 25, 0.1923529411764706, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1693832', '超神玩家', '失落叶', '游戏', 'male', 341.6153846153847, 341.61538461538464, 341.6153846153847, 0, 0, 9.299999999999997, 1.3000000000000003, 444.1000000000001, 25, 2.918923076923077, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1709320', '徒儿，饶了五位绝美师父吧', '不渊', '都市', 'male', 98.61904761904762, 98.6190476190476, 98.61904761904762, 0, 0, 9.099999999999998, 2.1000000000000005, 207.09999999999994, 25, 0.9709523809523808, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1726987', '大佬十代单传，我为他一胎生四宝', '白生米', '现代言情', 'women', 15.48300970873786, 15.483009708737862, 15.48300970873786, 0, 0, 9.4, 41.2, 637.9, 25, 0.3118640776699029, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1780393', '蛇骨阴香', '北派无尽夏', '现代言情', 'women', 0.17647058823529413, 0.17647058823529413, 0.17647058823529413, 0, 0, 9.599999999999998, 1.6999999999999995, 0.29999999999999993, 25, 0.1934117647058823, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1805751', '开局被女土匪看中，我占山为王', '键盘起灰', '历史', 'male', 97.70588235294119, 97.70588235294117, 97.70588235294119, 0, 0, 9.299999999999999, 1.6999999999999995, 166.09999999999997, 25, 0.9676470588235295, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1806041', '巅峰青云路', '登封造极', '都市', 'male', 5.816129032258064, 5.816129032258065, 5.816129032258064, 0, 0, 9.200000000000001, 31, 180.3, 25, 0.23052903225806456, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1810234', '从女子监狱走出的修仙者', '河图大妖', '都市', 'male', 34.71, 36.15384615384615, 34.71, 0, 0, 9, 5.200000000000001, 180.49200000000002, 25, 0.4576800000000001, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1815020', '巅峰权途', '争渡', '都市', 'male', 9.586813186813185, 9.586813186813187, 9.586813186813185, 0, 0, 9.3, 45.5, 436.1999999999999, 25, 0.2626945054945055, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1817221', '史上最强师父', '炒方便面', '玄幻奇幻', 'male', 37.996108949416346, 37.996108949416346, 37.996108949416346, 0, 0, 9.2, 25.699999999999992, 976.5, 25, 0.48796887159533076, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1830570', '世子先别死，夫人有喜了', '沙拉薯条', '古代言情', 'women', 2.669230769230769, 2.6692307692307695, 2.669230769230769, 0, 0, 9.599999999999998, 13, 34.69999999999999, 25, 0.21335384615384612, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1846315', '小雌性是万人迷，养了一窝毛绒绒', '一个刚正不阿的女人', '幻想言情', 'women', 0.28125, 0.28125, 0.28125, 0, 0, 9.8, 3.2000000000000006, 0.9000000000000001, 25, 0.19825000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1858392', '咬春靥', '空酒瓶', '古代言情', 'women', 72.68888888888888, 72.6888888888889, 72.68888888888888, 0, 0, 8.400000000000002, 4.5, 327.1, 25, 0.7495111111111111, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1867139', '师叔，你的法宝太不正经了', '李别浪', '玄幻奇幻', 'male', 31.115704697986565, 32.40939597315436, 31.115704697986565, 0, 0, 9.400000000000002, 14.900000000000004, 463.62399999999997, 25, 0.4369256375838926, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1867208', '真福宝挥手粮满仓，全家悔断肠', '朵瑞米发娑', '古代言情', 'women', 4.8000000000000025, 50.41666666666667, 4.8000000000000025, 0, 0, 9.299999999999997, 1.1999999999999997, 5.76, 25, 0.22439999999999996, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1870433', '冻死风雪夜，重生真嫡女虐翻全家', '一颗胖梨', '古代言情', 'women', 37.45859872611466, 37.45859872611465, 37.45859872611466, 0, 0, 9.5, 15.699999999999998, 588.1000000000001, 25, 0.48966878980891726, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1872576', '我来自上界帝族，成婚当天媳妇跟人跑', '社恐啊社恐', '玄幻奇幻', 'male', 197.08333333333337, 197.08333333333334, 197.08333333333337, 0, 0, 8.799999999999997, 1.1999999999999997, 236.5, 25, 1.7526666666666668, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1873655', '重生八零：离婚后被军少宠上天', '小白蛇', '现代言情', 'women', 92.03030303030302, 92.03030303030303, 92.03030303030302, 0, 0, 9.700000000000001, 6.599999999999999, 607.3999999999999, 25, 0.9302424242424242, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1873810', '换婚病危世子，她一胎三宝赢麻了', '雨过阳光', '古代言情', 'women', 13.056000000000008, 160.44, 13.056000000000008, 0, 0, 9.599999999999998, 2.5, 32.64000000000002, 25, 0.29644800000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1876687', '和离前夜，她重生回了出嫁前', '柳程安', '古代言情', 'women', 83.48076923076924, 83.48076923076923, 83.48076923076924, 0, 0, 9.5, 5.2, 434.1000000000001, 25, 0.8578461538461539, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1879266', '封总，太太想跟你离婚很久了', '云中觅', '现代言情', 'women', 0.2244501940491591, 0.22445019404915914, 0.2244501940491591, 0, 0, 9.200000000000003, 154.59999999999997, 34.69999999999999, 25, 0.18579560155239333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1882754', '边军悍卒', '木有金箍', '历史', 'male', 15.290858725761778, 15.290858725761773, 15.290858725761778, 0, 0, 9.299999999999999, 36.10000000000001, 552, 25, 0.30832686980609425, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1888573', '女富婆的超级神医', '狼性佛心', '都市', 'male', 32.35000000000001, 32.35, 32.35000000000001, 0, 0, 9.099999999999998, 2, 64.70000000000002, 25, 0.44079999999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1975352', '叉腰腰，全家都是我捡来哒！', '柠檬鱼头', '幻想言情', 'women', 9.101785714285718, 17.437500000000004, 9.101785714285718, 0, 0, 9.700000000000003, 11.2, 101.93999999999997, 25, 0.2668142857142858, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('197810', '都市最狂医仙', '花小刺', '都市', 'male', 376.0952380952381, 376.0952380952381, 376.0952380952381, 0, 0, 9.099999999999998, 2.1000000000000005, 789.8, 25, 3.1907619047619042, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1979319', '邢教练，别太野', '七个菜包', '现代言情', 'women', 2.6399999999999992, 10.296296296296296, 2.6399999999999992, 0, 0, 9.700000000000003, 5.4, 14.255999999999998, 25, 0.21512000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1979356', '阴当', '北派无尽夏', '现代言情', 'women', 9.652582159624414, 9.652582159624412, 9.652582159624414, 0, 0, 9.799999999999999, 21.300000000000004, 205.59999999999994, 25, 0.2732206572769953, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982371', '你宠白月光，我收凤印你急什么', '江墨甜', '古代言情', 'women', 9.78125, 9.78125, 9.78125, 0, 0, 8.9, 6.400000000000001, 62.60000000000001, 25, 0.25625000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982723', '无敌逍遥侯', '沧海种树', '历史', 'male', 3.978978978978979, 3.9789789789789793, 3.978978978978979, 0, 0, 9.099999999999998, 33.30000000000001, 132.5, 25, 0.2138318318318318, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1985055', '摆摊开饭馆，她惊动全京城', '幸运团团', '古代言情', 'women', 9.748965517241379, 10.586206896551724, 9.748965517241379, 0, 0, 9.800000000000002, 5.799999999999998, 56.544, 25, 0.2739917241379311, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1992776', '我叫二狗，一条会咬人的狗！', '半解不解', '都市', 'male', 25.307692307692314, 25.307692307692307, 25.307692307692314, 0, 0, 9.099999999999998, 1.3000000000000003, 32.89999999999999, 25, 0.3844615384615385, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1994507', '权力争锋', '东流无歇', '都市', 'male', 7.1096, 7.4, 7.1096, 0, 0, 9.099999999999998, 5, 35.548, 25, 0.23887679999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2015371', '再近点，就失控了', '雪泥', '现代言情', 'women', 24.274336283185843, 24.27433628318584, 24.274336283185843, 0, 0, 9.900000000000002, 11.300000000000002, 274.30000000000007, 25, 0.3921946902654868, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2024794', '武圣看门武王扫地，你嫌我武馆太垃圾？', '白鹫', '都市', 'male', 27.25, 27.25, 27.25, 0, 0, 9, 0.4, 10.900000000000004, 25, 0.398, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2027735', '三国：我，赤壁周瑜，揽二乔脱离江东', '老骥伏枥', '历史', 'male', 19.6, 19.599999999999998, 19.6, 0, 0, 9, 1.5, 29.399999999999995, 25, 0.3368, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2032899', '让你当书童，你成大夏文圣', '炫迈', '历史', 'male', 16.512222222222224, 17.194444444444443, 16.512222222222224, 0, 0, 9, 3.600000000000001, 59.44399999999999, 25, 0.3120977777777778, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2036642', '暗恋十年，庄先生他藏不住了', '雯锦', '现代言情', 'women', 16.883720930232556, 16.883720930232556, 16.883720930232556, 0, 0, 9.5, 4.299999999999999, 72.6, 25, 0.32506976744186045, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2038328', '重生不嫁高门后，高冷权臣追疯了！', '溪午闻钟', '古代言情', 'women', 28.999999999999996, 28.999999999999996, 28.999999999999996, 0, 0, 8.400000000000002, 0.1, 2.899999999999999, 25, 0.4, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2047215', '皇后谁爱当谁当，我嫁权臣横着走', '素手摘星', '古代言情', 'women', 2.3823529411764706, 2.3823529411764706, 2.3823529411764706, 0, 0, 9.5, 3.399999999999999, 8.099999999999998, 25, 0.20905882352941177, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2051697', '末世，从吞尸体开始进化', '只是小脑虎', '科幻', 'male', 6.901694915254237, 7.186440677966101, 6.901694915254237, 0, 0, 9.200000000000001, 5.9, 40.71999999999999, 25, 0.23921355932203395, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2057124', '靠私房菜名震京城，凤印上门了！', '宋九九', '古代言情', 'women', 3.1363636363636362, 3.1363636363636362, 3.1363636363636362, 0, 0, 9.799999999999999, 2.1999999999999993, 6.900000000000001, 25, 0.22109090909090906, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2057569', '领主：我招募的士兵怎么都是玩家', '禅心道骨', '玄幻奇幻', 'male', 3.344827586206896, 3.3448275862068964, 3.344827586206896, 0, 0, 9.5, 2.8999999999999995, 9.7, 25, 0.21675862068965518, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2060180', '科举：开局官府发妻，卷成状元', '明月天衣', '历史', 'male', 10.333333333333336, 10.333333333333334, 10.333333333333336, 0, 0, 9.2, 0.29999999999999993, 3.100000000000001, 25, 0.2666666666666667, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061262', '哑巴小向导，被七个顶级哨兵缠上了', '疯麦', '幻想言情', 'women', 4, 4, 4, 0, 0, 8.799999999999999, 0.1, 0.4, 25, 0.208, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062320', '随母改嫁换新爹，拖油瓶成了团宠', '萝兹萝丝', '现代言情', 'women', 3.583333333333334, 3.5833333333333335, 3.583333333333334, 0, 0, 9.5, 1.1999999999999997, 4.299999999999999, 25, 0.21866666666666668, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062422', '惨死认亲日，嫡女夺回凤命杀疯了', '雪落听风', '古代言情', 'women', 5.0357142857142865, 5.035714285714286, 5.0357142857142865, 0, 0, 9.5, 2.7999999999999994, 14.099999999999996, 25, 0.2302857142857143, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064995', '重回六十年代，从挖何首乌开始', '巍巍青山', '都市', 'male', 31, 31, 31, 0, 0, 9.200000000000001, 0.1, 3.1000000000000005, 25, 0.43200000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065879', '一天暴涨一年修为，你说你后悔了？', '小陈little', '都市', 'male', 14.000000000000002, 14.000000000000002, 14.000000000000002, 0, 0, 9.200000000000003, 0.29999999999999993, 4.200000000000001, 25, 0.29600000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065896', '重生孕肚藏福宝，灾年养崽掀族祠', '瑞侈', '古代言情', 'women', 7, 7, 7, 0, 0, 9.2, 0.5, 3.5, 25, 0.24, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2072619', '长生：从寿元零点一年开始', '馀杯', '玄幻奇幻', 'male', 2.580645161290323, 2.5806451612903225, 2.580645161290323, 0, 0, 9.099999999999998, 3.100000000000001, 8, 25, 0.20264516129032256, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074181', '权力巅峰：从市委大秘开始', '鹏鹏君本尊', '都市', 'male', 4.363636363636362, 4.363636363636363, 4.363636363636362, 0, 0, 9, 1.0999999999999996, 4.799999999999999, 25, 0.21490909090909094, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2075109', '四合院：从火车列车员开始', '我家有母老虎', 'N次元', 'male', 5.5, 5.5, 5.5, 0, 0, 8.799999999999997, 0.5999999999999999, 3.2999999999999994, 25, 0.21999999999999992, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2075347', '被退婚五次，她嫁残王夫君却躺赢', '瓜田立夏', '古代言情', 'women', 12.5, 12.5, 12.5, 0, 0, 9.200000000000001, 0.2, 2.5, 25, 0.28400000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('208594', '吞天圣帝', '枫落忆痕', '玄幻奇幻', 'male', 58.03750000000001, 60.45, 58.03750000000001, 0, 0, 9.099999999999998, 8, 464.30000000000007, 25, 0.6463, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213108', '都市全能医圣', '玖月天', '都市', 'male', 129.78571428571425, 129.78571428571428, 129.78571428571425, 0, 0, 9.099999999999998, 1.4, 181.7, 25, 1.220285714285714, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213502', '小皇叔腹黑又难缠', '一碧榶榶', '古代言情', 'women', 0.3, 0.3, 0.3, 0, 0, 9.6, 2, 0.6, 25, 0.19440000000000002, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213692', '武帝归来', '修果', '都市', 'male', 526.6666666666667, 526.6666666666666, 526.6666666666667, 0, 0, 9.099999999999998, 1.8000000000000005, 948, 25, 4.395333333333334, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('214783', '山野诡闻笔记', '吴大胆', '奇闻异事', 'male', 121.76470588235294, 121.76470588235294, 121.76470588235294, 0, 0, 9.5, 3.399999999999999, 414, 25, 1.1641176470588235, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('215874', '吞天造化经', '鬼疯子', '玄幻奇幻', 'male', 291.42307692307696, 291.4230769230769, 291.42307692307696, 0, 0, 9.099999999999998, 2.6000000000000005, 757.7, 25, 2.5133846153846156, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('216404', '荒古武神', '化十', '玄幻奇幻', 'male', 63.51807228915663, 63.51807228915663, 63.51807228915663, 0, 0, 9.099999999999998, 8.299999999999997, 527.1999999999998, 25, 0.6901445783132529, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1655407', '鸿蒙霸体诀', '鱼初见', '玄幻奇幻', 'male', 23.078717201166175, 23.07871720116618, 23.078717201166175, 0, 0, 9.099999999999998, 34.300000000000004, 791.6000000000003, 25, 0.3666297376093294, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1729484', '凡尘飞仙', '齐甲', '玄幻奇幻', 'male', 29.06526315789474, 30.271929824561404, 29.06526315789474, 0, 0, 9.299999999999997, 11.400000000000004, 331.34399999999994, 25, 0.41852210526315786, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1737869', '重生七零，搬空敌人仓库去下乡', '六月无花', '现代言情', 'women', 0.588235294117647, 0.5882352941176471, 0.588235294117647, 0, 0, 9.599999999999998, 1.6999999999999995, 1, 25, 0.19670588235294112, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1759390', '分手后，捡到一只吸血鬼美少女', '黄泉隼', 'N次元', 'male', 212.53333333333333, 212.53333333333333, 212.53333333333333, 0, 0, 9.5, 1.5, 318.80000000000007, 25, 1.8902666666666665, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1768764', '出阳神', '罗樵森', '奇闻异事', 'male', 118.76, 118.75999999999999, 118.76, 0, 0, 9.400000000000002, 2.5, 296.9, 25, 1.13808, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1771336', '王妃她五行缺德', '棠花落', '古代言情', 'women', 0.2, 0.2, 0.2, 0, 0, 9.700000000000001, 2, 0.4, 25, 0.19560000000000002, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1771379', '大佬绝嗣！我一夜怀上他两个崽', '相思一顾', '现代言情', 'women', 64.15217391304348, 64.15217391304348, 64.15217391304348, 0, 0, 9.5, 4.6, 295.1, 25, 0.7032173913043478, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1777995', '将军她是引渡人', '指尖上的行走', '古代言情', 'women', 0.45454545454545436, 0.45454545454545453, 0.45454545454545436, 0, 0, 9.8, 2.2, 1, 25, 0.19963636363636367, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1781303', '穿书反派：开局挖掉女主至尊骨', '晚风起', '玄幻奇幻', 'male', 72.20000000000002, 72.2, 72.20000000000002, 0, 0, 8.700000000000003, 2, 144.40000000000003, 25, 0.7516000000000002, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1809361', '逍遥四公子', '修果', '历史', 'male', 0.44035532994923876, 0.44035532994923865, 0.44035532994923876, 0, 0, 9.300000000000002, 78.79999999999998, 34.7, 25, 0.18952284263959396, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1833599', '枭龙出山', '轩仔', '都市', 'male', 15.069230769230764, 15.69230769230769, 15.069230769230764, 0, 0, 9.099999999999998, 5.200000000000001, 78.36000000000001, 25, 0.30255384615384606, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1834789', '警报！真龙出狱！', '红透半边天', '都市', 'male', 11.527426160337551, 11.527426160337553, 11.527426160337551, 0, 0, 9.200000000000001, 71.10000000000001, 819.6000000000001, 25, 0.2762194092827005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1836527', '凰宫梦', '蓝九九', '古代言情', 'women', 24.565445026178004, 24.565445026178008, 24.565445026178004, 0, 0, 9.700000000000001, 38.199999999999996, 938.3999999999997, 25, 0.390523560209424, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1838037', '典狱长大人深不可测！', '黄泉隼', '都市', 'male', 117.4375, 117.4375, 117.4375, 0, 0, 9.5, 1.6, 187.90000000000003, 25, 1.1295, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1885468', '我医武双绝，体内还有一条龙', '月辰', '都市', 'male', 16.249599999999997, 16.919999999999998, 16.249599999999997, 0, 0, 9, 5, 81.24799999999999, 25, 0.30999679999999996, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1924831', '有帝族背景还开挂，我无敌了！', '不太勇敢', '玄幻奇幻', 'male', 23.442784810126586, 24.417721518987342, 23.442784810126586, 0, 0, 9.099999999999998, 15.800000000000002, 370.3960000000001, 25, 0.3695422784810126, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1949070', '孩子谁爱生谁生，我勾帝心夺凤位', '爱吃石榴', '古代言情', 'women', 5.34843205574913, 13.313588850174217, 5.34843205574913, 0, 0, 9.599999999999998, 28.699999999999992, 153.49999999999994, 25, 0.23478745644599297, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1954700', '媚君榻', '随山月', '古代言情', 'women', 4.3461538461538485, 21.192307692307693, 4.3461538461538485, 0, 0, 9.700000000000003, 5.200000000000001, 22.59999999999999, 25, 0.22876923076923084, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1956587', '五岁萌妃炸京城，我阿娘是侯府真千金', '幻想鱼', '古代言情', 'women', 9.730000000000002, 58.45, 9.730000000000002, 0, 0, 9.599999999999998, 2, 19.460000000000004, 25, 0.26983999999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('195958', '盖世神医', '狐颜乱语', '都市', 'male', 0.23834167262330233, 0.24803431022158687, 0.23834167262330233, 0, 0, 9.299999999999999, 139.90000000000003, 33.343999999999994, 25, 0.18790673338098643, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1960821', '雪夜活埋后，我夺了假千金凤命', '柠檬小丸子', '古代言情', 'women', 16.888888888888886, 16.88888888888889, 16.888888888888886, 0, 0, 9.5, 8.099999999999998, 136.79999999999995, 25, 0.32511111111111113, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1965987', '被贬边疆，成就最强藩王', '绯雨', '历史', 'male', 14.173553719008265, 14.173553719008265, 14.173553719008265, 0, 0, 9, 12.099999999999996, 171.5, 25, 0.29338842975206614, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1968910', '全家夺我军功，重生嫡女屠了满门', '我吃饱饱', '古代言情', 'women', 12.208877284595301, 12.208877284595301, 12.208877284595301, 0, 0, 9.599999999999998, 38.3, 467.6000000000001, 25, 0.28967101827676234, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1975889', '懂兽语穿六零，家属院里我最行', '情丝入你心', '现代言情', 'women', 2.6095238095238087, 12.285714285714285, 2.6095238095238087, 0, 0, 9.700000000000001, 4.200000000000001, 10.960000000000003, 25, 0.2148761904761905, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1978709', '惨死生子夜，重生嫡女屠尽侯府', '南酥青子', '古代言情', 'women', 11.971052631578948, 21.263157894736842, 11.971052631578948, 0, 0, 9.299999999999997, 7.599999999999999, 90.97999999999998, 25, 0.28176842105263156, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1978758', '小姑奶奶下山了，在桥洞底下摆摊算命', '骑着猫的小鱼干', '现代言情', 'women', 6.648070175438595, 10.333333333333332, 6.648070175438595, 0, 0, 9.700000000000001, 11.400000000000004, 75.78799999999998, 25, 0.2471845614035088, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982718', '真没必要让我重生', '刘大咪', '都市', 'male', 25.41666666666667, 25.416666666666668, 25.41666666666667, 0, 0, 8.900000000000002, 1.1999999999999997, 30.5, 25, 0.3813333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1984439', '炼仙鼎', '在下不求人', '玄幻奇幻', 'male', 7.723287671232876, 8.04109589041096, 7.723287671232876, 0, 0, 9.200000000000001, 7.299999999999998, 56.38000000000001, 25, 0.24578630136986307, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1988961', '重生1984：我靠赶海打渔成首富', '菠萝炒饭', '都市', 'male', 10.806250000000004, 10.80625, 10.806250000000004, 0, 0, 9, 16, 172.90000000000006, 25, 0.2664500000000001, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2004996', '仙侣', '鬼疯子', '武侠仙侠', 'male', 9.033274336283181, 9.407079646017698, 9.033274336283181, 0, 0, 8.900000000000002, 11.3, 102.07599999999998, 25, 0.2502661946902655, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2018535', '洪荒：我屡出毒计，十二祖巫劝我冷静！', '橘黄的橙子', '武侠仙侠', 'male', 24.894736842105264, 24.894736842105264, 24.894736842105264, 0, 0, 8.900000000000002, 1.8999999999999997, 47.3, 25, 0.37715789473684214, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2019227', '随母改嫁旺新家，重生嫡女嘎嘎乱杀', '三十嘉', '古代言情', 'women', 4.110958904109589, 6.006849315068494, 4.110958904109589, 0, 0, 9.599999999999998, 14.599999999999996, 60.020000000000024, 25, 0.22488767123287667, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2020674', '从市委大秘到权力之巅', '洗礼先生', '都市', 'male', 6.0589090909090935, 6.3090909090909095, 6.0589090909090935, 0, 0, 9.099999999999998, 5.5, 33.324, 25, 0.23047127272727272, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2027737', '向上登攀', '老虎本尊', '都市', 'male', 4.873103448275863, 5.068965517241379, 4.873103448275863, 0, 0, 9.099999999999998, 5.799999999999998, 28.263999999999996, 25, 0.22098482758620686, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2029607', '我的道侣是诸天第一女帝', '虎眸', '玄幻奇幻', 'male', 42, 42, 42, 0, 0, 8.400000000000002, 0.1, 4.200000000000001, 25, 0.504, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2038351', '公府上下宠我如宝，养兄一家后悔了', '钱多多君', '古代言情', 'women', 27.999999999999996, 27.999999999999996, 27.999999999999996, 0, 0, 8.400000000000002, 0.1, 2.8, 25, 0.392, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2048050', '抢我婚约嫁太子？我携孕肚嫁皇帝', '缓缓归', '古代言情', 'women', 2.8595505617977532, 2.859550561797753, 2.8595505617977532, 0, 0, 9.599999999999998, 17.800000000000004, 50.899999999999984, 25, 0.21487640449438197, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2052834', '魂穿吕布：貂蝉离间弑父？那是我亲爹！', '八方来才', '历史', 'male', 12.571428571428573, 12.571428571428573, 12.571428571428573, 0, 0, 9.2, 0.7, 8.799999999999997, 25, 0.2845714285714286, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061260', '七零读心，掏空家产带福宝寻夫随军', '沫沫无闻', '现代言情', 'women', 17, 17, 17, 0, 0, 9, 0.29999999999999993, 5.1000000000000005, 25, 0.31600000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061266', '边荒小吏', '东门吹牛', '历史', 'male', 27, 27, 27, 0, 0, 8.400000000000002, 0.1, 2.7, 25, 0.38400000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061849', '官府发男人，绝色罪女抬我回家', '凶名赫赫', '历史', 'male', 13, 13, 13, 0, 0, 8.799999999999997, 0.4, 5.200000000000001, 25, 0.2799999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061931', '八零：渣夫骗婚娶大嫂，我转身嫁首长', '锦禾', '现代言情', 'women', 5.138888888888888, 5.138888888888888, 5.138888888888888, 0, 0, 9.299999999999997, 3.600000000000001, 18.5, 25, 0.22711111111111104, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062265', '换父兄后流放？真千金成了边疆团宠', '君染染', '古代言情', 'women', 6.5, 6.5, 6.5, 0, 0, 8.799999999999999, 0.8000000000000002, 5.2, 25, 0.22799999999999998, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062370', '边疆发男人，从被罪女买走开始！', '陈火火', '历史', 'male', 7.5, 7.5, 7.5, 0, 0, 8.799999999999997, 0.4, 3, 25, 0.23599999999999993, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062825', '捡漏！', '外八字', '都市', 'male', 13.999999999999998, 13.999999999999998, 13.999999999999998, 0, 0, 8.599999999999998, 0.1, 1.4, 25, 0.2839999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063306', '重返二十岁心动，他才是白月光', '浮景', '现代言情', 'women', 11, 11, 11, 0, 0, 9.200000000000001, 0.1, 1.0999999999999996, 25, 0.272, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063605', '九阴九阳', '仗剑修真', '玄幻奇幻', 'male', 1.5819209039548026, 1.5819209039548023, 1.5819209039548026, 0, 0, 9.099999999999998, 17.699999999999996, 28, 25, 0.1946553672316384, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065877', '医路情劫', '微微狂笑', '都市', 'male', 5.999999999999999, 5.999999999999999, 5.999999999999999, 0, 0, 8.799999999999999, 0.8, 4.799999999999999, 25, 0.22399999999999998, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2073625', '我都人间武圣了，你让我当傀儡皇帝？', '小呀小馒头', '玄幻奇幻', 'male', 8, 8, 8, 0, 0, 9.200000000000003, 0.1, 0.8, 25, 0.24800000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074086', '偏护寡嫂不成婚？扇完巴掌嫁权臣', '喵大仙儿', '古代言情', 'women', 1.1999999999999997, 1.2, 1.1999999999999997, 0, 0, 8.400000000000002, 0.5, 0.5999999999999999, 25, 0.17760000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074326', '萌兽驾到，京圈大佬集体翘班洗奶瓶', '听听不听', '现代言情', 'women', 3.4999999999999996, 3.4999999999999996, 3.4999999999999996, 0, 0, 9.2, 0.20000000000000004, 0.6999999999999998, 25, 0.212, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074330', '穿成六零小炮灰，大小姐带物资养兵王', '娮小夕', '现代言情', 'women', 1.7499999999999998, 1.7499999999999998, 1.7499999999999998, 0, 0, 9.200000000000003, 0.4, 0.7, 25, 0.19800000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076380', '女子监狱出真龙，出狱后全球震动', '我非良人', '都市', 'male', 3.899999999999999, 3.9, 3.899999999999999, 0, 0, 9.599999999999998, 1, 3.899999999999999, 25, 0.22319999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213092', '吞噬古帝', '黑白仙鹤', '玄幻奇幻', 'male', 2.609022556390978, 2.6090225563909777, 2.609022556390978, 0, 0, 9.2, 13.300000000000002, 34.699999999999996, 25, 0.20487218045112782, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('214514', '活人阴差', '末日诗人', '奇闻异事', 'male', 260.0476190476191, 260.04761904761904, 260.0476190476191, 0, 0, 9.099999999999998, 2.1000000000000005, 546.1000000000001, 25, 2.2623809523809526, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('214890', '混沌天尊', '新闻工作者', '玄幻奇幻', 'male', 108.6551724137931, 108.65517241379311, 108.6551724137931, 0, 0, 9, 2.899999999999999, 315.09999999999997, 25, 1.0492413793103448, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('215169', '寒门枭士', '北川', '历史', 'male', 4.506493506493506, 4.5064935064935066, 4.506493506493506, 0, 0, 9.299999999999999, 7.700000000000002, 34.69999999999999, 25, 0.22205194805194806, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '科幻', 'male', 3.8555555555555547, 3.855555555555556, 3.8555555555555547, 0, 0, 9, 9, 34.699999999999996, 25, 0.21084444444444445, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1648172', '仙棺，神墟，剑无敌！', '千年老龟', '玄幻奇幻', 'male', 36.302736842105276, 37.810526315789474, 36.302736842105276, 0, 0, 9, 9.5, 344.8759999999999, 25, 0.47042189473684226, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1654986', '团宠小师妹才是真大佬', '千金兔', '幻想言情', 'women', 0.2799999999999999, 0.27999999999999997, 0.2799999999999999, 0, 0, 9.7, 2.5, 0.7, 25, 0.19624, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1658048', '六年后，我携四个幼崽炸翻前夫家', '相思一顾', '现代言情', 'women', 1.152823920265781, 1.1528239202657808, 1.152823920265781, 0, 0, 9.599999999999998, 30.100000000000005, 34.699999999999996, 25, 0.2012225913621262, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1672578', '逃荒后三岁福宝被团宠了', '时好', '古代言情', 'women', 0.15625, 0.15625, 0.15625, 0, 0, 9.700000000000001, 3.2, 0.5, 25, 0.19525000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1697715', '被关女子监狱三年，我修炼成仙了', '一只狸猫', '都市', 'male', 22.255189873417716, 23.177215189873415, 22.255189873417716, 0, 0, 9, 7.900000000000001, 175.81599999999995, 25, 0.3580415189873417, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1730259', '踏神界逆九州：废物七小姐权倾天下', '苏音', '幻想言情', 'women', 0.14285714285714282, 0.14285714285714285, 0.14285714285714282, 0, 0, 9.700000000000003, 2.1000000000000005, 0.29999999999999993, 25, 0.1951428571428572, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1759358', '出狱后，我闪婚了植物人大佬', '柠七七', '现代言情', 'women', 37.16455696202531, 37.164556962025316, 37.16455696202531, 0, 0, 9.400000000000002, 7.900000000000001, 293.59999999999997, 25, 0.4853164556962025, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1764505', '我团宠小师妹，嚣张点怎么了', '瑰夏', '幻想言情', 'women', 28.076923076923077, 28.076923076923077, 28.076923076923077, 0, 0, 9.700000000000003, 13, 365, 25, 0.41861538461538467, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1802708', '神算真千金，全豪门跪下喊祖宗', '一只肉九', '现代言情', 'women', 0.20833333333333337, 0.20833333333333334, 0.20833333333333337, 0, 0, 9.5, 2.3999999999999995, 0.5, 25, 0.19166666666666668, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1803024', '神算萌妻：傅太太才是玄学真大佬', '易小升', '现代言情', 'women', 2.7322834645669296, 2.7322834645669296, 2.7322834645669296, 0, 0, 9.700000000000001, 12.7, 34.69999999999999, 25, 0.21585826771653546, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1804346', '绝世天命大反派', '金裘花马', '玄幻奇幻', 'male', 54.11864864864865, 56.371621621621614, 54.11864864864865, 0, 0, 9, 14.800000000000002, 800.9559999999999, 25, 0.6129491891891892, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1848642', '离婚吧，真当我是废物啊', '凝望之影', '都市', 'male', 43.16666666666667, 43.166666666666664, 43.16666666666667, 0, 0, 8.900000000000002, 2.3999999999999995, 103.59999999999998, 25, 0.5233333333333334, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1851542', '麒麟出世，师父让我下山去结婚', '御龙', '都市', 'male', 25, 25, 25, 0, 0, 9, 3.399999999999999, 85, 25, 0.38, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1858924', '无间令', '无间之令', '古代言情', 'women', 10.653333333333329, 128.48148148148147, 10.653333333333329, 0, 0, 9.3, 2.7000000000000006, 28.764, 25, 0.2712266666666666, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1863508', '重生1994，逃婚海钓赢麻了！', '林溪', '现代言情', 'women', 13.26666666666667, 13.266666666666667, 13.26666666666667, 0, 0, 9.7, 7.5, 99.5, 25, 0.30013333333333336, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1870439', '空间通末世：我囤亿万物资养兵王', '小桃花', '幻想言情', 'women', 16.682499999999997, 206.37499999999997, 16.682499999999997, 0, 0, 9.6, 1.6, 26.692000000000007, 25, 0.32545999999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1880008', '吞天神体：从仙女奉献开始无敌', '南云月', '玄幻奇幻', 'male', 4.3022784810126575, 4.481012658227848, 4.3022784810126575, 0, 0, 9.200000000000003, 15.800000000000002, 67.97599999999998, 25, 0.21841822784810133, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1880127', '出生被活埋，萌宝回京杀疯了', '固夏', '古代言情', 'women', 2.3535135135135135, 28.486486486486488, 2.3535135135135135, 0, 0, 9.599999999999998, 3.7000000000000006, 8.707999999999997, 25, 0.21082810810810806, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1885415', '再睁眼！高冷女知青在我怀里哭唧唧', '九伐', '都市', 'male', 176.59999999999994, 176.6, 176.59999999999994, 0, 0, 9.2, 0.5, 88.29999999999997, 25, 1.5967999999999993, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1929412', '重生：清纯转校生表白我，校花哭惨了', '一缕微光', '都市', 'male', 40.8, 40.8, 40.8, 0, 0, 9.400000000000002, 2, 81.6, 25, 0.5144, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1959895', '十二只SSS级鬼宠，你管这叫差班生', '洛青澜', '都市', 'male', 115.55555555555559, 115.55555555555556, 115.55555555555559, 0, 0, 9.200000000000001, 0.9000000000000001, 104, 25, 1.1084444444444448, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1964672', '顾总，你前妻在科研界杀疯了！', '席宝贝', '现代言情', 'women', 6.784615384615384, 6.7846153846153845, 6.784615384615384, 0, 0, 9.5, 32.5, 220.5, 25, 0.24427692307692306, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1970645', '神级刺客，我有一支动物杀手队', '九把火', '玄幻奇幻', 'male', 29.571428571428577, 30.8, 29.571428571428577, 0, 0, 9.3, 3.5, 103.49999999999999, 25, 0.4225714285714286, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1976002', '续弦小夫人', '江摇舟', '古代言情', 'women', 21.6102564102564, 21.610256410256408, 21.6102564102564, 0, 0, 9.7, 19.5, 421.3999999999999, 25, 0.3668820512820512, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1980267', '陆总别作，太太她不要你了', '是空空呀', '现代言情', 'women', 8.34876404494382, 9.932584269662922, 8.34876404494382, 0, 0, 9.400000000000002, 8.900000000000002, 74.304, 25, 0.2547901123595506, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982967', '厉总，太太在外面有两个私生子', '十里山河', '现代言情', 'women', 39.458333333333336, 39.458333333333336, 39.458333333333336, 0, 0, 9.099999999999998, 2.3999999999999995, 94.70000000000003, 25, 0.4976666666666666, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1983530', '厂长收手吧！国家真的压不住了！', '正义反派', '都市', 'male', 10.562580645161288, 10.999999999999998, 10.562580645161288, 0, 0, 9.3, 9.3, 98.23199999999997, 25, 0.27050064516129035, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1989600', '掌天图', '四眼秀才', '玄幻奇幻', 'male', 12.066666666666665, 12.066666666666666, 12.066666666666665, 0, 0, 9.099999999999998, 27, 325.80000000000007, 25, 0.2785333333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1991675', '我赚够两千就下播，榜一大哥却急了', '哼哼哈哈', '现代言情', 'women', 30.695121951219512, 30.695121951219512, 30.695121951219512, 0, 0, 9.8, 8.200000000000001, 251.69999999999996, 25, 0.44156097560975616, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2003997', '末世囤货养崽，从娘胎开始旺妈咪', '小桃花', '幻想言情', 'women', 9.042666666666669, 31.266666666666666, 9.042666666666669, 0, 0, 9.599999999999998, 1.5, 13.563999999999997, 25, 0.2643413333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2014122', '于他怀中轻颤', '苏晚舟', '现代言情', 'women', 4.136551724137932, 9.298850574712645, 4.136551724137932, 0, 0, 9.599999999999998, 8.700000000000003, 35.98800000000001, 25, 0.2250924137931034, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2027742', 'SSSSSSSSSS级狂龙出狱', '成书', '都市', 'male', 14.62833333333333, 15.229166666666666, 14.62833333333333, 0, 0, 9, 4.799999999999999, 70.21600000000001, 25, 0.29702666666666666, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2032046', '守活寡两年去随军，改嫁绝嗣大佬', '糖煵五加', '现代言情', 'women', 10.742325581395349, 11.186046511627907, 10.742325581395349, 0, 0, 9.5, 4.299999999999999, 46.19200000000001, 25, 0.2759386046511628, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2040906', '边军悍卒：从鸡蛋换老婆开始！', '黑夜残影', '历史', 'male', 9.400000000000002, 9.4, 9.400000000000002, 0, 0, 9.200000000000001, 2.5, 23.5, 25, 0.2592000000000001, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2041071', '捡个混球当奶爸，炸翻京圈做团宠！', '夜风微微', '现代言情', 'women', 5.285714285714286, 5.2857142857142865, 5.285714285714286, 0, 0, 9.5, 0.7, 3.7000000000000006, 25, 0.2322857142857143, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2052700', '小司机的美女总裁老婆', '最爱老板娘', '都市', 'male', 3.6882008368200845, 3.8410041841004183, 3.6882008368200845, 0, 0, 9.099999999999998, 23.9, 88.14799999999997, 25, 0.21150560669456064, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2053895', '带崽搬空婆家，易孕娇女随军被亲哭', '金岁岁', '现代言情', 'women', 5.65, 5.65, 5.65, 0, 0, 9.400000000000002, 4, 22.6, 25, 0.23320000000000007, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2055374', '七零美人要离婚，冷面军少他急了', '钱小二', '现代言情', 'women', 2.4650467289719624, 2.6728971962616828, 2.4650467289719624, 0, 0, 9.5, 10.7, 26.376000000000005, 25, 0.2097203738317757, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2055375', '姜医生，贺总约你去民政局', '江月何年', '现代言情', 'women', 21.33333333333334, 21.333333333333336, 21.33333333333334, 0, 0, 8.799999999999999, 0.29999999999999993, 6.4, 25, 0.3466666666666667, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2057884', '神级捡漏王：无良校花逼我去扯证', '李卯卯', '都市', 'male', 7.571428571428571, 7.571428571428572, 7.571428571428571, 0, 0, 8.900000000000002, 0.7, 5.299999999999999, 25, 0.2385714285714286, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2059102', '让你求生，你竟在疯狂摸尸？', '半山闲客', '都市', 'male', 5.9, 5.9, 5.9, 0, 0, 8.900000000000002, 1, 5.9, 25, 0.22520000000000007, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2059140', '戍边斥候：从奉旨传宗接代开始！', '般若菠萝', '历史', 'male', 16.666666666666664, 16.666666666666668, 16.666666666666664, 0, 0, 8.799999999999997, 0.29999999999999993, 5, 25, 0.30933333333333324, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2060824', '让你当狱长，没让你把神魔改造成卷王', '最怕取名字', '玄幻奇幻', 'male', 11, 11, 11, 0, 0, 8.599999999999998, 0.1, 1.0999999999999999, 25, 0.25999999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061257', '重生七零：我家老祖宗能通古今', '烟花璀璨', '现代言情', 'women', 18.999999999999996, 18.999999999999996, 18.999999999999996, 0, 0, 8.400000000000002, 0.1, 1.8999999999999997, 25, 0.32, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061269', '七零美人二嫁后，随军西北撩硬汉', '一然', '现代言情', 'women', 4, 4, 4, 0, 0, 8.599999999999998, 0.1, 0.4, 25, 0.20399999999999996, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061800', '重生1985，我靠万物标签赶海发家', '吃不完的荔枝', '都市', 'male', 13.999999999999998, 13.999999999999998, 13.999999999999998, 0, 0, 8.599999999999998, 0.1, 1.4, 25, 0.2839999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062363', '离婚后，我转嫁大佬你哭什么？', '舒子曦', '现代言情', 'women', 8.2, 15, 8.2, 0, 0, 8.599999999999998, 0.1, 0.82, 25, 0.23759999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062835', '小貔貅掉七零军区大院，被全军抢着宠', '加菲不是猫', '现代言情', 'women', 26, 26, 26, 0, 0, 8.400000000000002, 0.1, 2.6000000000000005, 25, 0.37600000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063611', '小蘑菇今天也在吃软饭', '垂耳兔', '古代言情', 'women', 3.307692307692307, 3.3076923076923075, 3.307692307692307, 0, 0, 9.8, 1.3000000000000003, 4.299999999999999, 25, 0.2224615384615385, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064055', '挺孕肚离婚二嫁财阀，渣前夫悔疯了', '一颗胖梨', '现代言情', 'women', 2.2941176470588225, 2.2941176470588234, 2.2941176470588225, 0, 0, 9.400000000000002, 8.5, 19.5, 25, 0.20635294117647063, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064972', '当我捡漏古董后，前女友后悔了', '大金拿', '都市', 'male', 15, 15, 15, 0, 0, 8.400000000000002, 0.1, 1.5, 25, 0.28800000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065885', '重生85：带猫咪去赶海，狂宠九个女儿', '咸鱼咸鱼', '都市', 'male', 5.124999999999999, 5.124999999999999, 5.124999999999999, 0, 0, 9.2, 0.8000000000000002, 4.1, 25, 0.22499999999999998, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066872', '离婚后，从幼儿园会演开始爆火全网', '烂番薯', '都市', 'male', 20.499999999999996, 20.499999999999996, 20.499999999999996, 0, 0, 9.200000000000003, 0.2, 4.100000000000001, 25, 0.34800000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066874', '七五：虎妞为伴，再收个落难大小姐', '任性的狮子', '都市', 'male', 10.249999999999998, 10.249999999999998, 10.249999999999998, 0, 0, 9.099999999999998, 0.4, 4.1000000000000005, 25, 0.26399999999999996, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067317', '夫人拒不原谅，高冷渣夫失控了', '严以妃', '现代言情', 'women', 4.6, 4.6, 4.6, 0, 0, 9.2, 0.5, 2.3, 25, 0.2208, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('207105', '傲世潜龙', '西装暴徒', '都市', 'male', 1.1339869281045747, 1.1339869281045751, 1.1339869281045747, 0, 0, 9.099999999999998, 30.600000000000005, 34.69999999999999, 25, 0.19107189542483657, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2072337', '开局撞破皇帝女儿身', '拉满弓月', '历史', 'male', 6.999999999999999, 6.999999999999999, 6.999999999999999, 0, 0, 8.599999999999998, 0.2, 1.4, 25, 0.22799999999999995, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2075975', 'SSSSSSS级医武至尊', '大盘鸡仙尊', '都市', 'male', 14.499999999999998, 14.499999999999998, 14.499999999999998, 0, 0, 8.400000000000002, 0.2, 2.899999999999999, 25, 0.28400000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076863', '换宗门，当团宠，师妹她修生钱道', '金池', '幻想言情', 'women', 6, 6, 6, 0, 0, 9.200000000000001, 0.29999999999999993, 1.8000000000000003, 25, 0.23200000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2078304', '转生狗妖，我在万世轮回成仙！', '六尺七寸', '玄幻奇幻', 'male', 10, 10, 10, 0, 0, 9.200000000000003, 0.2, 2, 25, 0.26400000000000007, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('218179', '天命风水神相', '半盏清茶', '奇闻异事', 'male', 42.214285714285715, 42.214285714285715, 42.214285714285715, 0, 0, 9.200000000000001, 1.4, 59.10000000000001, 25, 0.5217142857142858, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('222157', '我有神级收益系统', '不是蚊子', '都市', 'male', 329.00000000000006, 329.00000000000006, 329.00000000000006, 0, 0, 9.200000000000001, 2.8, 921.2000000000002, 25, 2.8160000000000007, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('151584', '极品戒指', '淮阴小侯', '都市', 'male', 24.785714285714285, 24.78571428571429, 24.785714285714285, 0, 0, 9.099999999999998, 1.4, 34.69999999999999, 25, 0.3802857142857142, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1648167', '开局截胡五虎上将', '孔明很愁', '历史', 'male', 287.14814814814815, 287.1481481481481, 287.14814814814815, 0, 0, 9.099999999999998, 2.7, 775.3, 25, 2.479185185185185, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1658839', '穿成孩子妈，奋斗成赢家', '冉阿冉', '现代言情', 'women', 0.7857142857142858, 0.7857142857142858, 0.7857142857142858, 0, 0, 9.5, 1.4, 1.0999999999999996, 25, 0.19628571428571429, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1673461', '三个缩小版大佬带百亿资产上门', '一轮玫瑰', '现代言情', 'women', 0.27272727272727265, 0.2727272727272727, 0.27272727272727265, 0, 0, 9.5, 2.1999999999999993, 0.5999999999999999, 25, 0.19218181818181818, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1683831', '重生八零嫁给全军第一硬汉', '九羊猪猪', '现代言情', 'women', 66.7857142857143, 66.78571428571429, 66.7857142857143, 0, 0, 9.5, 5.6, 374, 25, 0.7242857142857144, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1697498', '末世天灾，抢艘航母当基地', '封卷残云', '科幻', 'male', 383.5833333333334, 383.58333333333337, 383.5833333333334, 0, 0, 8.799999999999997, 1.1999999999999997, 460.3000000000001, 25, 3.2446666666666673, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1699328', '大佬归来，假千金她不装了', '骑着猫的小鱼干', '现代言情', 'women', 0.6584440227703984, 0.6584440227703985, 0.6584440227703984, 0, 0, 9.700000000000003, 52.70000000000001, 34.69999999999999, 25, 0.19926755218216324, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1725180', '我废柴真千金，会亿点玄学怎么了', '甜幽幽', '现代言情', 'women', 0.33333333333333337, 0.33333333333333337, 0.33333333333333337, 0, 0, 9.7, 2.3999999999999995, 0.8, 25, 0.19666666666666668, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1761352', '易孕体质，七零长嫂凶又甜', '方赢', '现代言情', 'women', 0.19047619047619052, 0.19047619047619047, 0.19047619047619052, 0, 0, 9.7, 2.1000000000000005, 0.4, 25, 0.19552380952380952, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1767349', '父皇偷听我心声杀疯了，我负责吃奶', '安已然', '古代言情', 'women', 0.3703703703703703, 0.37037037037037035, 0.3703703703703703, 0, 0, 9.599999999999998, 2.7, 1, 25, 0.19496296296296292, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1780456', '混沌鼎', '鬼疯子', '玄幻奇幻', 'male', 86.85714285714288, 86.85714285714286, 86.85714285714288, 0, 0, 9, 1.4, 121.59999999999998, 25, 0.8748571428571431, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1801623', '帝国皇太子，老子不干了！', '灰色小猫', '历史', 'male', 141.08333333333331, 141.08333333333334, 141.08333333333331, 0, 0, 8.900000000000002, 2.3999999999999995, 338.6, 25, 1.3066666666666666, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1810593', '嫁权臣', '有香如故', '古代言情', 'women', 0.13636363636363633, 0.13636363636363635, 0.13636363636363633, 0, 0, 9.7, 2.1999999999999997, 0.29999999999999993, 25, 0.1950909090909091, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1848650', '夜火缠绵', '骨子鱼', '现代言情', 'women', 0.7333333333333334, 0.7333333333333334, 0.7333333333333334, 0, 0, 9.5, 1.5, 1.0999999999999999, 25, 0.19586666666666666, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1863729', '断亲不伺候了，哥哥们破产睡天桥', '红十三', '现代言情', 'women', 188.8, 188.79999999999998, 188.8, 0, 0, 9.099999999999998, 3, 566.3999999999999, 25, 1.6924000000000001, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1893629', '捡了小福星后，将军府旺疯了', '树己不树人', '古代言情', 'women', 4.670769230769229, 53.07692307692307, 4.670769230769229, 0, 0, 9.5, 1.3000000000000003, 6.071999999999995, 25, 0.22736615384615383, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1949695', '被贵妃配给太监当对食后', '沙子', '古代言情', 'women', 14.221214574898784, 19.732793522267205, 14.221214574898784, 0, 0, 9.5, 24.699999999999992, 351.26399999999995, 25, 0.3037697165991903, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1963728', '玄黄鼎', '不做梵高', '玄幻奇幻', 'male', 15.152046783625734, 15.152046783625732, 15.152046783625734, 0, 0, 9, 17.099999999999994, 259.0999999999999, 25, 0.3012163742690059, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1968483', '霍总，太太不复婚，只改嫁！', '相思一顾', '现代言情', 'women', 5.1615, 7.9875, 5.1615, 0, 0, 9.5, 8, 41.292, 25, 0.231292, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1989835', '刚入截教，听到截教气运在抱怨', '超爱吃甜粽子', '武侠仙侠', 'male', 57.61538461538463, 57.61538461538462, 57.61538461538463, 0, 0, 9.200000000000003, 1.3000000000000003, 74.89999999999998, 25, 0.644923076923077, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1992339', '重回七零，搬空养父母家库房下乡了', '暖以沐', '现代言情', 'women', 16.75, 16.75, 16.75, 0, 0, 9.5, 5.6, 93.79999999999997, 25, 0.324, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2016334', '深情失控，他服软低哄别离婚', '林深深', '现代言情', 'women', 9.823908045977014, 11.149425287356323, 9.823908045977014, 0, 0, 9.400000000000002, 8.700000000000003, 85.46799999999999, 25, 0.26659126436781616, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2021927', '西游：取经？关我混沌魔猿什么事！', '南木北树', '武侠仙侠', 'male', 29.04166666666667, 29.041666666666668, 29.04166666666667, 0, 0, 9, 2.3999999999999995, 69.70000000000002, 25, 0.4123333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2022495', '情劫', '花小刺', '都市', 'male', 11.930303030303032, 12.424242424242426, 11.930303030303032, 0, 0, 9.099999999999998, 6.599999999999999, 78.74, 25, 0.2774424242424242, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('202636', '九转星辰诀', '晨弈', '玄幻奇幻', 'male', 176.9302325581395, 176.93023255813952, 176.9302325581395, 0, 0, 9.200000000000001, 4.299999999999999, 760.8, 25, 1.5994418604651162, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2027484', '领证爽约？我转嫁你哥哭什么', '欧橙', '现代言情', 'women', 12.134615384615385, 12.134615384615385, 12.134615384615385, 0, 0, 9.2, 10.400000000000002, 126.20000000000003, 25, 0.2810769230769231, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2046772', '纵情人生', '一缕微光', '都市', 'male', 8.2, 8.533333333333333, 8.2, 0, 0, 9, 4.5, 36.89999999999999, 25, 0.2456, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2050780', '渣夫骗我领假证，转身携千亿资产嫁权少', '唐小糖', '现代言情', 'women', 4.448504983388704, 4.4485049833887045, 4.448504983388704, 0, 0, 9.5, 30.100000000000005, 133.90000000000003, 25, 0.22558803986710962, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2054267', '三年婚姻喂了狗，二嫁律师宠疯了', '炎热的夏天', '现代言情', 'women', 17, 17, 17, 0, 0, 8.599999999999998, 0.1, 1.6999999999999997, 25, 0.30799999999999994, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2054306', '无敌皇子：从边关开始制霸天下！', '大内低手', '历史', 'male', 15, 15, 15, 0, 0, 8.400000000000002, 0.2, 3, 25, 0.28800000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2055380', '哑奴带崽改嫁，清冷权臣悔疯了', '桐原雪穗穗穗穗', '古代言情', 'women', 6.666666666666668, 6.666666666666667, 6.666666666666668, 0, 0, 8.599999999999998, 0.29999999999999993, 2, 25, 0.2253333333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2057851', '从把傲娇室友捧成娱乐天后开始', '罗宝爱花卷', '都市', 'male', 18.999999999999996, 18.999999999999996, 18.999999999999996, 0, 0, 9.2, 0.10000000000000002, 1.8999999999999997, 25, 0.33599999999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061856', '王府里来了个捡破烂的崽崽', '三颗小石头', '古代言情', 'women', 3.5301507537688446, 3.5301507537688446, 3.5301507537688446, 0, 0, 9.6, 39.8, 140.5, 25, 0.22024120603015077, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062836', '重回七零：跟着小白脸爸进城吃软饭', '巫颜', '现代言情', 'women', 7.000000000000001, 7.000000000000001, 7.000000000000001, 0, 0, 9.599999999999998, 0.5999999999999999, 4.200000000000001, 25, 0.24799999999999994, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063608', '边疆老卒，御赐老婆后我越活越勇', '月光大妖怪', '历史', 'male', 3.5161290322580645, 3.5161290322580645, 3.5161290322580645, 0, 0, 9, 3.100000000000001, 10.900000000000004, 25, 0.20812903225806453, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063933', '网游：进化万物，我成唯一至高神！', '苍月翔', '游戏', 'male', 10.666666666666664, 10.666666666666668, 10.666666666666664, 0, 0, 9.2, 0.29999999999999993, 3.2000000000000006, 25, 0.2693333333333333, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066484', '四合院：从技术员到人生赢家', '辰语', 'N次元', 'male', 25, 25, 25, 0, 0, 8.400000000000002, 0.1, 2.5, 25, 0.36800000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066492', '空间系统穿七零，肥妻暴瘦暴富样样行', '慕荣华', '现代言情', 'women', 6.4, 6.4, 6.4, 0, 0, 8.799999999999999, 0.5, 3.2, 25, 0.22719999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067201', '掏空仇家空间流放，亲爹一家悔哭', '景惠', '古代言情', 'women', 2.5862068965517233, 2.586206896551724, 2.5862068965517233, 0, 0, 9.5, 5.799999999999998, 15, 25, 0.21068965517241378, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067310', '问鼎：从选调警员到权力巅峰', '叶少华', '都市', 'male', 5.6, 5.6, 5.6, 0, 0, 9.2, 0.5, 2.8, 25, 0.2288, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067420', '年代：开局一把小猎枪，娇妻貌美肉满仓', '钓鱼捞', '都市', 'male', 8.571428571428571, 8.571428571428571, 8.571428571428571, 0, 0, 8.900000000000002, 0.7, 6, 25, 0.2465714285714286, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2073165', '被他吻时心动', '玛丽苏狗蛋', '现代言情', 'women', 8.75, 8.75, 8.75, 0, 0, 9.200000000000003, 0.4, 3.5, 25, 0.25400000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074327', '御堂春事', '荞麦十二画', '古代言情', 'women', 8, 8, 8, 0, 0, 8, 0.10000000000000002, 0.8000000000000002, 25, 0.22400000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2077580', '裴大人，表小姐她又跑了', '蓝莓爆珠', '古代言情', 'women', 7.666666666666668, 7.666666666666666, 7.666666666666668, 0, 0, 9.200000000000003, 0.29999999999999993, 2.3000000000000007, 25, 0.2453333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('215264', '都市战狼', '荆南', '都市', 'male', 230.66666666666663, 230.66666666666666, 230.66666666666663, 0, 0, 9.200000000000001, 1.8000000000000005, 415.1999999999999, 25, 2.029333333333333, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('217822', '天命成凰', '赵小球', '古代言情', 'women', 0.3125, 0.3125, 0.3125, 0, 0, 9.400000000000002, 3.2, 1, 25, 0.19050000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1651341', '盖世圣医', '林阳', '都市', 'male', 298.2222222222222, 298.2222222222222, 298.2222222222222, 0, 0, 9.099999999999998, 0.9000000000000002, 268.4000000000001, 25, 2.5677777777777773, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1669371', '吞天神帝', '小三叔', '玄幻奇幻', 'male', 71, 71, 71, 0, 0, 9, 1.5, 106.5, 25, 0.748, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1741639', '九零军媳：兵王老公不见面', '香辣小螃蟹', '现代言情', 'women', 0.2222222222222223, 0.22222222222222224, 0.2222222222222223, 0, 0, 9.7, 1.8000000000000003, 0.4000000000000001, 25, 0.19577777777777777, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1747899', '无敌六皇子', '梁山老鬼', '历史', 'male', 0.8829516539440209, 0.8829516539440205, 0.8829516539440209, 0, 0, 9.299999999999997, 39.30000000000001, 34.69999999999999, 25, 0.1930636132315521, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1763089', '喜棺开，百鬼散，王妃她从地狱来', '一碗佛跳墙', '古代言情', 'women', 4.082352941176472, 4.082352941176471, 4.082352941176472, 0, 0, 9.799999999999999, 8.5, 34.69999999999999, 25, 0.22865882352941175, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1803283', '皇叔借点功德，王妃把符画猛了', '安卿心', '古代言情', 'women', 0.3323754789272031, 0.3323754789272031, 0.3323754789272031, 0, 0, 9.700000000000001, 104.40000000000002, 34.69999999999999, 25, 0.19665900383141766, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1807804', '重启2008：从拯救绝色女老师开始逆袭', '封尘往昔', '都市', 'male', 384.9, 384.9, 384.9, 0, 0, 9, 1, 384.9, 25, 3.2592, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1819118', '八零养崽：清冷美人被科研大佬宠上天！', '桔子阿宝', '现代言情', 'women', 0.6315789473684211, 0.631578947368421, 0.6315789473684211, 0, 0, 9.599999999999998, 1.8999999999999997, 1.1999999999999997, 25, 0.1970526315789473, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1844850', '饥荒年，我囤货娇养了古代大将军', '苜肉', '古代言情', 'women', 2.648854961832061, 2.648854961832061, 2.648854961832061, 0, 0, 9.599999999999998, 13.099999999999996, 34.69999999999999, 25, 0.21319083969465644, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1847406', '此夜逢君', '晨露嫣然', '古代言情', 'women', 0.3571428571428571, 0.35714285714285715, 0.3571428571428571, 0, 0, 9.7, 2.8, 1, 25, 0.19685714285714287, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1850556', '让我娶傻千金，你又回来求我离婚？', '摸鱼小将', '都市', 'male', 28.226181818181814, 29.4, 28.226181818181814, 0, 0, 9.099999999999998, 5.5, 155.24400000000003, 25, 0.4078094545454545, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1851521', '魔女校花从无绯闻，直到遇上了我', '铲子王', '都市', 'male', 109.875, 109.875, 109.875, 0, 0, 9.299999999999999, 1.6, 175.8, 25, 1.065, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1853441', '春华照灼', '蝉不知雪', '古代言情', 'women', 2.2400000000000007, 50.46153846153845, 2.2400000000000007, 0, 0, 9.700000000000001, 2.6000000000000005, 5.823999999999997, 25, 0.21192000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1854610', '八零娇女一撒娇，高冷军少领证了', '白茶流萤', '现代言情', 'women', 33.801324503311264, 33.80132450331126, 33.801324503311264, 0, 0, 9.200000000000003, 15.099999999999996, 510.3999999999999, 25, 0.45441059602649014, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1861632', '我有一家纸扎铺', '花萝吱吱', '现代言情', 'women', 1.2289655172413791, 27.413793103448278, 1.2289655172413791, 0, 0, 9.7, 2.899999999999999, 3.564000000000003, 25, 0.20383172413793105, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1927415', '离婚三天：我冷淡至极，他索吻成瘾', '风羽轻轻', '现代言情', 'women', 16.629629629629626, 16.62962962962963, 16.629629629629626, 0, 0, 9.5, 13.5, 224.5, 25, 0.323037037037037, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1936358', '大楚第一逍遥王', '打得你喵喵叫', '历史', 'male', 14.9448, 15.559999999999999, 14.9448, 0, 0, 9, 5, 74.72399999999999, 25, 0.2995584, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1941553', '我的峥嵘岁月', '牛不易', '都市', 'male', 14.088727272727276, 14.672727272727274, 14.088727272727276, 0, 0, 9.2, 5.5, 77.48800000000001, 25, 0.2967098181818182, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1945519', '马甲藏不住，假千金炸翻全京圈', '程不言', '现代言情', 'women', 69.01492537313433, 69.01492537313432, 69.01492537313433, 0, 0, 9.799999999999999, 6.700000000000002, 462.3999999999999, 25, 0.7481194029850746, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1989780', '权力医途', '端午', '都市', 'male', 9.70769230769231, 9.707692307692309, 9.70769230769231, 0, 0, 9.099999999999998, 19.5, 189.3, 25, 0.25966153846153844, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1994174', '恶婆婆重生后，怂包儿媳被宠成宝！', '洇鹤', '古代言情', 'women', 18.999999999999996, 18.999999999999996, 18.999999999999996, 0, 0, 8.900000000000002, 0.2, 3.7999999999999994, 25, 0.33, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2002910', '嫁太监？踏破鬼门女帝凤临天下', '狐狸九', '古代言情', 'women', 4.56923076923077, 4.569230769230769, 4.56923076923077, 0, 0, 9.599999999999998, 26, 118.79999999999998, 25, 0.2285538461538461, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2011930', '末世别人砍丧尸，我在房车炫美食', '槿花篱', '幻想言情', 'women', 13.451612903225808, 13.451612903225808, 13.451612903225808, 0, 0, 9.700000000000003, 3.100000000000001, 41.69999999999999, 25, 0.30161290322580653, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2020570', '重生70：让你守门，你整了个蘑菇云？', '历史小尘埃', '都市', 'male', 18.818181818181817, 18.818181818181817, 18.818181818181817, 0, 0, 9.099999999999998, 1.0999999999999996, 20.699999999999996, 25, 0.3325454545454545, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2027749', '刚抽中SSS级天赋，你跟我说游戏停服', '吃猫的鱼仔', '玄幻奇幻', 'male', 17.038095238095238, 17.738095238095237, 17.038095238095238, 0, 0, 9.2, 4.200000000000001, 71.56, 25, 0.32030476190476187, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2038385', 'SSSSSSSSSSSSS级镇狱狂龙', '封情老衲', '都市', 'male', 1.9003495145631073, 1.9786407766990293, 1.9003495145631073, 0, 0, 9.099999999999998, 51.5, 97.868, 25, 0.19720279611650482, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2038910', '你惹她干什么？她修的是杀道啊', '璃焰', '幻想言情', 'women', 9.047619047619051, 9.047619047619047, 9.047619047619051, 0, 0, 9.599999999999998, 6.299999999999998, 57, 25, 0.2643809523809524, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2052703', '双生兄弟要换亲？我稳做侯门主母', '林拾酒', '古代言情', 'women', 8.534090909090908, 8.534090909090908, 8.534090909090908, 0, 0, 9.5, 8.799999999999997, 75.10000000000001, 25, 0.25827272727272726, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2053789', '权力沉浮', '空中鹰', '都市', 'male', 6.1, 6.1, 6.1, 0, 0, 8.799999999999997, 1, 6.1, 25, 0.22479999999999994, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2055904', '被沈家抛弃后，真千金她马甲炸翻全球', '鹿笙', '现代言情', 'women', 15, 15, 15, 0, 0, 8.400000000000002, 0.2, 3, 25, 0.28800000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2059138', '救命！求生综里看风水，爆火全网', '桑桑籽', '现代言情', 'women', 22.999999999999996, 22.999999999999996, 22.999999999999996, 0, 0, 8.599999999999998, 0.1, 2.3000000000000003, 25, 0.35599999999999987, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2060184', '开局娶女囚，我成就最强悍卒', '青衫酌酒', '历史', 'male', 12.8, 12.8, 12.8, 0, 0, 9.2, 0.5, 6.4, 25, 0.2864, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2060816', '重生78：我靠岛赶海，带全家暴富！', '夕墨沉烟', '都市', 'male', 13.5, 13.5, 13.5, 0, 0, 8.799999999999997, 0.2, 2.7, 25, 0.2839999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061267', '边军枭卒：从领媳妇开始皇图霸业', '凉小城', '历史', 'male', 9.499999999999998, 9.499999999999998, 9.499999999999998, 0, 0, 8.799999999999997, 0.2, 1.8999999999999997, 25, 0.2519999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061854', '恐怖时代：从斩诡开始永生不死', '戒律', '都市', 'male', 21, 21, 21, 0, 0, 8.400000000000002, 0.1, 2.1000000000000005, 25, 0.336, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2061932', '九零带崽寻亲，被绝嗣大佬宠疯了', '树梢上', '现代言情', 'women', 9.000000000000002, 9.000000000000002, 9.000000000000002, 0, 0, 9.400000000000002, 1.1999999999999997, 10.800000000000002, 25, 0.26000000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062787', '镇世龙王，你说他是废物赘婿？', '小只气球', '都市', 'male', 15, 15, 15, 0, 0, 8.400000000000002, 0.10000000000000002, 1.5, 25, 0.28800000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063300', '五个大佬命里缺我，我只管吃奶', '舒展v', '现代言情', 'women', 16, 16, 16, 0, 0, 9.2, 0.1, 1.6, 25, 0.312, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064344', '都市绝品神医', '就爱吃牛肉', '都市', 'male', 19.5, 19.5, 19.5, 0, 0, 8.799999999999997, 0.2, 3.899999999999999, 25, 0.33199999999999996, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064966', '成全他和青梅后，我却成了白月光', '墨墨卿卿', '现代言情', 'women', 2.0988372093023253, 2.0988372093023258, 2.0988372093023253, 0, 0, 9.599999999999998, 17.199999999999996, 36.10000000000001, 25, 0.20879069767441855, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065348', '父兄拿我当草，随母改嫁断亲当皇后', '饱福福', '古代言情', 'women', 20, 20, 20, 0, 0, 8.400000000000002, 0.1, 2, 25, 0.32800000000000007, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065813', '开局捉奸，傍上权臣好孕来', '雨过阳光', '古代言情', 'women', 4.714285714285714, 4.714285714285714, 4.714285714285714, 0, 0, 9.200000000000003, 0.7, 3.2999999999999994, 25, 0.22171428571428575, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067718', '四合院：开局猎户，邻居喝风我吃肉！', '刚烈的汉子', 'N次元', 'male', 13, 13, 13, 0, 0, 8.9, 0.4000000000000001, 5.2, 25, 0.28200000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2070054', '穿成恶女向导，七个顶级哨兵疯抢！', '贰一陆', '幻想言情', 'women', 6.5, 6.5, 6.5, 0, 0, 9.2, 0.4000000000000001, 2.6000000000000005, 25, 0.236, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2073050', '权力巅峰：SSSS级村书记！', '荒苑爆红', '都市', 'male', 2.7857142857142856, 2.785714285714286, 2.7857142857142856, 0, 0, 9.299999999999999, 1.4, 3.8999999999999995, 25, 0.2082857142857143, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074412', '和初恋官宣后，装瘸前夫气得站起来了', '青时序', '现代言情', 'women', 4.38, 9, 4.38, 0, 0, 9.200000000000001, 0.2, 0.8759999999999998, 25, 0.21904000000000007, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074462', '七零孕妻进军营，野痞兵王缠吻不休', '玖甜妹子', '现代言情', 'women', 5.111111111111112, 5.111111111111111, 5.111111111111112, 0, 0, 9.200000000000003, 0.9000000000000002, 4.600000000000001, 25, 0.22488888888888894, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2075352', '资本家假千金，搬空家产嫁糙汉', '韶光煮雪', '现代言情', 'women', 5.999999999999999, 5.999999999999999, 5.999999999999999, 0, 0, 9.2, 0.4000000000000001, 2.3999999999999995, 25, 0.23199999999999998, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076515', '乾元混沌塔', '织花明路', '玄幻奇幻', 'male', 9.499999999999998, 9.499999999999998, 9.499999999999998, 0, 0, 8.599999999999998, 0.20000000000000004, 1.8999999999999997, 25, 0.24799999999999994, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2078905', '夺我灵泉空间？掏空资产嫁京少爽翻天', '桃乐漫', '现代言情', 'women', 0.8461538461538461, 0.8461538461538461, 0.8461538461538461, 0, 0, 9.200000000000001, 1.3000000000000003, 1.0999999999999996, 25, 0.19076923076923083, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('208897', '极品天师', '月下冰河', '都市', 'male', 24.785714285714285, 24.78571428571429, 24.785714285714285, 0, 0, 9.200000000000001, 1.4, 34.69999999999999, 25, 0.38228571428571434, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('208898', '极品小侯爷', '梦入山河', '历史', 'male', 451, 451, 451, 0, 0, 9.200000000000001, 1.5, 676.5, 25, 3.792, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('209888', '重回1991', '南三石', '都市', 'male', 447.076923076923, 447.0769230769231, 447.076923076923, 0, 0, 9.3, 1.3, 581.2, 25, 3.7626153846153843, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('210771', '万古龙帝', '拓跋流云', '玄幻奇幻', 'male', 17.35, 17.35, 17.35, 0, 0, 9.1, 2, 34.7, 25, 0.3208, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('215243', '第一瞳术师', '喵喵大人', '幻想言情', 'women', 1.5013333333333336, 1.7794871794871796, 1.5013333333333336, 0, 0, 9.8, 19.5, 29.276, 25, 0.2080106666666667, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1672801', '太古吞天诀', '心无尘', '玄幻奇幻', 'male', 76.54166666666667, 76.54166666666667, 76.54166666666667, 0, 0, 9, 2.4, 183.69999999999996, 25, 0.7923333333333334, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1684297', '规则怪谈，欢迎来到甜蜜的家', '弦泠兮', '幻想言情', 'women', 0.24137931034482754, 0.24137931034482757, 0.24137931034482754, 0, 0, 9.8, 2.899999999999999, 0.6999999999999998, 25, 0.19793103448275864, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1706674', '开局麒麟肾，吓哭九个绝色娇妻', '神级大牛', '都市', 'male', 235.5238095238096, 235.52380952380952, 235.5238095238096, 0, 0, 9.099999999999998, 2.1000000000000005, 494.6000000000001, 25, 2.0661904761904766, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1723049', '天门神医', '小楼听雨本尊', '都市', 'male', 44.6515254237288, 46.50847457627118, 44.6515254237288, 0, 0, 9.2, 5.9, 263.4440000000001, 25, 0.5412122033898303, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1761978', '葬神棺', '浮生一诺', '玄幻奇幻', 'male', 0.6912350597609561, 0.6912350597609562, 0.6912350597609561, 0, 0, 9.299999999999999, 50.2, 34.69999999999999, 25, 0.19152988047808764, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1764634', '七零：最硬糙汉被媳妇撩红了眼', '一尾小锦鲤', '现代言情', 'women', 2.0654761904761902, 2.0654761904761907, 2.0654761904761902, 0, 0, 9.299999999999997, 16.800000000000004, 34.69999999999999, 25, 0.20252380952380947, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1780785', '吞天混沌经：开局先吞圣女修为', '一阵乱写', '玄幻奇幻', 'male', 35.56347826086956, 37.04347826086956, 35.56347826086956, 0, 0, 9.099999999999998, 6.900000000000001, 245.38799999999995, 25, 0.4665078260869564, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1802216', '诱她，一夜成瘾', '壹鹿小跑', '现代言情', 'women', 124.97727272727272, 124.9772727272727, 124.97727272727272, 0, 0, 9.400000000000002, 4.399999999999999, 549.8999999999999, 25, 1.1878181818181819, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1803136', '第一凤女', '十二妖', '古代言情', 'women', 0.9012987012987014, 0.9012987012987014, 0.9012987012987014, 0, 0, 9.700000000000003, 38.5, 34.69999999999999, 25, 0.20121038961038967, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1840296', '夫君清心寡欲，我却连生三胎', '米团开花', '古代言情', 'women', 48.590163934426236, 48.59016393442623, 48.590163934426236, 0, 0, 9.700000000000003, 6.1, 296.4000000000001, 25, 0.58272131147541, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1850695', '炼神鼎', '秋月梧桐', '玄幻奇幻', 'male', 12.228157894736839, 12.736842105263158, 12.228157894736839, 0, 0, 9, 15.199999999999998, 185.86799999999997, 25, 0.27782526315789474, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1864909', '将军活不过仨月，换亲后我旺他百年', '不知绿', '古代言情', 'women', 28.183673469387756, 28.183673469387752, 28.183673469387756, 0, 0, 9.599999999999998, 4.9, 138.09999999999997, 25, 0.417469387755102, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1868453', '噬神鼎', '三千晴空', '玄幻奇幻', 'male', 47.10916666666666, 49.0625, 47.10916666666666, 0, 0, 8.900000000000002, 4.799999999999999, 226.12400000000002, 25, 0.5548733333333333, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1872563', '为奴三年后，整个侯府跪求我原谅', '莫小弃', '古代言情', 'women', 0.8920308483290492, 0.892030848329049, 0.8920308483290492, 0, 0, 8.8, 38.89999999999999, 34.7, 25, 0.18313624678663243, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1879542', '我宫斗冠军，矜贵世子俯首称臣', '唐荔枝', '古代言情', 'women', 105.76562499999999, 105.76562499999999, 105.76562499999999, 0, 0, 9.700000000000003, 6.4, 676.8999999999999, 25, 1.0401250000000002, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1888581', '葬仙棺', '执笔人', '玄幻奇幻', 'male', 20.87012987012987, 20.87012987012987, 20.87012987012987, 0, 0, 9.099999999999998, 15.400000000000002, 321.4, 25, 0.3489610389610389, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1948025', '夺妻', '将满', '现代言情', 'women', 86.81081081081082, 86.8108108108108, 86.81081081081082, 0, 0, 9.5, 3.7000000000000006, 321.19999999999993, 25, 0.8844864864864865, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1948198', '半熟', '槿郗', '现代言情', 'women', 10.458823529411763, 10.458823529411765, 10.458823529411763, 0, 0, 9.5, 8.5, 88.9, 25, 0.2736705882352941, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1952077', '一胎又一胎，说好的禁欲指挥官呢？', '望南云慢', '现代言情', 'women', 13.195965417867429, 13.195965417867434, 13.195965417867429, 0, 0, 9.5, 34.7, 457.89999999999986, 25, 0.29556772334293946, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1956833', '我就上山打个猎，你让我逐鹿中原？', '张正经', '历史', 'male', 39.734285714285726, 41.38095238095238, 39.734285714285726, 0, 0, 9.200000000000001, 4.200000000000001, 166.884, 25, 0.5018742857142859, 'B级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1965108', '召诸神，踏万界，天命帝女逆乾坤', '澜岸', '幻想言情', 'women', 11.164179104477617, 11.164179104477611, 11.164179104477617, 0, 0, 9.699999999999998, 6.700000000000002, 74.79999999999998, 25, 0.2833134328358209, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1968456', '断绝关系后，觉醒SSS级天赋百分百爆率', '赛博说书人', '都市', 'male', 23.699999999999992, 23.7, 23.699999999999992, 0, 0, 9, 2, 47.399999999999984, 25, 0.36959999999999993, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982193', '我的26岁女总裁', '卧龙岗小弟', '都市', 'male', 19.857142857142854, 19.857142857142858, 19.857142857142854, 0, 0, 9, 3.5, 69.5, 25, 0.33885714285714286, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1982356', '渣夫别跪了，夫人嫁顶级大佬啦', '乐恩', '现代言情', 'women', 14.831578947368426, 14.83157894736842, 14.831578947368426, 0, 0, 9.2, 47.5, 704.5, 25, 0.3026526315789474, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1984430', '网游：开局刮刮乐，觉醒唯一SSS天赋', '亦晨', '游戏', 'male', 18.30291666666667, 19.0625, 18.30291666666667, 0, 0, 9, 9.599999999999998, 175.708, 25, 0.3264233333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1989239', '财戒', '嚣张农民', '都市', 'male', 19.084, 19.875, 19.084, 0, 0, 9.099999999999998, 12, 229.00799999999998, 25, 0.33467199999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1991811', '错良缘', '雨山雪', '古代言情', 'women', 18.72727272727272, 18.727272727272727, 18.72727272727272, 0, 0, 9.599999999999998, 3.2999999999999994, 61.79999999999999, 25, 0.3418181818181817, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2023697', '男人野性', '月下冰河', '都市', 'male', 5.13921568627451, 5.13921568627451, 5.13921568627451, 0, 0, 9.099999999999998, 51, 262.0999999999999, 25, 0.22311372549019604, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2036574', '被贬北凉，我打造了无敌大雪龙骑！', '画虫的小龙', '历史', 'male', 22.272727272727273, 22.27272727272727, 22.272727272727273, 0, 0, 8.900000000000002, 1.0999999999999996, 24.5, 25, 0.35618181818181827, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2037407', '炼妖塔', '霸业', '玄幻奇幻', 'male', 23.999999999999996, 23.999999999999996, 23.999999999999996, 0, 0, 8.599999999999998, 0.1, 2.3999999999999995, 25, 0.3639999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2052832', '北地悍枭', '狼太孤', '历史', 'male', 8.416666666666668, 8.416666666666666, 8.416666666666668, 0, 0, 9.200000000000003, 3.600000000000001, 30.300000000000008, 25, 0.2513333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2054313', '阴阳塔', '水管开花', '玄幻奇幻', 'male', 6.588235294117648, 6.588235294117647, 6.588235294117648, 0, 0, 9, 1.6999999999999995, 11.2, 25, 0.2327058823529412, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2055000', '快穿好孕美人，绝嗣反派黑化了', '虞忧', '幻想言情', 'women', 17, 17, 17, 0, 0, 8.400000000000002, 0.2, 3.399999999999999, 25, 0.30400000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2055377', '你偏心，我改嫁！赶紧喊我小婶婶', '江梧蘅', '现代言情', 'women', 6.142857142857143, 6.142857142857143, 6.142857142857143, 0, 0, 9.3, 0.7, 4.299999999999999, 25, 0.23514285714285715, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2060462', '七零闪婚不见面，带娃炸翻家属院', '桃桃宝宝', '现代言情', 'women', 1.4618320610687017, 1.4618320610687021, 1.4618320610687017, 0, 0, 9.400000000000002, 26.199999999999992, 38.30000000000001, 25, 0.19969465648854967, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2060801', '穿成反派，开局迎娶主角未婚妻', '毛毛超爱吃', '玄幻奇幻', 'male', 11, 11, 11, 0, 0, 8.400000000000002, 0.1, 1.0999999999999996, 25, 0.256, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062428', '99次逃婚后，她攀上了京圈权贵', '栗子甜豆糕', '现代言情', 'women', 16, 16, 16, 0, 0, 9.2, 0.10000000000000002, 1.6000000000000003, 25, 0.312, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063976', '都市情劫', '御龙', '都市', 'male', 3, 3, 3, 0, 0, 8.799999999999997, 1, 3, 25, 0.19999999999999993, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065959', '让我进京当质子，我开局带兵强掳花魁', '有点刺挠', '历史', 'male', 11, 11, 11, 0, 0, 9.2, 0.5, 5.5, 25, 0.272, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067312', '网游：开局一条龙服务', '黑白相间', '游戏', 'male', 5.666666666666666, 5.666666666666666, 5.666666666666666, 0, 0, 9.3, 0.9000000000000002, 5.1, 25, 0.23133333333333336, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067319', '闪婚后，老公竟是我大学教授', '多多美', '现代言情', 'women', 3.8666666666666676, 6.666666666666667, 3.8666666666666676, 0, 0, 8.400000000000002, 0.29999999999999993, 1.16, 25, 0.19893333333333338, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2071506', '开局玉女宗，被仙子挑走当人丹', '三明治', '玄幻奇幻', 'male', 5, 5, 5, 0, 0, 8.400000000000002, 0.4, 2, 25, 0.20800000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074077', '开局一辆垃圾车，假千金杀穿末世', '温念君', '幻想言情', 'women', 12.399999999999999, 13.999999999999998, 12.399999999999999, 0, 0, 9.200000000000001, 0.1, 1.24, 25, 0.2832, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074218', '贪恋她', '谢九笙', '现代言情', 'women', 1.3999999999999997, 1.4, 1.3999999999999997, 0, 0, 9.199999999999998, 0.5, 0.6999999999999998, 25, 0.19519999999999993, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074333', '一掌退大帝，你说他是杂役弟子？', '百万单机王', '玄幻奇幻', 'male', 11.999999999999998, 11.999999999999998, 11.999999999999998, 0, 0, 8.599999999999998, 0.1, 1.1999999999999997, 25, 0.2679999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074368', '职路扶摇', '桑迪', '都市', 'male', 13, 13, 13, 0, 0, 8.400000000000002, 0.1, 1.3000000000000003, 25, 0.272, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074393', '乱世荒年：从打猎开始无限抽奖', '可破', '历史', 'male', 7.333333333333332, 7.333333333333334, 7.333333333333332, 0, 0, 9.200000000000001, 0.29999999999999993, 2.1999999999999993, 25, 0.2426666666666667, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076400', '镇荒印', '李中有梦', '玄幻奇幻', 'male', 10.5, 10.5, 10.5, 0, 0, 9.2, 0.2, 2.1000000000000005, 25, 0.268, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2077743', '灾荒年捡回姐妹花，我粮肉满仓！', '小小月月落落', '历史', 'male', 6.200000000000002, 6.2, 6.200000000000002, 0, 0, 9.2, 0.5, 3.100000000000001, 25, 0.23360000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2079417', '经常杀人的朋友', '魂燚', '都市', 'male', 5.142857142857143, 5.142857142857143, 5.142857142857143, 0, 0, 9.2, 0.6999999999999998, 3.600000000000001, 25, 0.22514285714285714, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('209898', '我能采集万物', '存叶', '科幻', 'male', 23.13333333333333, 23.133333333333336, 23.13333333333333, 0, 0, 9.200000000000003, 1.5, 34.69999999999999, 25, 0.36906666666666665, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('214147', '阴阳诡匠', '洛小阳', '奇闻异事', 'male', 136.42105263157896, 136.42105263157896, 136.42105263157896, 0, 0, 9.599999999999998, 1.8999999999999997, 259.19999999999993, 25, 1.2833684210526315, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('215476', '学霸女王马甲多', '灰夫人', '现代言情', 'women', 0.36363636363636365, 0.36363636363636365, 0.36363636363636365, 0, 0, 9.799999999999999, 2.1999999999999993, 0.8, 25, 0.1989090909090909, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('215780', '绝世强龙', '张龙虎', '都市', 'male', 10.84375, 10.84375, 10.84375, 0, 0, 8.799999999999997, 3.2, 34.69999999999999, 25, 0.26274999999999993, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('217770', '全师门就我一个废柴', '白木木', '幻想言情', 'women', 3.7098734177215182, 4.3924050632911396, 3.7098734177215182, 0, 0, 9.799999999999999, 7.900000000000001, 29.307999999999993, 25, 0.2256789873417721, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('219498', '君夫人的马甲层出不穷', '荷衣', '现代言情', 'women', 136.0188235294118, 161.8823529411765, 136.0188235294118, 0, 0, 9.700000000000003, 5.100000000000001, 693.6960000000003, 25, 1.2821505882352944, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('222767', '离婚后她惊艳了世界', '明婳', '现代言情', 'women', 0.31964000000000015, 0.34700000000000003, 0.31964000000000015, 0, 0, 9.599999999999998, 100, 31.963999999999995, 25, 0.19455711999999994, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '游戏', 'male', 102.82608695652172, 102.82608695652173, 102.82608695652172, 0, 0, 9.2, 6.900000000000001, 709.5, 25, 1.0066086956521736, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1653604', '我的冰山女神老婆', '冰城妖玉', '都市', 'male', 609.4285714285714, 609.4285714285714, 609.4285714285714, 0, 0, 9.299999999999997, 1.4, 853.2000000000002, 25, 5.061428571428571, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1654596', '退婚后被权爷宠上天', '一川风月', '现代言情', 'women', 67.41851851851851, 70.22222222222221, 67.41851851851851, 0, 0, 9.7, 5.4, 364.05999999999983, 25, 0.7333481481481481, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1655967', '吞噬九重天', '屠刀成佛', '玄幻奇幻', 'male', 17.32211538461538, 17.322115384615383, 17.32211538461538, 0, 0, 9.099999999999998, 20.800000000000004, 360.3000000000001, 25, 0.320576923076923, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1666957', '重生后我顶替了前夫白月光', '九九月', '现代言情', 'women', 0.5625, 0.5625, 0.5625, 0, 0, 9.099999999999998, 1.6, 0.9000000000000002, 25, 0.18649999999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1670199', '我的养成系女友', '佛系和尚', '都市', 'male', 318.5625, 318.5625, 318.5625, 0, 0, 9.5, 1.6, 509.6999999999999, 25, 2.7384999999999997, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '现代言情', 'women', 192.49551020408165, 200.51020408163265, 192.49551020408165, 0, 0, 9.599999999999998, 4.899999999999999, 943.2280000000001, 25, 1.731964081632653, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1710753', '舔狗反派只想苟，女主不按套路走！', '我是愤怒', '都市', 'male', 1.0547112462006079, 1.054711246200608, 1.0547112462006079, 0, 0, 9.5, 32.89999999999999, 34.69999999999999, 25, 0.19843768996960487, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1758119', '重生八零，闪婚柔情铁血硬汉', '风四爷', '现代言情', 'women', 0.9166666666666665, 0.9166666666666667, 0.9166666666666665, 0, 0, 9.700000000000003, 1.1999999999999997, 1.0999999999999996, 25, 0.2013333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1758273', '重生2000：从追求青涩校花同桌开始', '痞子老妖', '都市', 'male', 1.788659793814433, 1.7886597938144333, 1.788659793814433, 0, 0, 9.299999999999997, 19.400000000000006, 34.69999999999999, 25, 0.2003092783505154, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1824987', '凤归', '扶苏公子', '古代言情', 'women', 0.38888888888888884, 0.38888888888888884, 0.38888888888888884, 0, 0, 9.400000000000002, 1.8000000000000005, 0.7, 25, 0.19111111111111118, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1838355', '离婚后，前妻姐崩溃了', '洛王', '都市', 'male', 221.53571428571428, 221.53571428571428, 221.53571428571428, 0, 0, 8.700000000000001, 2.8, 620.3, 25, 1.9462857142857142, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1857847', '重生再嫁皇胄，我只想乱帝心夺凤位', '月下小兔', '古代言情', 'women', 62.42105263157895, 62.421052631578945, 62.42105263157895, 0, 0, 9.400000000000002, 9.5, 593, 25, 0.6873684210526316, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1871638', '你迎娶平妻？我带崽入宫当皇后', '虎金金', '古代言情', 'women', 14.289523809523814, 176.42857142857142, 14.289523809523814, 0, 0, 9.599999999999998, 2.1000000000000005, 30.00799999999999, 25, 0.30631619047619046, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1873716', '换嫁给绝嗣太子后我连生三胎', '昔也', '古代言情', 'women', 3.4496000000000016, 40.36, 3.4496000000000016, 0, 0, 9.5, 2.5, 8.623999999999995, 25, 0.2175968, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1875137', '断绝关系后，我的召唤兽全是黑暗生物', '可破', '都市', 'male', 163.5, 163.5, 163.5, 0, 0, 9.099999999999998, 1.8000000000000005, 294.30000000000007, 25, 1.49, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1882743', '郡主她百鬼送嫁，少将军敢娶吗？', '一碗佛跳墙', '古代言情', 'women', 5.291200000000001, 63.839999999999996, 5.291200000000001, 0, 0, 9.799999999999997, 2.5, 13.228, 25, 0.23832959999999997, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1916703', '宁嫁牌位不当妾，国公府我说了算', '林拾酒', '古代言情', 'women', 6.4328571428571415, 51.25, 6.4328571428571415, 0, 0, 9.5, 2.8, 18.011999999999993, 25, 0.24146285714285715, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1948430', '重生60：从深山打猎开始致富', 'KITTT', '都市', 'male', 18.50190476190476, 19.261904761904763, 18.50190476190476, 0, 0, 9.299999999999997, 4.200000000000001, 77.708, 25, 0.33401523809523803, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1956592', '一天一造化，苟在仙武成道祖', '日落倾河', '玄幻奇幻', 'male', 58.44444444444445, 58.44444444444444, 58.44444444444445, 0, 0, 8.799999999999997, 0.9000000000000002, 52.600000000000016, 25, 0.6435555555555555, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1965109', '守寡重生，送断袖夫君下黄泉', '指尖上的行走', '古代言情', 'women', 1.9414634146341467, 9.02439024390244, 1.9414634146341467, 0, 0, 9.700000000000001, 4.100000000000001, 7.959999999999996, 25, 0.2095317073170732, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1977771', '傅总，夫人不想当首富太太了', '蓝尧', '现代言情', 'women', 11.949044585987263, 11.949044585987261, 11.949044585987263, 0, 0, 9.400000000000002, 15.699999999999998, 187.59999999999994, 25, 0.2835923566878982, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1979346', '去父留子后才知，前夫爱的人竟是我', '乐希', '现代言情', 'women', 6.923076923076922, 6.9230769230769225, 6.923076923076922, 0, 0, 9.200000000000001, 20.800000000000004, 144, 25, 0.23938461538461542, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('1995023', '边关兵王', '青岳', '历史', 'male', 8.34375, 8.34375, 8.34375, 0, 0, 9.400000000000002, 41.60000000000001, 347.1, 25, 0.25475000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2004005', '傅总，太太瞒着你生了个童模', '七桉', '现代言情', 'women', 14.52631578947369, 14.526315789473685, 14.52631578947369, 0, 0, 9.400000000000002, 3.7999999999999994, 55.20000000000001, 25, 0.3042105263157896, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2007504', '结婚三年喊错名，成对家老公了你哭什么', '木易未央', '都市', 'male', 68.33333333333336, 68.33333333333334, 68.33333333333336, 0, 0, 8.700000000000003, 0.29999999999999993, 20.5, 25, 0.7206666666666669, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2024150', '玄幻：从炼制合情丹开始长生！', '柿饼吃个糖', '玄幻奇幻', 'male', 64.0909090909091, 64.09090909090908, 64.0909090909091, 0, 0, 9, 1.0999999999999996, 70.5, 25, 0.6927272727272729, 'B级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2024793', '五年冷婚，我跑路了你发什么疯', '一尾小锦鲤', '现代言情', 'women', 3.614678899082569, 3.6146788990825685, 3.614678899082569, 0, 0, 9.099999999999998, 32.69999999999999, 118.20000000000003, 25, 0.21091743119266051, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2024797', '七零资本娇小姐，下放后硬汉宠上天', '梅才华', '现代言情', 'women', 26, 26, 26, 0, 0, 8.8, 0.29999999999999993, 7.799999999999999, 25, 0.38400000000000006, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2029029', '离婚后，我权势滔天，你哭什么', '水门绅士', '都市', 'male', 9.97802197802198, 9.978021978021978, 9.97802197802198, 0, 0, 8.9, 18.2, 181.59999999999997, 25, 0.2578241758241758, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2041092', '无双公子', '小陈叔叔', '历史', 'male', 8, 8, 8, 0, 0, 9.2, 0.2, 1.6, 25, 0.248, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2048046', '重生70当猎王', '吴家三少', '都市', 'male', 18, 18, 18, 0, 0, 8, 0.1, 1.8000000000000005, 25, 0.30400000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2053254', '混沌神鼎：从为女帝解毒开始无敌', '战神宇哥', '玄幻奇幻', 'male', 8.249999999999998, 8.249999999999998, 8.249999999999998, 0, 0, 8.900000000000002, 0.4, 3.2999999999999994, 25, 0.24400000000000002, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2053703', '三年同房两次，要离婚他跪求复合', '一只小甜饼', '现代言情', 'women', 5.815384615384615, 5.815384615384615, 5.815384615384615, 0, 0, 9.299999999999999, 6.5, 37.800000000000004, 25, 0.23252307692307692, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2058468', '快穿：小狐狸她漂亮但能打', '十一肆', '幻想言情', 'women', 16.499999999999996, 16.499999999999996, 16.499999999999996, 0, 0, 8.799999999999997, 0.2, 3.2999999999999994, 25, 0.3079999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062279', '考中状元又怎样，我娘是长公主', '汐家锦锂', '古代言情', 'women', 0.13888888888888887, 0.1388888888888889, 0.13888888888888887, 0, 0, 9.5, 3.600000000000001, 0.5, 25, 0.19111111111111112, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2062788', '穿越大唐：从驿站小卒到帝国巨擘', '亲爱的葡萄', '历史', 'male', 17, 17, 17, 0, 0, 9.2, 0.1, 1.6999999999999995, 25, 0.32, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063237', '怀孕生女他不管，提离婚他崩溃了', '凌淮', '现代言情', 'women', 1, 1, 1, 0, 0, 8.799999999999999, 0.5999999999999999, 0.5999999999999999, 25, 0.184, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2063290', '让我做外室？我另嫁你哭什么', '皎皎朗月', '古代言情', 'women', 8, 8, 8, 0, 0, 9.200000000000001, 0.29999999999999993, 2.3999999999999995, 25, 0.24800000000000005, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064353', '八零随军：退婚神医被绝嗣大佬宠上天', '煎bingo子', '现代言情', 'women', 2.1999999999999997, 2.2, 2.1999999999999997, 0, 0, 9.299999999999999, 2.5, 5.5, 25, 0.2036, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2064998', '开局抄家，姐姐抢着去流放', '一个豆包', '古代言情', 'women', 7.833333333333332, 7.833333333333334, 7.833333333333332, 0, 0, 9.2, 0.5999999999999999, 4.700000000000001, 25, 0.24666666666666665, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065353', '只剩七天寿命？先休渣夫再杀全家', '南山野', '古代言情', 'women', 2.6666666666666674, 2.666666666666667, 2.6666666666666674, 0, 0, 9.200000000000001, 0.29999999999999993, 0.8, 25, 0.2053333333333334, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065792', '边军老卒，从娶媳妇开始横扫六国！', '齐天小圣', '历史', 'male', 15.5, 15.5, 15.5, 0, 0, 8.700000000000003, 0.2, 3.100000000000001, 25, 0.29800000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065807', '重生下乡：我才不当冤大头！', '清蒸大白蛆', '都市', 'male', 4.8888888888888875, 4.888888888888888, 4.8888888888888875, 0, 0, 8.900000000000002, 2.7, 13.199999999999998, 25, 0.21711111111111114, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2065888', '解春衫', '随山月', '古代言情', 'women', 2, 2, 2, 0, 0, 9.700000000000003, 61, 122, 25, 0.21000000000000008, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066494', '换嫁绝嗣大佬，我胎胎多宝赢麻了', '猫猫鱼吃果果', '现代言情', 'women', 7.5, 7.5, 7.5, 0, 0, 9.2, 0.4, 3, 25, 0.244, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2066505', '侯府捡的小福星，全城大佬争着宠', '鱼芽', '古代言情', 'women', 2.3703703703703702, 2.3703703703703702, 2.3703703703703702, 0, 0, 9.5, 2.7, 6.4, 25, 0.20896296296296296, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067421', '你爱绿茶我让位，再嫁大佬你别跪', '落雪颂梅', '现代言情', 'women', 7.333333333333332, 7.333333333333334, 7.333333333333332, 0, 0, 8.400000000000002, 0.29999999999999993, 2.1999999999999993, 25, 0.22666666666666668, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2067715', '嫌我劳改犯？我神医身份曝光了', '瓜神驾到', '都市', 'male', 22, 22, 22, 0, 0, 8.400000000000002, 0.1, 2.1999999999999997, 25, 0.34400000000000003, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2073577', '人在废丹房，我以丹药证道成仙！', '伽蓝之梦', '玄幻奇幻', 'male', 2.1646341463414633, 2.164634146341464, 2.1646341463414633, 0, 0, 9.3, 16.4, 35.5, 25, 0.20331707317073172, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2073626', '万倍返还！我靠荒野求生养活龙国', '年年有玉', '玄幻奇幻', 'male', 13, 13, 13, 0, 0, 8.400000000000002, 0.1, 1.3000000000000003, 25, 0.272, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074363', '被逼自刎，嫡女重生撕婚书覆皇朝', '柠檬小丸子', '古代言情', 'women', 3.875, 3.875, 3.875, 0, 0, 9.2, 0.8, 3.100000000000001, 25, 0.215, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2074408', '全星际都想rua元帅的小奶崽', '未礼', '幻想言情', 'women', 13, 13, 13, 0, 0, 8.400000000000002, 0.2, 2.6000000000000005, 25, 0.272, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2075172', '穿成掌勺丫鬟，我把病秧子喂活了', '水中有鱼', '古代言情', 'women', 1.6, 1.6, 1.6, 0, 0, 9.2, 0.5, 0.8, 25, 0.1968, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076478', '狂野都市', '大丙', '都市', 'male', 8, 8, 8, 0, 0, 8.400000000000002, 0.2, 1.6, 25, 0.23200000000000004, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('2076487', '极品九千岁：我在后宫无法无天！', '莫不愁', '历史', 'male', 6.25, 6.25, 6.25, 0, 0, 9.2, 0.4, 2.5, 25, 0.23399999999999999, 'C级', '观望');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('210772', '都市之最强仙医', '夫子', '都市', 'male', 356.3333333333334, 356.3333333333333, 356.3333333333334, 0, 0, 9, 1.5, 534.5, 25, 3.0306666666666673, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213189', '混沌剑帝', '运也', '玄幻奇幻', 'male', 150.96666666666667, 150.96666666666667, 150.96666666666667, 0, 0, 9.099999999999998, 6, 905.7999999999998, 25, 1.3897333333333333, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('213190', '阴阳鲁班咒', '一气三元', '奇闻异事', 'male', 151.06666666666663, 151.06666666666666, 151.06666666666663, 0, 0, 9.400000000000002, 1.5, 226.59999999999994, 25, 1.3965333333333332, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('215067', '九转修罗诀', '李中有梦', '玄幻奇幻', 'male', 147.47619047619042, 147.47619047619045, 147.47619047619042, 0, 0, 9, 2.1000000000000005, 309.69999999999993, 25, 1.3598095238095234, 'A级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('217267', '民间诡闻实录之阴阳先生', '罗樵森', '奇闻异事', 'male', 329.6153846153846, 329.6153846153846, 329.6153846153846, 0, 0, 9.5, 1.3, 428.5, 25, 2.8269230769230766, 'S级', '可考虑-粉丝粘性强');
+INSERT INTO `ads_capital_future_purchasing_power` VALUES ('221137', '网游之全服公敌', '黑白相间', '游戏', 'male', 397.7222222222222, 397.7222222222222, 397.7222222222222, 0, 0, 9.299999999999997, 1.8000000000000005, 715.8999999999997, 25, 3.3677777777777775, 'S级', '可考虑-粉丝粘性强');
+
+-- ----------------------------
+-- Table structure for ads_capital_ltv
+-- ----------------------------
+DROP TABLE IF EXISTS `ads_capital_ltv`;
+CREATE TABLE `ads_capital_ltv`  (
+  `book_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `author` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category2_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `status` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `gender_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `total_heat_integral` double NULL DEFAULT NULL,
+  `avg_popularity` double NULL DEFAULT NULL,
+  `peak_popularity` double NULL DEFAULT NULL,
+  `lowest_popularity` double NULL DEFAULT NULL,
+  `appearance_count` bigint NULL DEFAULT NULL,
+  `first_rank_date` date NULL DEFAULT NULL,
+  `latest_rank_date` date NULL DEFAULT NULL,
+  `avg_score` double NULL DEFAULT NULL,
+  `avg_read_count` double NULL DEFAULT NULL,
+  `total_words` double NULL DEFAULT NULL,
+  `lifecycle_days` int NULL DEFAULT NULL,
+  `daily_avg_heat` double NULL DEFAULT NULL,
+  `heat_volatility` double NULL DEFAULT NULL,
+  `heat_stability` double NULL DEFAULT NULL,
+  `ip_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `ltv_score` double NULL DEFAULT NULL,
+  `ip_value_level` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `adaptation_suggestion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ads_capital_ltv
+-- ----------------------------
+INSERT INTO `ads_capital_ltv` VALUES ('1647094', '九转吞天诀', '萧逆天', '玄幻奇幻', '东方玄幻', '连载中', 'male', 7769.699999999999, 310.78799999999995, 323.7, 0.9, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 7.099999999999999, 6397800, 732, 10.61434426229508, 1.0415460056372834, 0.0028958647052009733, '长线稳定', 0.7842442100869584, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1666957', '重生后我顶替了前夫白月光', '九九月', '现代言情', '总裁豪门', '已完结', 'women', 22.500000000000007, 0.9000000000000002, 0.9, 0.9, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.6, 1427700, 732, 0.030737704918032797, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8836447356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1669963', '大景巡夜人', '藕池猫咪', '古代言情', '古代情缘', '已完结', 'women', 29.999999999999993, 1.1999999999999997, 1.2, 1.2, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 1.8000000000000005, 2362300, 732, 0.04098360655737704, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8976450356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1670199', '我的养成系女友', '佛系和尚', '都市', '热血校园', '已完结', 'male', 12742.499999999996, 509.6999999999999, 509.7, 509.7, 25, '2023-10-01', '2025-10-01', 9.5, 1.6, 3585899.9999999995, 732, 17.407786885245898, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8921535356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1675640', '镇天神医', '五杯咖啡', '都市', '都市高手', '连载中', 'male', 8540.000000000002, 341.6000000000001, 355.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 12.3, 5258500, 732, 11.66666666666667, 1.0415690866510536, 0.0023419203747072595, '长线稳定', 0.7862196276539093, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1709320', '徒儿，饶了五位绝美师父吧', '不渊', '都市', '都市高手', '已完结', 'male', 5177.499999999998, 207.09999999999994, 207.1, 207.1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.1000000000000005, 1779300, 732, 7.0730874316939865, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8838509356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1761352', '易孕体质，七零长嫂凶又甜', '方赢', '现代言情', '年代重生', '已完结', 'women', 10, 0.4, 0.4, 0.4, 25, '2023-10-01', '2025-10-01', 9.7, 2.1000000000000005, 2123300, 732, 0.01366120218579235, 1, 1, '长线稳定', 0.8956442356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1763089', '喜棺开，百鬼散，王妃她从地狱来', '一碗佛跳墙', '古代言情', '古代情缘', '已完结', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 8.5, 1369900, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8976785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1810593', '嫁权臣', '有香如故', '古代言情', '宫闱宅斗', '已完结', 'women', 7.499999999999998, 0.29999999999999993, 0.3, 0.3, 25, '2023-10-01', '2025-10-01', 9.7, 2.1999999999999997, 523900, 732, 0.01024590163934426, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8956441356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1830570', '世子先别死，夫人有喜了', '沙拉薯条', '古代言情', '古代情缘', '已完结', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 13, 1305700, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8936785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1836527', '凰宫梦', '蓝九九', '古代言情', '宫闱宅斗', '连载中', 'women', 23459.999999999993, 938.3999999999997, 938.4, 938.4, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 38.199999999999996, 3014700.0000000005, 732, 32.04918032786884, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8965822356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1840296', '夫君清心寡欲，我却连生三胎', '米团开花', '古代言情', '宫闱宅斗', '已完结', 'women', 7410.000000000002, 296.4000000000001, 296.4, 296.4, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 6.1, 1463400, 732, 10.122950819672134, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8959402356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1850556', '让我娶傻千金，你又回来求我离婚？', '摸鱼小将', '都市', '都市高手', '连载中', 'male', 3881.1000000000004, 155.24400000000003, 161.7, 0.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 5.5, 2925100, 732, 5.302049180327869, 1.0415861482569373, 0.0019324418335008111, '长线稳定', 0.7839923237997884, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1857847', '重生再嫁皇胄，我只想乱帝心夺凤位', '月下小兔', '古代言情', '宫闱宅斗', '连载中', 'women', 14825, 593, 593, 593, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 9.5, 2163764, 732, 20.252732240437158, 1, 1, '长线稳定', 0.8902368356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1863729', '断亲不伺候了，哥哥们破产睡天桥', '红十三', '现代言情', '总裁豪门', '已完结', 'women', 14159.999999999996, 566.3999999999999, 566.4, 566.4, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 3, 2002600, 732, 19.34426229508196, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8842102356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1880127', '出生被活埋，萌宝回京杀疯了', '固夏', '古代言情', '古代情缘', '已完结', 'women', 217.69999999999993, 8.707999999999997, 105.4, 0.3, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 3.7000000000000006, 1086900, 732, 0.29740437158469935, 12.103812586127704, 0.03445107946715665, '波动型', 0.797097651563154, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1885468', '我医武双绝，体内还有一条龙', '月辰', '都市', '都市高手', '连载中', 'male', 2031.1999999999998, 81.24799999999999, 84.6, 0.8, 25, '2023-10-01', '2025-10-01', 9, 5, 1565500, 732, 2.774863387978142, 1.0412564001575424, 0.009846396218983854, '长线稳定', 0.7827097232383369, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1887846', '七零美人到西北，硬汉红温了', '棠元', '现代言情', '年代重生', '已完结', 'women', 5900, 236, 236, 236, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 5.100000000000001, 1059300, 732, 8.060109289617486, 1, 1, '长线稳定', 0.8958798356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1888573', '女富婆的超级神医', '狼性佛心', '都市', '都市高手', '已完结', 'male', 1617.5000000000005, 64.70000000000002, 64.7, 64.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2, 2127600, 732, 2.209699453551913, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8837085356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1949695', '被贵妃配给太监当对食后', '沙子', '古代言情', '宫闱宅斗', '连载中', 'women', 8781.599999999999, 351.26399999999995, 487.4, 1.2, 25, '2023-10-01', '2025-10-01', 9.5, 24.699999999999992, 1426384, 732, 11.996721311475408, 1.3875603534663388, 0.003416233943700465, '长线稳定', 0.7923367230108085, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1959895', '十二只SSS级鬼宠，你管这叫差班生', '洛青澜', '都市', '灵气复苏', '已完结', 'male', 2600, 104, 104, 104, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.9000000000000001, 1189600, 732, 3.551912568306011, 1, 1, '长线稳定', 0.8857478356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1963728', '玄黄鼎', '不做梵高', '玄幻奇幻', '东方玄幻', '连载中', 'male', 6477.499999999998, 259.0999999999999, 259.1, 259.1, 25, '2023-10-01', '2025-10-01', 9, 17.099999999999994, 2176300, 732, 8.849043715846992, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8819029356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1968456', '断绝关系后，觉醒SSS级天赋百分百爆率', '赛博说书人', '都市', '都市高武', '已完结', 'male', 1184.9999999999995, 47.399999999999984, 47.4, 47.4, 25, '2023-10-01', '2025-10-01', 9, 2, 1093700, 732, 1.6188524590163929, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8816912356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1968910', '全家夺我军功，重生嫡女屠了满门', '我吃饱饱', '古代言情', '宫闱宅斗', '连载中', 'women', 11690.000000000002, 467.6000000000001, 467.6, 467.6, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 38.3, 1569800, 732, 15.969945355191259, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8941114356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1970645', '神级刺客，我有一支动物杀手队', '九把火', '玄幻奇幻', '东方玄幻', '连载中', 'male', 2587.4999999999995, 103.49999999999999, 107.8, 0.3, 25, '2023-10-01', '2025-10-01', 9.3, 3.5, 952099.9999999999, 732, 3.53483606557377, 1.0415458937198068, 0.0028985507246376816, '长线稳定', 0.7880371906889023, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1976002', '续弦小夫人', '江摇舟', '古代言情', '宫闱宅斗', '已完结', 'women', 10534.999999999998, 421.3999999999999, 421.4, 421.4, 25, '2023-10-01', '2025-10-01', 9.7, 19.5, 806200, 732, 14.392076502732237, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8960652356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982967', '厉总，太太在外面有两个私生子', '十里山河', '现代言情', '总裁豪门', '已完结', 'women', 2367.500000000001, 94.70000000000003, 94.7, 94.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.3999999999999995, 949400, 732, 3.2342896174863403, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8837385356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1988961', '重生1984：我靠赶海打渔成首富', '菠萝炒饭', '都市', '都市生活', '连载中', 'male', 4322.500000000002, 172.90000000000006, 172.9, 172.9, 25, '2023-10-01', '2025-10-01', 9, 16, 1527700, 732, 5.905054644808746, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8818167356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1994507', '权力争锋', '东流无歇', '都市', '官场', '连载中', 'male', 888.7, 35.548, 37, 0.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 5, 1005500, 732, 1.2140710382513662, 1.0408461798132103, 0.019691684482952627, '长线稳定', 0.7856485520647337, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1996973', '赌石，我的龙瞳能鉴定一切！', '一梅独秀', '都市', '都市高武', '已完结', 'male', 812.5, 32.5, 32.5, 32.5, 25, '2023-10-01', '2025-10-01', 9, 3, 1324199.9999999998, 732, 1.1099726775956285, 1, 1, '长线稳定', 0.8816763356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2014120', '雨夜你陪白月光，我让位后你哭啥', '露将熹', '现代言情', '总裁豪门', '已完结', 'women', 243.8999999999999, 9.755999999999995, 29, 0.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1, 1000400.0000000001, 732, 0.33319672131147526, 2.9725297252972545, 0.0717507175071751, '波动型', 0.7908286633671558, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('2014975', '重生84：九个赔钱货？我把女儿宠上天', '一只大香蕉', '都市', '乡村生活', '连载中', 'male', 2119.8999999999996, 84.79599999999999, 88.3, 0.7, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 5.6, 968199.9999999999, 732, 2.89603825136612, 1.0413227039011275, 0.00825510637294212, '长线稳定', 0.7865541422537327, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2021927', '西游：取经？关我混沌魔猿什么事！', '南木北树', '武侠仙侠', '上古洪荒', '已完结', 'male', 1742.5000000000005, 69.70000000000002, 69.7, 69.7, 25, '2023-10-01', '2025-10-01', 9, 2.3999999999999995, 622100, 732, 2.3804644808743176, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8817135356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2022495', '情劫', '花小刺', '都市', '都市生活', '连载中', 'male', 1968.5, 78.74, 82, 0.5, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 6.599999999999999, 911000, 732, 2.689207650273224, 1.0414020828041657, 0.006350012700025401, '长线稳定', 0.7843575768864408, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2023697', '男人野性', '月下冰河', '都市', '商战职场', '连载中', 'male', 6552.499999999998, 262.0999999999999, 262.1, 262.1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 51, 737200, 732, 8.951502732240435, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8839059356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2024793', '五年冷婚，我跑路了你发什么疯', '一尾小锦鲤', '现代言情', '总裁豪门', '连载中', 'women', 2955.000000000001, 118.20000000000003, 118.2, 118.2, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 32.69999999999999, 580200, 732, 4.03688524590164, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8837620356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2024797', '七零资本娇小姐，下放后硬汉宠上天', '梅才华', '现代言情', '年代重生', '连载中', 'women', 194.99999999999997, 7.799999999999999, 7.8, 7.8, 25, '2023-10-01', '2025-10-01', 8.8, 0.29999999999999993, 482400, 732, 0.2663934426229508, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776516356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2046772', '纵情人生', '一缕微光', '都市', '都市高手', '连载中', 'male', 922.4999999999998, 36.89999999999999, 38.4, 0.9, 25, '2023-10-01', '2025-10-01', 9, 4.5, 1003700, 732, 1.260245901639344, 1.0406504065040652, 0.024390243902439032, '长线稳定', 0.7841197600066824, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2047644', '我的钱全捐了，老婆竟是天后', '伤心小呆', '都市', '明星娱乐', '连载中', 'male', 167.50000000000006, 6.700000000000002, 6.7, 6.7, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.2, 406900, 732, 0.22882513661202195, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8776505356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2053900', '下山后，漂亮姐姐蠢蠢欲动', '神笔马丁爷', '都市', '都市高手', '连载中', 'male', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.29999999999999993, 347400, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8696468356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2055375', '姜医生，贺总约你去民政局', '江月何年', '现代言情', '总裁豪门', '连载中', 'women', 160, 6.4, 6.4, 6.4, 25, '2023-10-01', '2025-10-01', 8.799999999999999, 0.29999999999999993, 350900.00000000006, 732, 0.2185792349726776, 1, 1, '长线稳定', 0.8776502356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2055377', '你偏心，我改嫁！赶紧喊我小婶婶', '江梧蘅', '现代言情', '总裁豪门', '连载中', 'women', 107.49999999999997, 4.299999999999999, 4.3, 4.3, 25, '2023-10-01', '2025-10-01', 9.3, 0.7, 371500, 732, 0.14685792349726773, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8876481356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2057851', '从把傲娇室友捧成娱乐天后开始', '罗宝爱花卷', '都市', '明星娱乐', '连载中', 'male', 47.49999999999999, 1.8999999999999997, 1.9, 1.9, 25, '2023-10-01', '2025-10-01', 9.2, 0.10000000000000002, 421136, 732, 0.06489071038251365, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856457356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061262', '哑巴小向导，被七个顶级哨兵缠上了', '疯麦', '幻想言情', '未来科幻', '连载中', 'women', 10, 0.4, 0.4, 0.4, 25, '2023-10-01', '2025-10-01', 8.799999999999999, 0.1, 362100, 732, 0.01366120218579235, 1, 1, '长线稳定', 0.8776442356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062825', '捡漏！', '外八字', '都市', '都市高手', '连载中', 'male', 35, 1.4, 1.4, 1.4, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 490700, 732, 0.04781420765027322, 1, 1, '长线稳定', 0.8736452356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063300', '五个大佬命里缺我，我只管吃奶', '舒展v', '现代言情', '总裁豪门', '连载中', 'women', 40, 1.6, 1.6, 1.6, 25, '2023-10-01', '2025-10-01', 9.2, 0.1, 262900, 732, 0.0546448087431694, 1, 1, '长线稳定', 0.8856454356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063605', '九阴九阳', '仗剑修真', '玄幻奇幻', '东方玄幻', '连载中', 'male', 700, 28, 28, 28, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 17.699999999999996, 371500, 732, 0.9562841530054644, 1, 1, '长线稳定', 0.8836718356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063976', '都市情劫', '御龙', '都市', '都市生活', '连载中', 'male', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 1, 315600, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8776468356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065349', '每日情报：乱世边军一小兵', '推拿医生', '历史', '架空历史', '连载中', 'male', 35, 1.4, 1.4, 1.4, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 394200, 732, 0.04781420765027322, 1, 1, '长线稳定', 0.8736452356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066875', '种田修仙：从随机刷新词条开始', '浪兰飞山', '玄幻奇幻', '异世大陆', '连载中', 'male', 42.499999999999986, 1.6999999999999995, 1.7, 1.7, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 261700.00000000003, 732, 0.05806010928961747, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8736455356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2072940', '第五年重逢，驰先生再度失控', '锦锦不是妖', '现代言情', '总裁豪门', '连载中', 'women', 170.2, 6.808, 8.8, 0.5, 25, '2023-10-01', '2025-10-01', 9.900000000000002, 3.7000000000000006, 250348, 732, 0.23251366120218578, 1.2925969447708578, 0.07344300822561692, '长线稳定', 0.8069949444390001, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2073050', '权力巅峰：SSSS级村书记！', '荒苑爆红', '都市', '官场', '连载中', 'male', 97.49999999999999, 3.8999999999999995, 3.9, 3.9, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 1.4, 476800, 732, 0.1331967213114754, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8876477356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2073626', '万倍返还！我靠荒野求生养活龙国', '年年有玉', '玄幻奇幻', '异世大陆', '连载中', 'male', 32.50000000000001, 1.3000000000000003, 1.3, 1.3, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 329400, 732, 0.044398907103825144, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696451356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074181', '权力巅峰：从市委大秘开始', '鹏鹏君本尊', '都市', '官场', '连载中', 'male', 119.99999999999997, 4.799999999999999, 4.8, 4.8, 25, '2023-10-01', '2025-10-01', 9, 1.0999999999999996, 310700, 732, 0.16393442622950816, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8816486356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074412', '和初恋官宣后，装瘸前夫气得站起来了', '青时序', '现代言情', '总裁豪门', '连载中', 'women', 21.899999999999995, 0.8759999999999998, 1.8, 0.7, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.2, 210496, 732, 0.029918032786885238, 2.054794520547946, 0.7990867579908677, '波动型', 0.8655533874155252, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('2076380', '女子监狱出真龙，出狱后全球震动', '我非良人', '都市', '都市高武', '连载中', 'male', 97.49999999999997, 3.899999999999999, 3.9, 3.9, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1, 223000, 732, 0.13319672131147536, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8936477356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076498', '一觉醒来三年后，七零长姐凶又甜', '叫我富贵叭', '现代言情', '年代重生', '连载中', 'women', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.4, 186900, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856462356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2077960', '刚下山，全球大佬跪迎我回家', '霜叶红于二月花', '都市', '都市高手', '连载中', 'male', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 9.2, 0.4, 239800, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856462356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('208898', '极品小侯爷', '梦入山河', '历史', '架空历史', '已完结', 'male', 16912.5, 676.5, 676.5, 676.5, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 1.5, 2672200.0000000005, 732, 23.104508196721312, 1, 1, '长线稳定', 0.8863203356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('211115', '都市逍遥天医', '星空野狼', '都市', '都市高手', '已完结', 'male', 10897.499999999998, 435.8999999999999, 435.9, 435.9, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 1.4, 5737400, 732, 14.88729508196721, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8880797356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213108', '都市全能医圣', '玖月天', '都市', '都市高武', '已完结', 'male', 4542.5, 181.7, 181.7, 181.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.4, 4931600, 732, 6.205601092896175, 1, 1, '长线稳定', 0.8838255356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213692', '武帝归来', '修果', '都市', '都市高武', '已完结', 'male', 23700, 948, 948, 948, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.8000000000000005, 4372100, 732, 32.377049180327866, 1, 1, '长线稳定', 0.8845918356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('214147', '阴阳诡匠', '洛小阳', '奇闻异事', '奇门秘术', '已完结', 'male', 6479.999999999998, 259.19999999999993, 259.2, 259.2, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.8999999999999997, 1005800, 732, 8.852459016393441, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8939030356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('214783', '山野诡闻笔记', '吴大胆', '奇闻异事', '奇门秘术', '已完结', 'male', 10350, 414, 414, 414, 25, '2023-10-01', '2025-10-01', 9.5, 3.399999999999999, 2562799.9999999995, 732, 14.139344262295081, 1, 1, '长线稳定', 0.8920578356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('215476', '学霸女王马甲多', '灰夫人', '现代言情', '总裁豪门', '已完结', 'women', 20, 0.8, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 2.1999999999999993, 1200400, 732, 0.0273224043715847, 1, 1, '长线稳定', 0.8976446356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('216404', '荒古武神', '化十', '玄幻奇幻', '东方玄幻', '连载中', 'male', 13179.999999999996, 527.1999999999998, 527.2, 527.2, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 8.299999999999997, 7987200, 732, 18.005464480874313, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8841710356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('219040', '极道剑尊', '二十七杯酒', '玄幻奇幻', '东方玄幻', '连载中', 'male', 20938.699999999997, 837.5479999999999, 872.4, 1.1, 25, '2023-10-01', '2025-10-01', 9.2, 16, 8897200, 732, 28.604781420765022, 1.0416119434348838, 0.0013133575627904315, '长线稳定', 0.7866127193727174, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('151584', '极品戒指', '淮阴小侯', '都市', '都市高武', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.4, 5304700, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8836785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('152973', '最强学霸系统', '佛系和尚', '都市', '热血校园', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.5, 1.6999999999999995, 3723300, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8916785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1648172', '仙棺，神墟，剑无敌！', '千年老龟', '玄幻奇幻', '东方玄幻', '连载中', 'male', 8621.899999999998, 344.8759999999999, 359.2, 1.1, 25, '2023-10-01', '2025-10-01', 9, 9.5, 5286200, 732, 11.778551912568304, 1.0415337686588806, 0.003189552186872964, '长线稳定', 0.7823076668351258, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '游戏', '虚拟网游', '已完结', 'male', 17737.5, 709.5, 709.5, 709.5, 25, '2023-10-01', '2025-10-01', 9.2, 6.900000000000001, 4523100, 732, 24.23155737704918, 1, 1, '长线稳定', 0.8863533356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1673461', '三个缩小版大佬带百亿资产上门', '一轮玫瑰', '现代言情', '总裁豪门', '已完结', 'women', 14.999999999999996, 0.5999999999999999, 0.6, 0.6, 25, '2023-10-01', '2025-10-01', 9.5, 2.1999999999999993, 2840400, 732, 0.02049180327868852, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8916444356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1694124', '女总裁的贴身龙帅', '枯木封雨', '都市', '都市高手', '已完结', 'male', 1252.5000000000002, 50.10000000000001, 50.1, 50.1, 25, '2023-10-01', '2025-10-01', 9, 1, 1000500, 732, 1.711065573770492, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8816939356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1723450', '被王爷赐死，医妃潇洒转身嫁皇叔', '金银满屋', '古代言情', '宫闱宅斗', '已完结', 'women', 14.999999999999996, 0.5999999999999999, 0.6, 0.6, 25, '2023-10-01', '2025-10-01', 9.5, 3.7999999999999994, 1887500, 732, 0.02049180327868852, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8916444356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1726987', '大佬十代单传，我为他一胎生四宝', '白生米', '现代言情', '总裁豪门', '连载中', 'women', 15947.499999999998, 637.9, 637.9, 637.9, 25, '2023-10-01', '2025-10-01', 9.4, 41.2, 3638900, 732, 21.786202185792348, 1, 1, '长线稳定', 0.8902817356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1730259', '踏神界逆九州：废物七小姐权倾天下', '苏音', '幻想言情', '玄幻仙侠', '已完结', 'women', 7.499999999999998, 0.29999999999999993, 0.3, 0.3, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 2.1000000000000005, 2700800, 732, 0.01024590163934426, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8956441356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1754203', '玲珑塔', '一丝凉意', '玄幻奇幻', '东方玄幻', '连载中', 'male', 6442.300000000001, 257.69200000000006, 268.4, 0.7, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 8.900000000000002, 3900000, 732, 8.800956284153006, 1.041553482451919, 0.0027164211539357054, '长线稳定', 0.788173169731832, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1767940', '混沌塔', '惊蛰落月', '玄幻奇幻', '东方玄幻', '连载中', 'male', 14559.999999999996, 582.3999999999999, 582.4, 582.4, 25, '2023-10-01', '2025-10-01', 9.2, 32.199999999999996, 2938300, 732, 19.890710382513657, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8862262356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1771379', '大佬绝嗣！我一夜怀上他两个崽', '相思一顾', '现代言情', '总裁豪门', '已完结', 'women', 7377.5, 295.1, 295.1, 295.1, 25, '2023-10-01', '2025-10-01', 9.5, 4.6, 1673100, 732, 10.078551912568306, 1, 1, '长线稳定', 0.8919389356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1780785', '吞天混沌经：开局先吞圣女修为', '一阵乱写', '玄幻奇幻', '东方玄幻', '连载中', 'male', 6134.699999999999, 245.38799999999995, 255.6, 0.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 6.900000000000001, 3745312, 732, 8.380737704918031, 1.0416157269304125, 0.0012225536701061179, '长线稳定', 0.7840114789834489, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1803024', '神算萌妻：傅太太才是玄学真大佬', '易小升', '现代言情', '都市奇幻', '已完结', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 12.7, 1351300, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1803283', '皇叔借点功德，王妃把符画猛了', '安卿心', '古代言情', '宫闱宅斗', '连载中', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 104.40000000000002, 3491560, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1806041', '巅峰青云路', '登封造极', '都市', '官场', '连载中', 'male', 4507.5, 180.3, 180.3, 180.3, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 31, 3966700, 732, 6.157786885245901, 1, 1, '长线稳定', 0.8858241356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1812053', '警报！龙国出现SSS级修仙者！', '紫枫', '都市', '都市高武', '连载中', 'male', 8769.999999999998, 350.79999999999995, 365.4, 0.4, 25, '2023-10-01', '2025-10-01', 9.2, 6.700000000000002, 3183600, 732, 11.980874316939888, 1.0416191562143673, 0.0011402508551881416, '长线稳定', 0.7861086607019573, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1824987', '凤归', '扶苏公子', '古代言情', '权谋天下', '已完结', 'women', 17.5, 0.7, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 1.8000000000000005, 1210100, 732, 0.02390710382513661, 1, 1, '长线稳定', 0.8896445356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1830569', '凤池生春', '秦安安', '古代言情', '宫闱宅斗', '已完结', 'women', 13187.5, 527.5, 527.5, 527.5, 25, '2023-10-01', '2025-10-01', 9.7, 12.900000000000004, 2339000, 732, 18.01571038251366, 1, 1, '长线稳定', 0.8961713356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1844850', '饥荒年，我囤货娇养了古代大将军', '苜肉', '古代言情', '古代情缘', '连载中', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 13.099999999999996, 2227200, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8936785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1851521', '魔女校花从无绯闻，直到遇上了我', '铲子王', '都市', '热血校园', '已完结', 'male', 4395, 175.8, 175.8, 175.8, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 1.6, 1524300, 732, 6.004098360655738, 1, 1, '长线稳定', 0.8878196356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1853441', '春华照灼', '蝉不知雪', '古代言情', '宫闱宅斗', '已完结', 'women', 145.59999999999994, 5.823999999999997, 131.2, 0.6, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 2.6000000000000005, 905100, 732, 0.19890710382513652, 22.527472527472536, 0.10302197802197807, '波动型', 0.8059518574186363, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1858924', '无间令', '无间之令', '古代言情', '宫闱宅斗', '已完结', 'women', 719.1, 28.764, 346.9, 1.1, 25, '2023-10-01', '2025-10-01', 9.3, 2.7000000000000006, 2004500, 732, 0.9823770491803279, 12.06021415658462, 0.03824224725351134, '波动型', 0.7914968243417896, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1867208', '真福宝挥手粮满仓，全家悔断肠', '朵瑞米发娑', '古代言情', '种田经商', '已完结', 'women', 144, 5.76, 60.5, 1, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 1.1999999999999997, 1630200, 732, 0.19672131147540983, 10.503472222222223, 0.1736111111111111, '波动型', 0.8050107067275495, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1870433', '冻死风雪夜，重生真嫡女虐翻全家', '一颗胖梨', '古代言情', '宫闱宅斗', '已完结', 'women', 14702.500000000004, 588.1000000000001, 588.1, 588.1, 25, '2023-10-01', '2025-10-01', 9.5, 15.699999999999998, 1895600, 732, 20.08538251366121, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8922319356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1873716', '换嫁给绝嗣太子后我连生三胎', '昔也', '古代言情', '宫闱宅斗', '已完结', 'women', 215.59999999999988, 8.623999999999995, 100.9, 0.6, 25, '2023-10-01', '2025-10-01', 9.5, 2.5, 1149200, 732, 0.2945355191256829, 11.699907235621529, 0.06957328385899818, '波动型', 0.7986097880023383, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1946720', '1977，开局女知青以身相许', '家有十猫', '都市', '都市生活', '连载中', 'male', 4445.7, 177.828, 185.2, 0.9, 25, '2023-10-01', '2025-10-01', 9, 13.900000000000004, 2550200, 732, 6.073360655737704, 1.041455788739681, 0.005061070247655037, '长线稳定', 0.782327770641204, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1954700', '媚君榻', '随山月', '古代言情', '古代情缘', '已完结', 'women', 564.9999999999998, 22.59999999999999, 110.2, 0.7, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 5.200000000000001, 1005800, 732, 0.7718579234972675, 4.8761061946902675, 0.03097345132743364, '波动型', 0.7987637807491819, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1970603', '星际兽世：万人迷小人类深陷修罗场', '含冬小鱼', '幻想言情', '异世幻想', '连载中', 'women', 7.499999999999998, 0.29999999999999993, 0.3, 0.3, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 0.5, 434336, 732, 0.01024590163934426, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8936441356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1976312', '观音泥', '溪芝', '现代言情', '现代悬疑', '连载中', 'women', 57.5, 2.3, 2.3, 2.3, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 384500, 732, 0.07855191256830601, 1, 1, '长线稳定', 0.8736461356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1979346', '去父留子后才知，前夫爱的人竟是我', '乐希', '现代言情', '总裁豪门', '连载中', 'women', 3600, 144, 144, 144, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 20.800000000000004, 1052100, 732, 4.918032786885246, 1, 1, '长线稳定', 0.8857878356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982360', '步步登阶', '江湖如梦', '都市', '都市生活', '连载中', 'male', 9432.500000000004, 377.3000000000001, 377.3, 377.3, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 47.2, 1248500, 732, 12.88592896174864, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8860211356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982723', '无敌逍遥侯', '沧海种树', '历史', '架空历史', '连载中', 'male', 3312.5, 132.5, 132.5, 132.5, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 33.30000000000001, 1217400, 732, 4.5252732240437155, 1, 1, '长线稳定', 0.8837763356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1989835', '刚入截教，听到截教气运在抱怨', '超爱吃甜粽子', '武侠仙侠', '上古洪荒', '已完结', 'male', 1872.4999999999995, 74.89999999999998, 74.9, 74.9, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 1.3000000000000003, 1291900, 732, 2.5580601092896167, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8857187356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1994128', '搬空婆家离婚后，被八零京少宠上天', '猫爱锅包肉', '现代言情', '年代重生', '已完结', 'women', 261.09999999999985, 10.443999999999994, 35.5, 0.7, 25, '2023-10-01', '2025-10-01', 9.5, 2.1000000000000005, 824300.0000000001, 732, 0.35669398907103805, 3.399080811949447, 0.06702412868632711, '波动型', 0.7983566924850712, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('2015371', '再近点，就失控了', '雪泥', '现代言情', '青春校园', '连载中', 'women', 6857.500000000002, 274.30000000000007, 274.3, 274.3, 25, '2023-10-01', '2025-10-01', 9.900000000000002, 11.300000000000002, 788900, 732, 9.368169398907106, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8999181356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2020674', '从市委大秘到权力之巅', '洗礼先生', '都市', '官场', '连载中', 'male', 833.0999999999999, 33.324, 34.7, 0.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 5.5, 803840, 732, 1.1381147540983605, 1.0412915616372587, 0.009002520705797623, '长线稳定', 0.7845774116870181, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2033005', 'SSSSSSSSSSSSSS满级神医', '星空野狼', '都市', '都市高手', '连载中', 'male', 4367.5, 174.7, 174.7, 174.7, 25, '2023-10-01', '2025-10-01', 9, 20.699999999999996, 775000, 732, 5.966530054644808, 1, 1, '长线稳定', 0.8818185356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2054267', '三年婚姻喂了狗，二嫁律师宠疯了', '炎热的夏天', '现代言情', '总裁豪门', '连载中', 'women', 42.49999999999999, 1.6999999999999997, 1.7, 1.7, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 390700, 732, 0.058060109289617474, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8736455356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2057069', '穿书八零，养崽训夫我手拿把掐', '菠萝小微', '现代言情', '年代重生', '连载中', 'women', 40, 1.6, 1.6, 1.6, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 391200, 732, 0.0546448087431694, 1, 1, '长线稳定', 0.8736454356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2057468', '权力巅峰：从县委大院开始', '今晚吃鸡', '都市', '官场', '连载中', 'male', 225, 9, 9, 9, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.3000000000000003, 374000, 732, 0.3073770491803279, 1, 1, '长线稳定', 0.8836528356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2059138', '救命！求生综里看风水，爆火全网', '桑桑籽', '现代言情', '娱乐明星', '连载中', 'women', 57.50000000000001, 2.3000000000000003, 2.3, 2.3, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 368300, 732, 0.07855191256830601, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8736461356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2059742', '带球上门后，我成陆少心尖宠', '幸夷', '现代言情', '年代重生', '连载中', 'women', 160, 6.4, 6.4, 6.4, 25, '2023-10-01', '2025-10-01', 9.5, 0.9000000000000002, 409700, 732, 0.2185792349726776, 1, 1, '长线稳定', 0.8916502356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061800', '重生1985，我靠万物标签赶海发家', '吃不完的荔枝', '都市', '都市生活', '连载中', 'male', 35, 1.4, 1.4, 1.4, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 366900, 732, 0.04781420765027322, 1, 1, '长线稳定', 0.8736452356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062370', '边疆发男人，从被罪女买走开始！', '陈火火', '历史', '架空历史', '连载中', 'male', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.4, 433600, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8776468356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('206343', '恐怖复苏之全球武装怪胎', '老郭在此', '科幻', '末世危机', '已完结', 'male', 15054.999999999996, 602.1999999999998, 602.2, 602.2, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 0.9000000000000002, 5330900, 732, 20.566939890710376, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8902460356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064995', '重回六十年代，从挖何首乌开始', '巍巍青山', '都市', '乡村生活', '连载中', 'male', 77.50000000000001, 3.1000000000000005, 3.1, 3.1, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.1, 364300, 732, 0.10587431693989073, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8856469356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064998', '开局抄家，姐姐抢着去流放', '一个豆包', '古代言情', '宫闱宅斗', '连载中', 'women', 117.50000000000003, 4.700000000000001, 4.7, 4.7, 25, '2023-10-01', '2025-10-01', 9.2, 0.5999999999999999, 283400, 732, 0.16051912568306015, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856485356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065959', '让我进京当质子，我开局带兵强掳花魁', '有点刺挠', '历史', '架空历史', '连载中', 'male', 137.5, 5.5, 5.5, 5.5, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 269700, 732, 0.1878415300546448, 1, 1, '长线稳定', 0.8856493356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067420', '年代：开局一把小猎枪，娇妻貌美肉满仓', '钓鱼捞', '都市', '乡村生活', '连载中', 'male', 150, 6, 6, 6, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 0.7, 341500, 732, 0.20491803278688525, 1, 1, '长线稳定', 0.8796498356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067718', '四合院：开局猎户，邻居喝风我吃肉！', '刚烈的汉子', 'N次元', '衍生同人', '连载中', 'male', 130, 5.2, 5.2, 5.2, 25, '2023-10-01', '2025-10-01', 8.9, 0.4000000000000001, 382100, 732, 0.17759562841530055, 1, 1, '长线稳定', 0.8796490356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('207105', '傲世潜龙', '西装暴徒', '都市', '都市高手', '连载中', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 30.600000000000005, 6583700, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8836785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2072619', '长生：从寿元零点一年开始', '馀杯', '玄幻奇幻', '东方玄幻', '连载中', 'male', 200, 8, 8, 8, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 3.100000000000001, 452200, 732, 0.273224043715847, 1, 1, '长线稳定', 0.8836518356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074086', '偏护寡嫂不成婚？扇完巴掌嫁权臣', '喵大仙儿', '古代言情', '宫闱宅斗', '连载中', 'women', 14.999999999999996, 0.5999999999999999, 0.6, 0.6, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.5, 237500, 732, 0.02049180327868852, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8696444356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076863', '换宗门，当团宠，师妹她修生钱道', '金池', '幻想言情', '玄幻仙侠', '连载中', 'women', 45.00000000000001, 1.8000000000000003, 1.8, 1.8, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.29999999999999993, 184600, 732, 0.061475409836065587, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8856456356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2077580', '裴大人，表小姐她又跑了', '蓝莓爆珠', '古代言情', '古代情缘', '连载中', 'women', 57.500000000000014, 2.3000000000000007, 2.3, 2.3, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.29999999999999993, 222399.99999999997, 732, 0.07855191256830603, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8856461356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2077743', '灾荒年捡回姐妹花，我粮肉满仓！', '小小月月落落', '历史', '架空历史', '连载中', 'male', 77.50000000000003, 3.100000000000001, 3.1, 3.1, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 201300, 732, 0.10587431693989074, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8856469356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2077779', '规则怪谈：我能找出错误的规则', '老猫写文', '奇闻异事', '恐怖灵异', '连载中', 'male', 57.5, 2.3, 2.3, 2.3, 25, '2023-10-01', '2025-10-01', 9.2, 0.2, 198400, 732, 0.07855191256830601, 1, 1, '长线稳定', 0.8856461356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213092', '吞噬古帝', '黑白仙鹤', '玄幻奇幻', '东方玄幻', '连载中', 'male', 867.4999999999999, 34.699999999999996, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.2, 13.300000000000002, 12192200, 732, 1.1851092896174862, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('219310', '全世界都玩异能只有我修仙', '缘起云涌', 'N次元', '原生幻想', '已完结', 'male', 3152.4999999999995, 126.09999999999998, 126.1, 126.1, 25, '2023-10-01', '2025-10-01', 9.2, 1.4, 1435100, 732, 4.306693989071038, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8857699356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '科幻', '末世危机', '已完结', 'male', 867.4999999999999, 34.699999999999996, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9, 9, 5023100, 732, 1.1851092896174862, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8816785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1653604', '我的冰山女神老婆', '冰城妖玉', '都市', '都市高手', '已完结', 'male', 21330.000000000004, 853.2000000000002, 853.2, 853.2, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 1.4, 3655700, 732, 29.139344262295086, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8884970356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1654986', '团宠小师妹才是真大佬', '千金兔', '幻想言情', '玄幻仙侠', '已完结', 'women', 17.5, 0.7, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.7, 2.5, 3374700.0000000005, 732, 0.02390710382513661, 1, 1, '长线稳定', 0.8956445356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1658839', '穿成孩子妈，奋斗成赢家', '冉阿冉', '现代言情', '总裁豪门', '已完结', 'women', 27.499999999999993, 1.0999999999999996, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 9.5, 1.4, 1651000, 732, 0.037568306010928955, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8916449356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1665743', '皇室奶团萌翻全京城', '司司', '古代言情', '古代情缘', '已完结', 'women', 20, 0.8, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 4.799999999999999, 1532100, 732, 0.0273224043715847, 1, 1, '长线稳定', 0.8956446356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1684297', '规则怪谈，欢迎来到甜蜜的家', '弦泠兮', '幻想言情', '无限快穿', '已完结', 'women', 17.499999999999996, 0.6999999999999998, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.8, 2.899999999999999, 1485500, 732, 0.023907103825136607, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8976445356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1689214', '藏起孕肚离婚，郁总全球疯找', '苏小鱼', '现代言情', '总裁豪门', '已完结', 'women', 29.999999999999996, 1.2, 1.2, 1.2, 25, '2023-10-01', '2025-10-01', 9.4, 1.6, 1470200, 732, 0.040983606557377046, 1, 1, '长线稳定', 0.8896450356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1697498', '末世天灾，抢艘航母当基地', '封卷残云', '科幻', '末世危机', '已完结', 'male', 11507.500000000004, 460.3000000000001, 460.3, 460.3, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 1.1999999999999997, 2875600, 732, 15.72062841530055, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8781041356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1738575', '直播算命太准，全网蹲守吃瓜', '荷衣', '现代言情', '都市奇幻', '已完结', 'women', 13777.500000000004, 551.1000000000001, 551.1, 551.1, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 5.9, 2303900, 732, 18.821721311475414, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8961949356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1763673', '捉奸当天，豪门继承人拉我去领证', '慕容悠然', '现代言情', '总裁豪门', '连载中', 'women', 9467.499999999996, 378.6999999999999, 378.7, 378.7, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 19.6, 3987300, 732, 12.933743169398902, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8900225356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1772694', '神尊强宠，废物小姐竟是绝世女帝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', '已完结', 'women', 12.5, 0.5, 0.5, 0.5, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 3.100000000000001, 2889500, 732, 0.01707650273224044, 1, 1, '长线稳定', 0.8936443356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1777995', '将军她是引渡人', '指尖上的行走', '古代言情', '古代情缘', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.8, 2.2, 1210300, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8976448356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1804346', '绝世天命大反派', '金裘花马', '玄幻奇幻', '异世大陆', '连载中', 'male', 20023.899999999998, 800.9559999999999, 834.3, 0.7, 25, '2023-10-01', '2025-10-01', 9, 14.800000000000002, 1969400, 732, 27.35505464480874, 1.0416302518490406, 0.0008739556230304786, '长线稳定', 0.7825321871787415, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1815020', '巅峰权途', '争渡', '都市', '官场', '连载中', 'male', 10904.999999999996, 436.1999999999999, 436.2, 436.2, 25, '2023-10-01', '2025-10-01', 9.3, 45.5, 3242300, 732, 14.897540983606552, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8880800356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1847406', '此夜逢君', '晨露嫣然', '古代言情', '宫闱宅斗', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.7, 2.8, 1368000, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8956448356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1848642', '离婚吧，真当我是废物啊', '凝望之影', '都市', '都市高手', '已完结', 'male', 2589.9999999999995, 103.59999999999998, 103.6, 103.6, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 2.3999999999999995, 1774800, 732, 3.538251366120218, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8797474356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1854610', '八零娇女一撒娇，高冷军少领证了', '白茶流萤', '现代言情', '年代重生', '连载中', 'women', 12759.999999999998, 510.3999999999999, 510.4, 510.4, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 15.099999999999996, 814400, 732, 17.431693989071036, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8861542356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1860026', '世子无双', '宁峥', '历史', '架空历史', '连载中', 'male', 22744.999999999996, 909.7999999999998, 909.8, 909.8, 25, '2023-10-01', '2025-10-01', 9.2, 16, 2516200, 732, 31.072404371584696, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8865536356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1864909', '将军活不过仨月，换亲后我旺他百年', '不知绿', '古代言情', '古代情缘', '已完结', 'women', 3452.499999999999, 138.09999999999997, 138.1, 138.1, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 4.9, 1041100, 732, 4.7165300546448075, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8937819356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1882743', '郡主她百鬼送嫁，少将军敢娶吗？', '一碗佛跳墙', '古代言情', '古代情缘', '已完结', 'women', 330.7, 13.228, 159.6, 0.5, 25, '2023-10-01', '2025-10-01', 9.799999999999997, 2.5, 549300, 732, 0.451775956284153, 12.065315996371334, 0.03779860901118839, '波动型', 0.8014369245175572, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1956587', '五岁萌妃炸京城，我阿娘是侯府真千金', '幻想鱼', '古代言情', '宫闱宅斗', '已完结', 'women', 486.5000000000001, 19.460000000000004, 116.9, 0.9, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 2, 1304100, 732, 0.664617486338798, 6.007194244604316, 0.04624871531346351, '波动型', 0.7982881671477847, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1991675', '我赚够两千就下播，榜一大哥却急了', '哼哼哈哈', '现代言情', '总裁豪门', '连载中', 'women', 6292.499999999999, 251.69999999999996, 251.7, 251.7, 25, '2023-10-01', '2025-10-01', 9.8, 8.200000000000001, 1108600, 732, 8.596311475409834, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8978955356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1996523', '全队笑我是傻子，我反手娶了俏知青！', '红色小晶体', '都市', '乡村生活', '已完结', 'male', 1109.9999999999995, 44.399999999999984, 44.4, 44.4, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.8, 1001600, 732, 1.5163934426229502, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776882356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2010008', '高武校长，我的实力是全校总和！', '邯郸财阀', '都市', '都市高武', '连载中', 'male', 2949.8, 117.992, 122.9, 0.2, 25, '2023-10-01', '2025-10-01', 9.3, 5.700000000000002, 1209800, 732, 4.029781420765028, 1.0415960404095193, 0.0016950301715370534, '长线稳定', 0.7879313306335921, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2029739', '穿成恶毒继母，手握空间灵泉养崽崽', 'YJ紫霞仙子', '古代言情', '种田经商', '连载中', 'women', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 433300, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8696468356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2036574', '被贬北凉，我打造了无敌大雪龙骑！', '画虫的小龙', '历史', '架空历史', '已完结', 'male', 612.5, 24.5, 24.5, 24.5, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 1.0999999999999996, 565500, 732, 0.8367486338797814, 1, 1, '长线稳定', 0.8796683356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2038385', 'SSSSSSSSSSSSS级镇狱狂龙', '封情老衲', '都市', '都市高手', '连载中', 'male', 2446.7, 97.868, 101.9, 1.1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 51.5, 1089400, 732, 3.342486338797814, 1.041198348796338, 0.011239628887889812, '长线稳定', 0.7848656665052274, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2038910', '你惹她干什么？她修的是杀道啊', '璃焰', '幻想言情', '玄幻仙侠', '连载中', 'women', 1425, 57, 57, 57, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 6.299999999999998, 522200, 732, 1.9467213114754098, 1, 1, '长线稳定', 0.8937008356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2053703', '三年同房两次，要离婚他跪求复合', '一只小甜饼', '现代言情', '总裁豪门', '连载中', 'women', 945.0000000000001, 37.800000000000004, 37.8, 37.8, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 6.5, 418600, 732, 1.2909836065573772, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8876816356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2060801', '穿成反派，开局迎娶主角未婚妻', '毛毛超爱吃', '玄幻奇幻', '东方玄幻', '连载中', 'male', 27.499999999999993, 1.0999999999999996, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 472000, 732, 0.037568306010928955, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8696449356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061794', '开局送老婆，我成了众仙之父！', '西地那非', '玄幻奇幻', '异世大陆', '连载中', 'male', 100, 4, 4, 4, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 459700, 732, 0.1366120218579235, 1, 1, '长线稳定', 0.8856478356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061931', '八零：渣夫骗婚娶大嫂，我转身嫁首长', '锦禾', '现代言情', '年代重生', '连载中', 'women', 462.5, 18.5, 18.5, 18.5, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 3.600000000000001, 432900, 732, 0.6318306010928961, 1, 1, '长线稳定', 0.8876623356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062320', '随母改嫁换新爹，拖油瓶成了团宠', '萝兹萝丝', '现代言情', '年代重生', '连载中', 'women', 107.49999999999997, 4.299999999999999, 4.3, 4.3, 25, '2023-10-01', '2025-10-01', 9.5, 1.1999999999999997, 313100, 732, 0.14685792349726773, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8916481356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062787', '镇世龙王，你说他是废物赘婿？', '小只气球', '都市', '都市高手', '连载中', 'male', 37.5, 1.5, 1.5, 1.5, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.10000000000000002, 445100, 732, 0.05122950819672131, 1, 1, '长线稳定', 0.8696453356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065879', '一天暴涨一年修为，你说你后悔了？', '小陈little', '都市', '都市高武', '连载中', 'male', 105.00000000000003, 4.200000000000001, 4.2, 4.2, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.29999999999999993, 269800, 732, 0.14344262295081972, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856480356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066505', '侯府捡的小福星，全城大佬争着宠', '鱼芽', '古代言情', '宫闱宅斗', '连载中', 'women', 160, 6.4, 6.4, 6.4, 25, '2023-10-01', '2025-10-01', 9.5, 2.7, 343600, 732, 0.2185792349726776, 1, 1, '长线稳定', 0.8916502356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067310', '问鼎：从选调警员到权力巅峰', '叶少华', '都市', '官场', '连载中', 'male', 70, 2.8, 2.8, 2.8, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 356599.99999999994, 732, 0.09562841530054644, 1, 1, '长线稳定', 0.8856466356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2072331', '假嫡女重生想抢婚？再嫁你也得下跪', '木怜青', '古代言情', '宫闱宅斗', '连载中', 'women', 47.49999999999999, 1.8999999999999997, 1.9, 1.9, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 384000, 732, 0.06489071038251365, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8736457356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074327', '御堂春事', '荞麦十二画', '古代言情', '古代情缘', '连载中', 'women', 20.000000000000004, 0.8000000000000002, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 8, 0.10000000000000002, 213900, 732, 0.027322404371584706, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8616446356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074393', '乱世荒年：从打猎开始无限抽奖', '可破', '历史', '架空历史', '连载中', 'male', 54.999999999999986, 2.1999999999999993, 2.2, 2.2, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.29999999999999993, 204500, 732, 0.07513661202185791, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856460356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2078333', '边境反贼：从解救女囚开始', '女帝', '历史', '架空历史', '连载中', 'male', 80, 3.2, 3.2, 3.2, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.5999999999999999, 186200, 732, 0.1092896174863388, 1, 1, '长线稳定', 0.8856470356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2079417', '经常杀人的朋友', '魂燚', '都市', '都市高武', '连载中', 'male', 90.00000000000003, 3.600000000000001, 3.6, 3.6, 25, '2023-10-01', '2025-10-01', 9.2, 0.6999999999999998, 255300, 732, 0.12295081967213119, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856474356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('210772', '都市之最强仙医', '夫子', '都市', '都市高武', '已完结', 'male', 13362.5, 534.5, 534.5, 534.5, 25, '2023-10-01', '2025-10-01', 9, 1.5, 5366100, 732, 18.254781420765028, 1, 1, '长线稳定', 0.8821783356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('217822', '天命成凰', '赵小球', '古代言情', '古代情缘', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 3.2, 4006400, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8896448356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1669371', '吞天神帝', '小三叔', '玄幻奇幻', '东方玄幻', '已完结', 'male', 2662.5, 106.5, 106.5, 106.5, 25, '2023-10-01', '2025-10-01', 9, 1.5, 2970299.9999999995, 732, 3.637295081967213, 1, 1, '长线稳定', 0.8817503356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1678025', '九皇叔的神医毒妃', '柠檬小丸子', '古代言情', '宫闱宅斗', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.5, 3.399999999999999, 1066800, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8916448356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1693832', '超神玩家', '失落叶', '游戏', '虚拟网游', '已完结', 'male', 11102.500000000002, 444.1000000000001, 444.1, 444.1, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 1.3000000000000003, 3193700, 732, 15.167349726775958, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8880879356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1724453', '妙手大仙医', '金佛', '都市', '都市高手', '连载中', 'male', 17152.500000000004, 686.1000000000001, 686.1, 686.1, 25, '2023-10-01', '2025-10-01', 9.2, 18, 4004700.0000000005, 732, 23.43237704918033, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8863299356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1725180', '我废柴真千金，会亿点玄学怎么了', '甜幽幽', '现代言情', '总裁豪门', '已完结', 'women', 20, 0.8, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.7, 2.3999999999999995, 2118100, 732, 0.0273224043715847, 1, 1, '长线稳定', 0.8956446356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1737869', '重生七零，搬空敌人仓库去下乡', '六月无花', '现代言情', '年代重生', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.6999999999999995, 1413300.0000000002, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8936448356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1738577', '女神的逍遥狂医', '东方天策', '都市', '都市高手', '已完结', 'male', 4412.5, 176.5, 176.5, 176.5, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 1.4, 3457000, 732, 6.0280054644808745, 1, 1, '长线稳定', 0.8858203356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1759358', '出狱后，我闪婚了植物人大佬', '柠七七', '现代言情', '总裁豪门', '已完结', 'women', 7339.999999999999, 293.59999999999997, 293.6, 293.6, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 7.900000000000001, 2979200, 732, 10.027322404371583, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8899374356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1781450', '无限流：在惊悚世界当万人迷', '白日宴火', '幻想言情', '无限快穿', '已完结', 'women', 10, 0.4, 0.4, 0.4, 25, '2023-10-01', '2025-10-01', 9.900000000000002, 3.2999999999999994, 852099.9999999999, 732, 0.01366120218579235, 1, 1, '长线稳定', 0.8996442356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1783142', '天剑神狱', '叶问', '玄幻奇幻', '东方玄幻', '已完结', 'male', 2287.5, 91.5, 91.5, 91.5, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.6000000000000003, 2914500, 732, 3.125, 1, 1, '长线稳定', 0.8837353356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1807804', '重启2008：从拯救绝色女老师开始逆袭', '封尘往昔', '都市', '商战职场', '已完结', 'male', 9622.5, 384.9, 384.9, 384.9, 25, '2023-10-01', '2025-10-01', 9, 1, 2341800, 732, 13.145491803278688, 1, 1, '长线稳定', 0.8820287356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1809361', '逍遥四公子', '修果', '历史', '架空历史', '连载中', 'male', 867.5, 34.7, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.300000000000002, 78.79999999999998, 4246100, 732, 1.1851092896174864, 1, 1, '长线稳定', 0.8876785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1819118', '八零养崽：清冷美人被科研大佬宠上天！', '桔子阿宝', '现代言情', '年代重生', '已完结', 'women', 29.999999999999993, 1.1999999999999997, 1.2, 1.2, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.8999999999999997, 2144800, 732, 0.04098360655737704, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8936450356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1875137', '断绝关系后，我的召唤兽全是黑暗生物', '可破', '都市', '都市高武', '已完结', 'male', 7357.500000000002, 294.30000000000007, 294.3, 294.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.8000000000000005, 1653899.9999999998, 732, 10.051229508196723, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8839381356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1879266', '封总，太太想跟你离婚很久了', '云中觅', '现代言情', '总裁豪门', '连载中', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 154.59999999999997, 655400.0000000001, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1882754', '边军悍卒', '木有金箍', '历史', '架空历史', '连载中', 'male', 13800, 552, 552, 552, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 36.10000000000001, 2268400, 732, 18.852459016393443, 1, 1, '长线稳定', 0.8881958356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1888581', '葬仙棺', '执笔人', '玄幻奇幻', '东方玄幻', '连载中', 'male', 8034.999999999999, 321.4, 321.4, 321.4, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 15.400000000000002, 3170100, 732, 10.976775956284152, 1, 1, '长线稳定', 0.8839652356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1916703', '宁嫁牌位不当妾，国公府我说了算', '林拾酒', '古代言情', '宫闱宅斗', '已完结', 'women', 450.29999999999984, 18.011999999999993, 143.5, 0.9, 25, '2023-10-01', '2025-10-01', 9.5, 2.8, 1210400, 732, 0.6151639344262293, 7.966910948256721, 0.04996668887408397, '波动型', 0.7966585165038467, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1924828', '还不起人情债，我只好当她男朋友了', '无色', '都市', '都市生活', '连载中', 'male', 3642.5, 145.7, 145.7, 145.7, 25, '2023-10-01', '2025-10-01', 9, 4.6, 1750220, 732, 4.976092896174864, 1, 1, '长线稳定', 0.8817895356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1941048', '全能真千金归来，发现家人住狗窝', '温小浅', '现代言情', '总裁豪门', '已完结', 'women', 207.60000000000008, 8.304000000000004, 67, 0.3, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 1.8999999999999997, 1018800, 732, 0.28360655737704926, 8.068400770712906, 0.036127167630057785, '波动型', 0.7932648563794442, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1946790', '谁说校花高冷？这校花可太甜软了', '佛系和尚', '都市', '热血校园', '已完结', 'male', 2680.000000000001, 107.20000000000003, 107.2, 107.2, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.8999999999999997, 1153200, 732, 3.661202185792351, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8937510356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1960821', '雪夜活埋后，我夺了假千金凤命', '柠檬小丸子', '古代言情', '宫闱宅斗', '连载中', 'women', 3419.999999999999, 136.79999999999995, 136.8, 136.8, 25, '2023-10-01', '2025-10-01', 9.5, 8.099999999999998, 1775900, 732, 4.672131147540982, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8917806356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1960964', '从小媳妇要传宗接代开始', '断章', '历史', '架空历史', '连载中', 'male', 4862.699999999999, 194.50799999999995, 202.6, 0.3, 25, '2023-10-01', '2025-10-01', 9.2, 9, 1855700, 732, 6.643032786885245, 1.0416024019577603, 0.0015423530137577892, '长线稳定', 0.7859925789178143, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1979319', '邢教练，别太野', '七个菜包', '现代言情', '职场情缘', '已完结', 'women', 356.4, 14.255999999999998, 55.6, 1.2, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 5.4, 872600, 732, 0.48688524590163934, 3.9001122334455673, 0.08417508417508418, '波动型', 0.804075600033947, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1979356', '阴当', '北派无尽夏', '现代言情', '都市奇幻', '连载中', 'women', 5139.999999999998, 205.59999999999994, 205.6, 205.6, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 21.300000000000004, 1055400, 732, 7.021857923497265, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8978494356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982356', '渣夫别跪了，夫人嫁顶级大佬啦', '乐恩', '现代言情', '总裁豪门', '连载中', 'women', 17612.5, 704.5, 704.5, 704.5, 25, '2023-10-01', '2025-10-01', 9.2, 47.5, 608100, 732, 24.060792349726775, 1, 1, '长线稳定', 0.8863483356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982358', '天黑请点灯', '罗樵森', '奇闻异事', '奇门秘术', '连载中', 'male', 3790.1000000000004, 151.604, 157.9, 0.5, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 7, 1917100, 732, 5.177732240437159, 1.0415292472494129, 0.003298066014089338, '长线稳定', 0.7901252462178474, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1994117', '婚后上瘾', '卢平凡', '现代言情', '总裁豪门', '连载中', 'women', 17880, 715.2, 715.2, 715.2, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 65.39999999999998, 897400, 732, 24.42622950819672, 1, 1, '长线稳定', 0.8943590356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1994174', '恶婆婆重生后，怂包儿媳被宠成宝！', '洇鹤', '古代言情', '宫闱宅斗', '连载中', 'women', 94.99999999999999, 3.7999999999999994, 3.8, 3.8, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 0.2, 484700, 732, 0.1297814207650273, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8796476356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2016334', '深情失控，他服软低哄别离婚', '林深深', '现代言情', '总裁豪门', '连载中', 'women', 2136.7, 85.46799999999999, 97, 0.9, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 8.700000000000003, 745600, 732, 2.918989071038251, 1.1349276922356908, 0.010530256938269296, '长线稳定', 0.7907823293102654, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2024794', '武圣看门武王扫地，你嫌我武馆太垃圾？', '白鹫', '都市', '都市高武', '已完结', 'male', 272.5000000000001, 10.900000000000004, 10.9, 10.9, 25, '2023-10-01', '2025-10-01', 9, 0.4, 650100, 732, 0.3722677595628417, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8816547356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2028796', '陛下管管吧，六皇子又发疯了！', '追风boy', '历史', '架空历史', '已完结', 'male', 354.99999999999994, 14.199999999999998, 14.2, 14.2, 25, '2023-10-01', '2025-10-01', 9, 0.8, 641900, 732, 0.48497267759562834, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8816580356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2033943', '再亲一下，高冷校草诱哄小娇娇', '逸捅天下', '现代言情', '青春校园', '连载中', 'women', 412.5, 16.5, 16.5, 16.5, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 2, 487600, 732, 0.5635245901639344, 1, 1, '长线稳定', 0.8936603356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2046282', '人生赢家', '烟云客横渡积水潭', '都市', '商战职场', '连载中', 'male', 112.5, 4.5, 4.5, 4.5, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 0.5, 466500, 732, 0.15368852459016394, 1, 1, '长线稳定', 0.8796483356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2046408', '逆子，开门！你娘回来整顿家风了', '黑葡萄', '古代言情', '宫闱宅斗', '连载中', 'women', 127.50000000000003, 5.100000000000001, 5.1, 5.1, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.4, 448600, 732, 0.17418032786885249, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8856489356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2052703', '双生兄弟要换亲？我稳做侯门主母', '林拾酒', '古代言情', '宫闱宅斗', '连载中', 'women', 1877.5000000000002, 75.10000000000001, 75.1, 75.1, 25, '2023-10-01', '2025-10-01', 9.5, 8.799999999999997, 595800, 732, 2.564890710382514, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8917189356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2052834', '魂穿吕布：貂蝉离间弑父？那是我亲爹！', '八方来才', '历史', '穿越历史', '连载中', 'male', 219.99999999999994, 8.799999999999997, 8.8, 8.8, 25, '2023-10-01', '2025-10-01', 9.2, 0.7, 411300, 732, 0.30054644808743164, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856526356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2053254', '混沌神鼎：从为女帝解毒开始无敌', '战神宇哥', '玄幻奇幻', '东方玄幻', '连载中', 'male', 82.49999999999999, 3.2999999999999994, 3.3, 3.3, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 0.4, 450000, 732, 0.11270491803278687, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8796471356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2054284', '快穿：我要当绝嗣大佬独生女', '挽书', '幻想言情', '无限快穿', '连载中', 'women', 17.5, 0.7, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 1.8000000000000005, 319400, 732, 0.02390710382513661, 1, 1, '长线稳定', 0.8896445356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2055380', '哑奴带崽改嫁，清冷权臣悔疯了', '桐原雪穗穗穗穗', '古代言情', '宫闱宅斗', '连载中', 'women', 50, 2, 2, 2, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.29999999999999993, 407800, 732, 0.06830601092896176, 1, 1, '长线稳定', 0.8736458356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2059102', '让你求生，你竟在疯狂摸尸？', '半山闲客', '都市', '都市高武', '连载中', 'male', 147.5, 5.9, 5.9, 5.9, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 1, 381800, 732, 0.20150273224043716, 1, 1, '长线稳定', 0.8796497356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2059140', '戍边斥候：从奉旨传宗接代开始！', '般若菠萝', '历史', '架空历史', '连载中', 'male', 125, 5, 5, 5, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.29999999999999993, 349500, 732, 0.17076502732240437, 1, 1, '长线稳定', 0.8776488356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2060174', '转职：我死亡天灾，站起来为了你的君主', '懒惰的帅比', '都市', '都市高武', '连载中', 'male', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.2, 328800, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8696468356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2060184', '开局娶女囚，我成就最强悍卒', '青衫酌酒', '历史', '架空历史', '连载中', 'male', 160, 6.4, 6.4, 6.4, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 496800, 732, 0.2185792349726776, 1, 1, '长线稳定', 0.8856502356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2060816', '重生78：我靠岛赶海，带全家暴富！', '夕墨沉烟', '都市', '乡村生活', '连载中', 'male', 67.5, 2.7, 2.7, 2.7, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.2, 457299.99999999994, 732, 0.09221311475409837, 1, 1, '长线稳定', 0.8776465356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064353', '八零随军：退婚神医被绝嗣大佬宠上天', '煎bingo子', '现代言情', '年代重生', '连载中', 'women', 137.5, 5.5, 5.5, 5.5, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 2.5, 358200, 732, 0.1878415300546448, 1, 1, '长线稳定', 0.8876493356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065885', '重生85：带猫咪去赶海，狂宠九个女儿', '咸鱼咸鱼', '都市', '都市生活', '连载中', 'male', 102.5, 4.1, 4.1, 4.1, 25, '2023-10-01', '2025-10-01', 9.2, 0.8000000000000002, 407700.00000000006, 732, 0.14002732240437157, 1, 1, '长线稳定', 0.8856479356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065888', '解春衫', '随山月', '古代言情', '宫闱宅斗', '连载中', 'women', 3050, 122, 122, 122, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 61, 368400.00000000006, 732, 4.166666666666667, 1, 1, '长线稳定', 0.8957658356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066841', '混元书', '枫如江画', '玄幻奇幻', '东方玄幻', '连载中', 'male', 57.500000000000014, 2.3000000000000007, 2.3, 2.3, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.5, 268500, 732, 0.07855191256830603, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8856461356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2073577', '人在废丹房，我以丹药证道成仙！', '伽蓝之梦', '玄幻奇幻', '异世大陆', '连载中', 'male', 887.5, 35.5, 35.5, 35.5, 25, '2023-10-01', '2025-10-01', 9.3, 16.4, 343600, 732, 1.2124316939890711, 1, 1, '长线稳定', 0.8876793356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074192', '影帝高冷捂不热？那就离婚！', '兔子不爱吃胡萝卜', '现代言情', '娱乐明星', '连载中', 'women', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 9.2, 0.29999999999999993, 203299.99999999997, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856462356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074326', '萌兽驾到，京圈大佬集体翘班洗奶瓶', '听听不听', '现代言情', '总裁豪门', '连载中', 'women', 17.499999999999996, 0.6999999999999998, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.2, 0.20000000000000004, 175108, 732, 0.023907103825136607, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856445356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076400', '镇荒印', '李中有梦', '玄幻奇幻', '东方玄幻', '连载中', 'male', 52.500000000000014, 2.1000000000000005, 2.1, 2.1, 25, '2023-10-01', '2025-10-01', 9.2, 0.2, 221500, 732, 0.07172131147540986, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856459356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076487', '极品九千岁：我在后宫无法无天！', '莫不愁', '历史', '架空历史', '连载中', 'male', 62.5, 2.5, 2.5, 2.5, 25, '2023-10-01', '2025-10-01', 9.2, 0.4, 258700, 732, 0.08538251366120218, 1, 1, '长线稳定', 0.8856463356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076515', '乾元混沌塔', '织花明路', '玄幻奇幻', '东方玄幻', '连载中', 'male', 47.49999999999999, 1.8999999999999997, 1.9, 1.9, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.20000000000000004, 440500, 732, 0.06489071038251365, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8736457356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('209898', '我能采集万物', '存叶', '科幻', '末世危机', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 1.5, 4356000, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1684583', '春棠欲醉', '锦一', '古代言情', '古代情缘', '已完结', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 20.6, 2269000, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '都市', '都市高手', '已完结', 'male', 4989.999999999998, 199.59999999999994, 199.6, 199.6, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 6, 4776800, 732, 6.81693989071038, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8838434356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1697715', '被关女子监狱三年，我修炼成仙了', '一只狸猫', '都市', '都市高手', '连载中', 'male', 4395.399999999999, 175.81599999999995, 183.1, 1, 25, '2023-10-01', '2025-10-01', 9, 7.900000000000001, 4902100, 732, 6.004644808743167, 1.0414296764799567, 0.00568776448104837, '长线稳定', 0.7823884280645433, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1729484', '凡尘飞仙', '齐甲', '玄幻奇幻', '东方玄幻', '连载中', 'male', 8283.599999999999, 331.34399999999994, 345.1, 1.2, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 11.400000000000004, 4614100, 732, 11.31639344262295, 1.0415157660920376, 0.003621613791105317, '长线稳定', 0.7883373409955489, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1758119', '重生八零，闪婚柔情铁血硬汉', '风四爷', '现代言情', '年代重生', '已完结', 'women', 27.499999999999993, 1.0999999999999996, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 1.1999999999999997, 1141300, 732, 0.037568306010928955, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956449356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1761978', '葬神棺', '浮生一诺', '玄幻奇幻', '东方玄幻', '连载中', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 50.2, 5492000, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8876785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1803136', '第一凤女', '十二妖', '古代言情', '宫闱宅斗', '已完结', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 38.5, 2383800, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1809333', '网游：我召唤的骷髅全是位面之子？', '禅心道骨', '游戏', '虚拟网游', '已完结', 'male', 5502.499999999999, 220.09999999999997, 220.1, 220.1, 25, '2023-10-01', '2025-10-01', 9.4, 1.5, 1749900, 732, 7.517076502732239, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8898639356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1833599', '枭龙出山', '轩仔', '都市', '都市高手', '连载中', 'male', 1959.0000000000002, 78.36000000000001, 81.6, 0.6, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 5.200000000000001, 4467100, 732, 2.676229508196722, 1.041347626339969, 0.007656967840735067, '长线稳定', 0.7844878924005119, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1838355', '离婚后，前妻姐崩溃了', '洛王', '都市', '都市生活', '已完结', 'male', 15507.5, 620.3, 620.3, 620.3, 25, '2023-10-01', '2025-10-01', 8.700000000000001, 2.8, 1649900, 732, 21.185109289617486, 1, 1, '长线稳定', 0.8762641356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1850580', '我非池中物', '夜泊秦淮', '都市', '都市生活', '连载中', 'male', 2760.3, 110.412, 115, 0.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 8.400000000000002, 3208360, 732, 3.7709016393442627, 1.0415534543346736, 0.0027170959678295835, '长线稳定', 0.7840259572132212, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1850695', '炼神鼎', '秋月梧桐', '玄幻奇幻', '东方玄幻', '连载中', 'male', 4646.699999999999, 185.86799999999997, 193.6, 0.3, 25, '2023-10-01', '2025-10-01', 9, 15.199999999999998, 3663700, 732, 6.347950819672129, 1.0415994146383456, 0.0016140486797081802, '长线稳定', 0.7819911084844092, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1924831', '有帝族背景还开挂，我无敌了！', '不太勇敢', '玄幻奇幻', '东方玄幻', '连载中', 'male', 9259.900000000001, 370.3960000000001, 385.8, 0.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 15.800000000000002, 2529200, 732, 12.65013661202186, 1.0415879221157893, 0.001889869221049903, '长线稳定', 0.7842032185385434, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1952077', '一胎又一胎，说好的禁欲指挥官呢？', '望南云慢', '现代言情', '年代重生', '连载中', 'women', 11447.499999999996, 457.89999999999986, 457.9, 457.9, 25, '2023-10-01', '2025-10-01', 9.5, 34.7, 1005400.0000000001, 732, 15.638661202185787, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8921017356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1956592', '一天一造化，苟在仙武成道祖', '日落倾河', '玄幻奇幻', '东方玄幻', '已完结', 'male', 1315.0000000000005, 52.600000000000016, 52.6, 52.6, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.9000000000000002, 1711100.0000000002, 732, 1.7964480874316946, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8776964356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1956833', '我就上山打个猎，你让我逐鹿中原？', '张正经', '历史', '架空历史', '连载中', 'male', 4172.099999999999, 166.884, 173.8, 0.9, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 4.200000000000001, 1394400, 732, 5.699590163934426, 1.0414419596845714, 0.005392967570288345, '长线稳定', 0.7863500163734672, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1957149', '出宫前夜，沦为暴君掌中物', '素律', '古代言情', '宫闱宅斗', '连载中', 'women', 8525, 341, 341, 341, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 16.400000000000006, 1187200, 732, 11.646174863387978, 1, 1, '长线稳定', 0.8899848356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('195958', '盖世神医', '狐颜乱语', '都市', '都市高武', '连载中', 'male', 833.5999999999999, 33.343999999999994, 34.7, 0.8, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 139.90000000000003, 7724200, 732, 1.1387978142076502, 1.0406669865642997, 0.023992322456813826, '长线稳定', 0.7900764118621197, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1978709', '惨死生子夜，重生嫡女屠尽侯府', '南酥青子', '古代言情', '宫闱宅斗', '连载中', 'women', 2274.4999999999995, 90.97999999999998, 161.6, 1.1, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 7.599999999999999, 972500, 732, 3.1072404371584694, 1.7762145526489344, 0.0120905693559024, '长线稳定', 0.7889438725520286, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1980267', '陆总别作，太太她不要你了', '是空空呀', '现代言情', '总裁豪门', '连载中', 'women', 1857.6, 74.304, 88.4, 0.3, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 8.900000000000002, 976700, 732, 2.537704918032787, 1.1897071490094746, 0.004037467700258398, '长线稳定', 0.7901218863864643, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982371', '你宠白月光，我收凤印你急什么', '江墨甜', '古代言情', '宫闱宅斗', '连载中', 'women', 1565.0000000000002, 62.60000000000001, 62.6, 62.6, 25, '2023-10-01', '2025-10-01', 8.9, 6.400000000000001, 1248500, 732, 2.137978142076503, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8797064356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1984430', '网游：开局刮刮乐，觉醒唯一SSS天赋', '亦晨', '游戏', '虚拟网游', '连载中', 'male', 4392.7, 175.708, 183, 0.7, 25, '2023-10-01', '2025-10-01', 9, 9.599999999999998, 1561399.9999999998, 732, 6.0009562841530055, 1.0415006715687392, 0.003983882350262936, '长线稳定', 0.7822179318514647, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1984439', '炼仙鼎', '在下不求人', '玄幻奇幻', '东方玄幻', '连载中', 'male', 1409.5000000000002, 56.38000000000001, 58.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 7.299999999999998, 1621300, 732, 1.925546448087432, 1.0411493437389143, 0.012415750266051788, '长线稳定', 0.7869417906430436, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1989239', '财戒', '嚣张农民', '都市', '都市高手', '连载中', 'male', 5725.2, 229.00799999999998, 238.5, 1.2, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 12, 2210500, 732, 7.821311475409836, 1.041448333682666, 0.005239991616013415, '长线稳定', 0.7843968427780398, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1989600', '掌天图', '四眼秀才', '玄幻奇幻', '东方玄幻', '连载中', 'male', 8145.000000000002, 325.80000000000007, 325.8, 325.8, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 27, 1649700, 732, 11.127049180327871, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8839696356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2007504', '结婚三年喊错名，成对家老公了你哭什么', '木易未央', '都市', '都市高手', '已完结', 'male', 512.5, 20.5, 20.5, 20.5, 25, '2023-10-01', '2025-10-01', 8.700000000000003, 0.29999999999999993, 1057900, 732, 0.700136612021858, 1, 1, '长线稳定', 0.8756643356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('202630', '道门诡谈', '李十一', '奇闻异事', '奇门秘术', '已完结', 'male', 3892.5, 155.7, 155.7, 155.7, 25, '2023-10-01', '2025-10-01', 9.2, 1.4, 1132200, 732, 5.317622950819672, 1, 1, '长线稳定', 0.8857995356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2027063', '敲骨吸髓？重生另选家人宠我如宝', '清砚', '古代言情', '宫闱宅斗', '连载中', 'women', 3455.000000000001, 138.20000000000005, 138.2, 138.2, 25, '2023-10-01', '2025-10-01', 9.5, 37.69999999999999, 628100, 732, 4.719945355191258, 0.9999999999999996, 0.9999999999999996, '长线稳定', 0.8917820356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2027484', '领证爽约？我转嫁你哥哭什么', '欧橙', '现代言情', '总裁豪门', '连载中', 'women', 3155.000000000001, 126.20000000000003, 126.2, 126.2, 25, '2023-10-01', '2025-10-01', 9.2, 10.400000000000002, 816100, 732, 4.310109289617488, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8857700356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2028957', '桃花劫', '推窗望岳', '都市', '商战职场', '连载中', 'male', 5620.000000000001, 224.80000000000004, 224.8, 224.8, 25, '2023-10-01', '2025-10-01', 9.2, 40.39999999999999, 613900, 732, 7.677595628415302, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8858686356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2029029', '离婚后，我权势滔天，你哭什么', '水门绅士', '都市', '都市高手', '连载中', 'male', 4539.999999999999, 181.59999999999997, 181.6, 181.6, 25, '2023-10-01', '2025-10-01', 8.9, 18.2, 1055700, 732, 6.2021857923497254, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8798254356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2037407', '炼妖塔', '霸业', '玄幻奇幻', '东方玄幻', '连载中', 'male', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 496800, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8736462356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2040906', '边军悍卒：从鸡蛋换老婆开始！', '黑夜残影', '历史', '架空历史', '已完结', 'male', 587.5, 23.5, 23.5, 23.5, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 2.5, 1188500, 732, 0.8025956284153005, 1, 1, '长线稳定', 0.8856673356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2053789', '权力沉浮', '空中鹰', '都市', '官场', '连载中', 'male', 152.5, 6.1, 6.1, 6.1, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 1, 468700, 732, 0.20833333333333334, 1, 1, '长线稳定', 0.8776499356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2057573', '窃医术，夺至亲？神医嫡女杀疯了！', '九汐公子', '古代言情', '宫闱宅斗', '连载中', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 4.100000000000001, 369300, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8896448356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061932', '九零带崽寻亲，被绝嗣大佬宠疯了', '树梢上', '现代言情', '年代重生', '连载中', 'women', 270.00000000000006, 10.800000000000002, 10.8, 10.8, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 1.1999999999999997, 488400.00000000006, 732, 0.3688524590163935, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8896546356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063290', '让我做外室？我另嫁你哭什么', '皎皎朗月', '古代言情', '古代情缘', '连载中', 'women', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.29999999999999993, 285300, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856462356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063933', '网游：进化万物，我成唯一至高神！', '苍月翔', '游戏', '虚拟网游', '连载中', 'male', 80.00000000000001, 3.2000000000000006, 3.2, 3.2, 25, '2023-10-01', '2025-10-01', 9.2, 0.29999999999999993, 332400, 732, 0.10928961748633882, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8856470356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066484', '四合院：从技术员到人生赢家', '辰语', 'N次元', '衍生同人', '连载中', 'male', 62.5, 2.5, 2.5, 2.5, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 499500, 732, 0.08538251366120218, 1, 1, '长线稳定', 0.8696463356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066492', '空间系统穿七零，肥妻暴瘦暴富样样行', '慕荣华', '现代言情', '年代重生', '连载中', 'women', 80, 3.2, 3.2, 3.2, 25, '2023-10-01', '2025-10-01', 8.799999999999999, 0.5, 346700, 732, 0.1092896174863388, 1, 1, '长线稳定', 0.8776470356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066874', '七五：虎妞为伴，再收个落难大小姐', '任性的狮子', '都市', '乡村生活', '连载中', 'male', 102.50000000000001, 4.1000000000000005, 4.1, 4.1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 0.4, 314400, 732, 0.1400273224043716, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8836479356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067201', '掏空仇家空间流放，亲爹一家悔哭', '景惠', '古代言情', '种田经商', '连载中', 'women', 375, 15, 15, 15, 25, '2023-10-01', '2025-10-01', 9.5, 5.799999999999998, 390200.00000000006, 732, 0.5122950819672131, 1, 1, '长线稳定', 0.8916588356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067312', '网游：开局一条龙服务', '黑白相间', '游戏', '虚拟网游', '连载中', 'male', 127.5, 5.1, 5.1, 5.1, 25, '2023-10-01', '2025-10-01', 9.3, 0.9000000000000002, 276400, 732, 0.17418032786885246, 1, 1, '长线稳定', 0.8876489356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067421', '你爱绿茶我让位，再嫁大佬你别跪', '落雪颂梅', '现代言情', '总裁豪门', '连载中', 'women', 54.999999999999986, 2.1999999999999993, 2.2, 2.2, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.29999999999999993, 246200, 732, 0.07513661202185791, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8696460356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2070054', '穿成恶女向导，七个顶级哨兵疯抢！', '贰一陆', '幻想言情', '未来科幻', '连载中', 'women', 65.00000000000001, 2.6000000000000005, 2.6, 2.6, 25, '2023-10-01', '2025-10-01', 9.2, 0.4000000000000001, 255600, 732, 0.08879781420765029, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856464356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2071753', '全球异能觉醒，我修肉身横推万古', '笔下再生', '都市', '都市高武', '连载中', 'male', 82.49999999999999, 3.2999999999999994, 3.3, 3.3, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.4, 348900, 732, 0.11270491803278687, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856471356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074462', '七零孕妻进军营，野痞兵王缠吻不休', '玖甜妹子', '现代言情', '年代重生', '连载中', 'women', 115.00000000000003, 4.600000000000001, 4.6, 4.6, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.9000000000000002, 196600, 732, 0.15710382513661206, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8856484356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076479', '净身出户后，大佬全部身家求复合', '夜微雨', '现代言情', '总裁豪门', '连载中', 'women', 22.500000000000007, 0.9000000000000002, 0.9, 0.9, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 191344, 732, 0.030737704918032797, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696447356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076502', '斗罗V：人面魔蛛，多子多福', '龙小君', 'N次元', '衍生同人', '连载中', 'male', 112.5, 4.5, 4.5, 4.5, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.5, 291500, 732, 0.15368852459016394, 1, 1, '长线稳定', 0.8776483356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2078351', '四合院：开局爆锤众禽', '沉鱼', 'N次元', '衍生同人', '连载中', 'male', 54.999999999999986, 2.1999999999999993, 2.2, 2.2, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.29999999999999993, 339099.99999999994, 732, 0.07513661202185791, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8736460356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2078905', '夺我灵泉空间？掏空资产嫁京少爽翻天', '桃乐漫', '现代言情', '年代重生', '连载中', 'women', 27.499999999999993, 1.0999999999999996, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 1.3000000000000003, 213872, 732, 0.037568306010928955, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856449356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('209888', '重回1991', '南三石', '都市', '商战职场', '已完结', 'male', 14530, 581.2, 581.2, 581.2, 25, '2023-10-01', '2025-10-01', 9.3, 1.3, 5581700, 732, 19.849726775956285, 1, 1, '长线稳定', 0.8882250356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213502', '小皇叔腹黑又难缠', '一碧榶榶', '古代言情', '宫闱宅斗', '已完结', 'women', 14.999999999999998, 0.6, 0.6, 0.6, 25, '2023-10-01', '2025-10-01', 9.6, 2, 1594400, 732, 0.020491803278688523, 1, 1, '长线稳定', 0.8936444356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1651341', '盖世圣医', '林阳', '都市', '都市高手', '已完结', 'male', 6710.000000000002, 268.4000000000001, 268.4, 268.4, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 0.9000000000000002, 2455800, 732, 9.16666666666667, 0.9999999999999996, 0.9999999999999996, '长线稳定', 0.8839122356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1706674', '开局麒麟肾，吓哭九个绝色娇妻', '神级大牛', '都市', '都市高手', '已完结', 'male', 12365.000000000002, 494.6000000000001, 494.6, 494.6, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.1000000000000005, 1507700, 732, 16.892076502732245, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8841384356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1710753', '舔狗反派只想苟，女主不按套路走！', '我是愤怒', '都市', '都市高手', '连载中', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.5, 32.89999999999999, 4954800, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8916785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1730848', '徒儿快下山，你师姐等不及了', '雨落狂流', '都市', '都市高手', '已完结', 'male', 3495, 139.8, 139.8, 139.8, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.1000000000000005, 2216300, 732, 4.774590163934426, 1, 1, '长线稳定', 0.8837836356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1764505', '我团宠小师妹，嚣张点怎么了', '瑰夏', '幻想言情', '玄幻仙侠', '已完结', 'women', 9125, 365, 365, 365, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 13, 3333200, 732, 12.46584699453552, 1, 1, '长线稳定', 0.8960088356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1767349', '父皇偷听我心声杀疯了，我负责吃奶', '安已然', '古代言情', '宫闱宅斗', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 2.7, 3176100, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8936448356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1801623', '帝国皇太子，老子不干了！', '灰色小猫', '历史', '架空历史', '已完结', 'male', 8465, 338.6, 338.6, 338.6, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 2.3999999999999995, 2689100.0000000005, 732, 11.564207650273223, 1, 1, '长线稳定', 0.8799824356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1807740', '末世前中彩票，我囤上亿物资躺赢', '诺禾', '幻想言情', '末世求生', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.6999999999999995, 937400, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8936448356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1846315', '小雌性是万人迷，养了一窝毛绒绒', '一个刚正不阿的女人', '幻想言情', '未来科幻', '已完结', 'women', 22.500000000000004, 0.9000000000000001, 0.9, 0.9, 25, '2023-10-01', '2025-10-01', 9.8, 3.2000000000000006, 850800, 732, 0.030737704918032793, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8976447356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1851542', '麒麟出世，师父让我下山去结婚', '御龙', '都市', '都市高手', '已完结', 'male', 2125, 85, 85, 85, 25, '2023-10-01', '2025-10-01', 9, 3.399999999999999, 2562100, 732, 2.9030054644808745, 1, 1, '长线稳定', 0.8817288356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1872563', '为奴三年后，整个侯府跪求我原谅', '莫小弃', '古代言情', '古代情缘', '连载中', 'women', 867.5, 34.7, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 8.8, 38.89999999999999, 2033000, 732, 1.1851092896174864, 1, 1, '长线稳定', 0.8776785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1872576', '我来自上界帝族，成婚当天媳妇跟人跑', '社恐啊社恐', '玄幻奇幻', '东方玄幻', '已完结', 'male', 5912.5, 236.5, 236.5, 236.5, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 1.1999999999999997, 1141900, 732, 8.077185792349727, 1, 1, '长线稳定', 0.8778803356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1873655', '重生八零：离婚后被军少宠上天', '小白蛇', '现代言情', '年代重生', '已完结', 'women', 15184.999999999996, 607.3999999999999, 607.4, 607.4, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 6.599999999999999, 1339300, 732, 20.744535519125677, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8962512356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1876687', '和离前夜，她重生回了出嫁前', '柳程安', '古代言情', '古代情缘', '已完结', 'women', 10852.500000000002, 434.1000000000001, 434.1, 434.1, 25, '2023-10-01', '2025-10-01', 9.5, 5.2, 630300, 732, 14.82581967213115, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8920779356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1927415', '离婚三天：我冷淡至极，他索吻成瘾', '风羽轻轻', '现代言情', '总裁豪门', '连载中', 'women', 5612.5, 224.5, 224.5, 224.5, 25, '2023-10-01', '2025-10-01', 9.5, 13.5, 1353700, 732, 7.6673497267759565, 1, 1, '长线稳定', 0.8918683356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1961152', '太阳神体：从为仙女解毒开始无敌！', '有木', '玄幻奇幻', '东方玄幻', '连载中', 'male', 1968.4, 78.736, 82, 0.4, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 4, 1073900, 732, 2.6890710382513663, 1.04145498882341, 0.005080268238162975, '长线稳定', 0.7842305984402547, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1964672', '顾总，你前妻在科研界杀疯了！', '席宝贝', '现代言情', '总裁豪门', '连载中', 'women', 5512.5, 220.5, 220.5, 220.5, 25, '2023-10-01', '2025-10-01', 9.5, 32.5, 1482600, 732, 7.530737704918033, 1, 1, '长线稳定', 0.8918643356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1965108', '召诸神，踏万界，天命帝女逆乾坤', '澜岸', '幻想言情', '玄幻仙侠', '连载中', 'women', 1869.9999999999995, 74.79999999999998, 74.8, 74.8, 25, '2023-10-01', '2025-10-01', 9.699999999999998, 6.700000000000002, 1613899.9999999998, 732, 2.5546448087431686, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8957186356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1975889', '懂兽语穿六零，家属院里我最行', '情丝入你心', '现代言情', '年代重生', '已完结', 'women', 274.00000000000006, 10.960000000000003, 51.6, 0.8, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 4.200000000000001, 1262500, 732, 0.37431693989071047, 4.7080291970802906, 0.07299270072992699, '波动型', 0.8029540656894312, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1978758', '小姑奶奶下山了，在桥洞底下摆摊算命', '骑着猫的小鱼干', '现代言情', '都市奇幻', '连载中', 'women', 1894.6999999999996, 75.78799999999998, 117.8, 1.1, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 11.400000000000004, 1002800, 732, 2.5883879781420758, 1.5543357787512537, 0.014514171108882677, '长线稳定', 0.7971710407273267, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1989780', '权力医途', '端午', '都市', '官场', '连载中', 'male', 4732.5, 189.3, 189.3, 189.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 19.5, 1166200, 732, 6.465163934426229, 1, 1, '长线稳定', 0.8838331356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1994365', '高门长媳', 'Ms腊肠', '古代言情', '古代情缘', '已完结', 'women', 1577.5000000000005, 63.100000000000016, 63.1, 63.1, 25, '2023-10-01', '2025-10-01', 9.5, 3.7999999999999994, 366100, 732, 2.155054644808744, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8917069356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2014122', '于他怀中轻颤', '苏晚舟', '现代言情', '总裁豪门', '连载中', 'women', 899.7000000000002, 35.98800000000001, 80.9, 0.7, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 8.700000000000003, 506100, 732, 1.229098360655738, 2.247971546070912, 0.019450928087140152, '波动型', 0.7956249164251524, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('2016384', '冷婚五年，离婚夜他却失控了', '温见鹿', '现代言情', '总裁豪门', '连载中', 'women', 22.500000000000007, 0.9000000000000002, 0.9, 0.9, 25, '2023-10-01', '2025-10-01', 9, 1.1999999999999997, 356940, 732, 0.030737704918032797, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8816447356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2018535', '洪荒：我屡出毒计，十二祖巫劝我冷静！', '橘黄的橙子', '武侠仙侠', '上古洪荒', '已完结', 'male', 1182.5, 47.3, 47.3, 47.3, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 1.8999999999999997, 3086500, 732, 1.6154371584699454, 1, 1, '长线稳定', 0.8796911356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2024150', '玄幻：从炼制合情丹开始长生！', '柿饼吃个糖', '玄幻奇幻', '东方玄幻', '已完结', 'male', 1762.5, 70.5, 70.5, 70.5, 25, '2023-10-01', '2025-10-01', 9, 1.0999999999999996, 845600, 732, 2.4077868852459017, 1, 1, '长线稳定', 0.8817143356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2027749', '刚抽中SSS级天赋，你跟我说游戏停服', '吃猫的鱼仔', '玄幻奇幻', '异世大陆', '连载中', 'male', 1789, 71.56, 74.5, 1, 25, '2023-10-01', '2025-10-01', 9.2, 4.200000000000001, 713500, 732, 2.4439890710382515, 1.0410844046953605, 0.01397428731134712, '长线稳定', 0.7871128243475731, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2034828', '唯一真神', '北冥', '都市', '都市高武', '已完结', 'male', 1640.0000000000005, 65.60000000000002, 65.6, 65.6, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.1999999999999993, 841400, 732, 2.240437158469946, 0.9999999999999996, 0.9999999999999996, '长线稳定', 0.8837094356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2036642', '暗恋十年，庄先生他藏不住了', '雯锦', '现代言情', '总裁豪门', '连载中', 'women', 1815, 72.6, 72.6, 72.6, 25, '2023-10-01', '2025-10-01', 9.5, 4.299999999999999, 584600, 732, 2.4795081967213113, 1, 1, '长线稳定', 0.8917164356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2038351', '公府上下宠我如宝，养兄一家后悔了', '钱多多君', '古代言情', '宫闱宅斗', '连载中', 'women', 70, 2.8, 2.8, 2.8, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 449500, 732, 0.09562841530054644, 1, 1, '长线稳定', 0.8696466356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2041092', '无双公子', '小陈叔叔', '历史', '架空历史', '连载中', 'male', 40, 1.6, 1.6, 1.6, 25, '2023-10-01', '2025-10-01', 9.2, 0.2, 213400, 732, 0.0546448087431694, 1, 1, '长线稳定', 0.8856454356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2050780', '渣夫骗我领假证，转身携千亿资产嫁权少', '唐小糖', '现代言情', '总裁豪门', '连载中', 'women', 3347.500000000001, 133.90000000000003, 133.9, 133.9, 25, '2023-10-01', '2025-10-01', 9.5, 30.100000000000005, 576200, 732, 4.57308743169399, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8917777356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2052700', '小司机的美女总裁老婆', '最爱老板娘', '都市', '都市高手', '连载中', 'male', 2203.6999999999994, 88.14799999999997, 91.8, 0.5, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 23.9, 761000, 732, 3.0105191256830595, 1.0414303217316334, 0.005672278440804104, '长线稳定', 0.7842992114605187, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2052831', '长生从助仙子修行开始', '勿问', '玄幻奇幻', '东方玄幻', '连载中', 'male', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.29999999999999993, 372200, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8736468356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2054306', '无敌皇子：从边关开始制霸天下！', '大内低手', '历史', '穿越历史', '连载中', 'male', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.2, 469000, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8696468356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2055000', '快穿好孕美人，绝嗣反派黑化了', '虞忧', '幻想言情', '无限快穿', '连载中', 'women', 84.99999999999997, 3.399999999999999, 3.4, 3.4, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.2, 369000, 732, 0.11612021857923494, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8696472356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2060180', '科举：开局官府发妻，卷成状元', '明月天衣', '历史', '架空历史', '连载中', 'male', 77.50000000000003, 3.100000000000001, 3.1, 3.1, 25, '2023-10-01', '2025-10-01', 9.2, 0.29999999999999993, 468800, 732, 0.10587431693989074, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8856469356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061268', '结婚三年不同房，离婚后她显怀了', '墨堑', '现代言情', '总裁豪门', '连载中', 'women', 130.00000000000003, 5.200000000000001, 5.2, 5.2, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.9000000000000002, 325900.00000000006, 732, 0.17759562841530058, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696490356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061269', '七零美人二嫁后，随军西北撩硬汉', '一然', '现代言情', '年代重生', '连载中', 'women', 10, 0.4, 0.4, 0.4, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 347100, 732, 0.01366120218579235, 1, 1, '长线稳定', 0.8736442356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061849', '官府发男人，绝色罪女抬我回家', '凶名赫赫', '历史', '架空历史', '连载中', 'male', 130.00000000000003, 5.200000000000001, 5.2, 5.2, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.4, 426700, 732, 0.17759562841530058, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8776490356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062363', '离婚后，我转嫁大佬你哭什么？', '舒子曦', '现代言情', '总裁豪门', '连载中', 'women', 20.5, 0.82, 1.5, 0.5, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 334300, 732, 0.028005464480874317, 1.829268292682927, 0.6097560975609756, '长线稳定', 0.8346202653725359, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062788', '穿越大唐：从驿站小卒到帝国巨擘', '亲爱的葡萄', '历史', '穿越历史', '连载中', 'male', 42.499999999999986, 1.6999999999999995, 1.7, 1.7, 25, '2023-10-01', '2025-10-01', 9.2, 0.1, 305500, 732, 0.05806010928961747, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856455356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063306', '重返二十岁心动，他才是白月光', '浮景', '现代言情', '青春校园', '连载中', 'women', 27.499999999999993, 1.0999999999999996, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.1, 292500, 732, 0.037568306010928955, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856449356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064308', '妖魔乱世逢灾年，我每日一卦粮肉满仓', '灶食', '玄幻奇幻', '东方玄幻', '连载中', 'male', 45.000000000000014, 1.8000000000000005, 1.8, 1.8, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 292300, 732, 0.06147540983606559, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696456356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064964', '规则怪谈：我的超能力给诡异整破防了', 'fishlike', '幻想言情', '无限快穿', '连载中', 'women', 17.5, 0.7, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 272400, 732, 0.02390710382513661, 1, 1, '长线稳定', 0.8736445356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065893', '太监无双', '水山', '历史', '架空历史', '连载中', 'male', 84.99999999999997, 3.399999999999999, 3.4, 3.4, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 0.5999999999999999, 341800, 732, 0.11612021857923494, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8836472356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065894', '神医下山：美女总裁非我不嫁', '月下无人', '都市', '都市高手', '连载中', 'male', 125, 5, 5, 5, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.8, 330900.00000000006, 732, 0.17076502732240437, 1, 1, '长线稳定', 0.8776488356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066494', '换嫁绝嗣大佬，我胎胎多宝赢麻了', '猫猫鱼吃果果', '现代言情', '年代重生', '连载中', 'women', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 9.2, 0.4, 273900, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8856468356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067715', '嫌我劳改犯？我神医身份曝光了', '瓜神驾到', '都市', '都市高武', '连载中', 'male', 54.99999999999999, 2.1999999999999997, 2.2, 2.2, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 367500, 732, 0.07513661202185791, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8696460356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2071506', '开局玉女宗，被仙子挑走当人丹', '三明治', '玄幻奇幻', '东方玄幻', '连载中', 'male', 50, 2, 2, 2, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.4, 286400, 732, 0.06830601092896176, 1, 1, '长线稳定', 0.8696458356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074077', '开局一辆垃圾车，假千金杀穿末世', '温念君', '幻想言情', '末世求生', '连载中', 'women', 31, 1.24, 1.4, 0.6, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.1, 112800, 732, 0.04234972677595628, 1.129032258064516, 0.48387096774193544, '长线稳定', 0.834032172390632, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074333', '一掌退大帝，你说他是杂役弟子？', '百万单机王', '玄幻奇幻', '东方玄幻', '连载中', 'male', 29.999999999999993, 1.1999999999999997, 1.2, 1.2, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 196300, 732, 0.04098360655737704, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8736450356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2075201', '魔道神豪携亿万魔晶，在两界杀疯了', '风九元', '玄幻奇幻', '东方玄幻', '连载中', 'male', 42.499999999999986, 1.6999999999999995, 1.7, 1.7, 25, '2023-10-01', '2025-10-01', 9.2, 0.29999999999999993, 267400, 732, 0.05806010928961747, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856455356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2075347', '被退婚五次，她嫁残王夫君却躺赢', '瓜田立夏', '古代言情', '宫闱宅斗', '连载中', 'women', 62.5, 2.5, 2.5, 2.5, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.2, 287900, 732, 0.08538251366120218, 1, 1, '长线稳定', 0.8856463356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('218179', '天命风水神相', '半盏清茶', '奇闻异事', '奇门秘术', '已完结', 'male', 1477.5000000000002, 59.10000000000001, 59.1, 59.1, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 1.4, 1042800, 732, 2.01844262295082, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8857029356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1655407', '鸿蒙霸体诀', '鱼初见', '玄幻奇幻', '东方玄幻', '连载中', 'male', 19790.000000000007, 791.6000000000003, 791.6, 791.6, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 34.300000000000004, 7510200, 732, 27.03551912568307, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8844354356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1655967', '吞噬九重天', '屠刀成佛', '玄幻奇幻', '东方玄幻', '连载中', 'male', 9007.500000000004, 360.3000000000001, 360.3, 360.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 20.800000000000004, 8211600, 732, 12.305327868852464, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8840041356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1758273', '重生2000：从追求青涩校花同桌开始', '痞子老妖', '都市', '热血校园', '连载中', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 19.400000000000006, 4274600, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8876785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1759390', '分手后，捡到一只吸血鬼美少女', '黄泉隼', 'N次元', '原生幻想', '已完结', 'male', 7970.000000000002, 318.80000000000007, 318.8, 318.8, 25, '2023-10-01', '2025-10-01', 9.5, 1.5, 2805899.9999999995, 732, 10.887978142076506, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8919626356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1766962', '苟到炼气10000层，飞升回地球', '拂衣惊雪', '都市', '都市高武', '已完结', 'male', 5492.499999999999, 219.69999999999996, 219.7, 219.7, 25, '2023-10-01', '2025-10-01', 8.5, 1.0999999999999996, 3085899.9999999995, 732, 7.503415300546447, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8718635356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1781303', '穿书反派：开局挖掉女主至尊骨', '晚风起', '玄幻奇幻', '东方玄幻', '已完结', 'male', 3610.000000000001, 144.40000000000003, 144.4, 144.4, 25, '2023-10-01', '2025-10-01', 8.700000000000003, 2, 1006800.0000000001, 732, 4.931693989071039, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8757882356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1802216', '诱她，一夜成瘾', '壹鹿小跑', '现代言情', '总裁豪门', '已完结', 'women', 13747.499999999996, 549.8999999999999, 549.9, 549.9, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 4.399999999999999, 1113100, 732, 18.780737704918028, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8901937356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1802708', '神算真千金，全豪门跪下喊祖宗', '一只肉九', '现代言情', '总裁豪门', '已完结', 'women', 12.5, 0.5, 0.5, 0.5, 25, '2023-10-01', '2025-10-01', 9.5, 2.3999999999999995, 1049700, 732, 0.01707650273224044, 1, 1, '长线稳定', 0.8916443356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1810234', '从女子监狱走出的修仙者', '河图大妖', '都市', '都市高武', '连载中', 'male', 4512.3, 180.49200000000002, 188, 0.3, 25, '2023-10-01', '2025-10-01', 9, 5.200000000000001, 3970800, 732, 6.164344262295082, 1.041597411519624, 0.0016621235290206766, '长线稳定', 0.7819905399693405, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1837399', '圣手大医仙', '带刺的毛球', '都市', '都市高手', '已完结', 'male', 767.4999999999998, 30.699999999999992, 30.7, 30.7, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 1.0999999999999996, 4280800, 732, 1.0484972677595625, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8796745356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1870439', '空间通末世：我囤亿万物资养兵王', '小桃花', '幻想言情', '末世求生', '已完结', 'women', 667.3000000000002, 26.692000000000007, 330.2, 0.3, 25, '2023-10-01', '2025-10-01', 9.6, 1.6, 1110500, 732, 0.9116120218579238, 12.370747789599877, 0.011239322643488682, '波动型', 0.7947944598807872, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1963904', '他说不爱，婚后却沦陷了', '如鱼', '现代言情', '总裁豪门', '连载中', 'women', 7987.5, 319.5, 319.5, 319.5, 25, '2023-10-01', '2025-10-01', 9.5, 34.80000000000001, 1444100, 732, 10.91188524590164, 1, 1, '长线稳定', 0.8919633356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1965109', '守寡重生，送断袖夫君下黄泉', '指尖上的行走', '古代言情', '宫闱宅斗', '已完结', 'women', 198.99999999999991, 7.959999999999996, 37, 0.7, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 4.100000000000001, 1019000, 732, 0.2718579234972676, 4.648241206030153, 0.08793969849246235, '波动型', 0.8044457654656847, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1981956', '柔弱医修今天也在背地里暴打魔尊', '白木木', '幻想言情', '玄幻仙侠', '连载中', 'women', 6597.500000000001, 263.90000000000003, 263.9, 263.9, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 16.900000000000002, 1005500, 732, 9.012978142076504, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8979077356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982718', '真没必要让我重生', '刘大咪', '都市', '都市生活', '已完结', 'male', 762.5, 30.5, 30.5, 30.5, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 1.1999999999999997, 1165300, 732, 1.0416666666666667, 1, 1, '长线稳定', 0.8796743356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1983530', '厂长收手吧！国家真的压不住了！', '正义反派', '都市', '都市生活', '连载中', 'male', 2455.7999999999993, 98.23199999999997, 102.3, 0.6, 25, '2023-10-01', '2025-10-01', 9.3, 9.3, 956100, 732, 3.3549180327868844, 1.0414121671145862, 0.006107989249938921, '长线稳定', 0.7883528665414324, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1985055', '摆摊开饭馆，她惊动全京城', '幸运团团', '古代言情', '古代情缘', '连载中', 'women', 1413.6, 56.544, 61.4, 0.7, 25, '2023-10-01', '2025-10-01', 9.800000000000002, 5.799999999999998, 696400, 732, 1.9311475409836065, 1.0858800226372383, 0.012379739671760046, '长线稳定', 0.7989383535836144, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2003997', '末世囤货养崽，从娘胎开始旺妈咪', '小桃花', '幻想言情', '末世求生', '已完结', 'women', 339.0999999999999, 13.563999999999997, 46.9, 0.6, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.5, 735900, 732, 0.46325136612021844, 3.457682099675613, 0.04423473901503982, '波动型', 0.7980808735179423, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('200456', '在他深情中陨落', '浮生三千', '现代言情', '总裁豪门', '已完结', 'women', 7.499999999999998, 0.29999999999999993, 0.3, 0.3, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 1.8999999999999997, 3883100, 732, 0.01024590163934426, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8956441356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2004996', '仙侣', '鬼疯子', '武侠仙侠', '幻想修真', '连载中', 'male', 2551.8999999999996, 102.07599999999998, 106.3, 0.7, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 11.3, 1413100, 732, 3.486202185792349, 1.0413809318546967, 0.006857635487283986, '长线稳定', 0.7804316751651669, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2027742', 'SSSSSSSSSS级狂龙出狱', '成书', '都市', '都市高手', '连载中', 'male', 1755.4, 70.21600000000001, 73.1, 1, 25, '2023-10-01', '2025-10-01', 9, 4.799999999999999, 744599.9999999999, 732, 2.3980874316939893, 1.0410732596559187, 0.014241768257946905, '长线稳定', 0.7831382284422331, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2038328', '重生不嫁高门后，高冷权臣追疯了！', '溪午闻钟', '古代言情', '古代情缘', '连载中', 'women', 72.49999999999997, 2.899999999999999, 2.9, 2.9, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 440200.00000000006, 732, 0.09904371584699449, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8696467356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2048046', '重生70当猎王', '吴家三少', '都市', '乡村生活', '连载中', 'male', 45.000000000000014, 1.8000000000000005, 1.8, 1.8, 25, '2023-10-01', '2025-10-01', 8, 0.1, 499099.99999999994, 732, 0.06147540983606559, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8616456356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2053898', '他的小撩精', '街灯读我', '现代言情', '总裁豪门', '连载中', 'women', 1458.0000000000005, 58.32000000000002, 111.6, 0.6, 25, '2023-10-01', '2025-10-01', 9.7, 18.5, 416900, 732, 1.9918032786885251, 1.9135802469135794, 0.010288065843621396, '长线稳定', 0.7967309622008004, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2054313', '阴阳塔', '水管开花', '玄幻奇幻', '东方玄幻', '连载中', 'male', 280, 11.2, 11.2, 11.2, 25, '2023-10-01', '2025-10-01', 9, 1.6999999999999995, 390000, 732, 0.3825136612021858, 1, 1, '长线稳定', 0.8816550356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2060462', '七零闪婚不见面，带娃炸翻家属院', '桃桃宝宝', '现代言情', '年代重生', '连载中', 'women', 957.5000000000002, 38.30000000000001, 38.3, 38.3, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 26.199999999999992, 353800, 732, 1.3080601092896178, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8896821356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061260', '七零读心，掏空家产带福宝寻夫随军', '沫沫无闻', '现代言情', '年代重生', '连载中', 'women', 127.50000000000001, 5.1000000000000005, 5.1, 5.1, 25, '2023-10-01', '2025-10-01', 9, 0.29999999999999993, 483700, 732, 0.17418032786885249, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8816489356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061854', '恐怖时代：从斩诡开始永生不死', '戒律', '都市', '灵气复苏', '连载中', 'male', 52.500000000000014, 2.1000000000000005, 2.1, 2.1, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 441800, 732, 0.07172131147540986, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696459356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062835', '小貔貅掉七零军区大院，被全军抢着宠', '加菲不是猫', '现代言情', '年代重生', '连载中', 'women', 65.00000000000001, 2.6000000000000005, 2.6, 2.6, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 292900, 732, 0.08879781420765029, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696464356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065807', '重生下乡：我才不当冤大头！', '清蒸大白蛆', '都市', '乡村生活', '连载中', 'male', 329.99999999999994, 13.199999999999998, 13.2, 13.2, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 2.7, 403300, 732, 0.4508196721311475, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8796570356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065813', '开局捉奸，傍上权臣好孕来', '雨过阳光', '古代言情', '宫闱宅斗', '连载中', 'women', 82.49999999999999, 3.2999999999999994, 3.3, 3.3, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.7, 296500, 732, 0.11270491803278687, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856471356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2066872', '离婚后，从幼儿园会演开始爆火全网', '烂番薯', '都市', '明星娱乐', '连载中', 'male', 102.50000000000003, 4.100000000000001, 4.1, 4.1, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.2, 425100, 732, 0.14002732240437163, 0.9999999999999996, 0.9999999999999996, '长线稳定', 0.8856479356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074090', '挖我灵根？重生后新师门待我如宝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', '连载中', 'women', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 9.2, 0.29999999999999993, 309600, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856462356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074330', '穿成六零小炮灰，大小姐带物资养兵王', '娮小夕', '现代言情', '年代重生', '连载中', 'women', 17.5, 0.7, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.4, 205600, 732, 0.02390710382513661, 1, 1, '长线稳定', 0.8856445356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074390', '错虐白月光，祁总跪地求复合', '鹿景景', '现代言情', '总裁豪门', '连载中', 'women', 42.499999999999986, 1.6999999999999995, 1.7, 1.7, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.1, 202399.99999999997, 732, 0.05806010928961747, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856455356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074395', '断绝关系？我转身科举成状元！', '天霸', '历史', '架空历史', '连载中', 'male', 50, 2, 2, 2, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 309500, 732, 0.06830601092896176, 1, 1, '长线稳定', 0.8696458356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074408', '全星际都想rua元帅的小奶崽', '未礼', '幻想言情', '未来科幻', '连载中', 'women', 65.00000000000001, 2.6000000000000005, 2.6, 2.6, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.2, 259400, 732, 0.08879781420765029, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696464356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('208594', '吞天圣帝', '枫落忆痕', '玄幻奇幻', '东方玄幻', '连载中', 'male', 11607.500000000002, 464.30000000000007, 483.6, 1.1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 8, 12380500, 732, 15.857240437158472, 1.0415679517553305, 0.0023691578720654747, '长线稳定', 0.7843450514036449, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('214890', '混沌天尊', '新闻工作者', '玄幻奇幻', '东方玄幻', '已完结', 'male', 7877.499999999999, 315.09999999999997, 315.1, 315.1, 25, '2023-10-01', '2025-10-01', 9, 2.899999999999999, 7728900, 732, 10.761612021857923, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8819589356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('215243', '第一瞳术师', '喵喵大人', '幻想言情', '玄幻仙侠', '已完结', 'women', 731.9, 29.276, 34.7, 0.8, 25, '2023-10-01', '2025-10-01', 9.8, 19.5, 3973100, 732, 0.999863387978142, 1.185271211914196, 0.02732613745047138, '长线稳定', 0.8004057253614857, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('215264', '都市战狼', '荆南', '都市', '都市高手', '已完结', 'male', 10379.999999999996, 415.1999999999999, 415.2, 415.2, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 1.8000000000000005, 5086300, 732, 14.180327868852453, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8860590356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('216054', '极品小道长', '任公独钓', '奇闻异事', '奇门秘术', '已完结', 'male', 3110.0000000000005, 124.40000000000002, 124.4, 124.4, 25, '2023-10-01', '2025-10-01', 9.3, 0.8000000000000002, 1138300, 732, 4.248633879781422, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8877682356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('217267', '民间诡闻实录之阴阳先生', '罗樵森', '奇闻异事', '奇门秘术', '已完结', 'male', 10712.5, 428.5, 428.5, 428.5, 25, '2023-10-01', '2025-10-01', 9.5, 1.3, 2265400, 732, 14.634562841530055, 1, 1, '长线稳定', 0.8920723356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('219498', '君夫人的马甲层出不穷', '荷衣', '现代言情', '总裁豪门', '已完结', 'women', 17342.400000000005, 693.6960000000003, 825.6, 1.2, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 5.100000000000001, 1335300, 732, 23.691803278688532, 1.1901466924993076, 0.0017298643786327146, '长线稳定', 0.7965105180543017, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('222157', '我有神级收益系统', '不是蚊子', '都市', '都市高武', '已完结', 'male', 23030.000000000004, 921.2000000000002, 921.2, 921.2, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 2.8, 2746600.0000000005, 732, 31.461748633879786, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8865650356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1658048', '六年后，我携四个幼崽炸翻前夫家', '相思一顾', '现代言情', '总裁豪门', '连载中', 'women', 867.4999999999999, 34.699999999999996, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 30.100000000000005, 5460300, 732, 1.1851092896174862, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8936785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1672801', '太古吞天诀', '心无尘', '玄幻奇幻', '东方玄幻', '已完结', 'male', 4592.499999999999, 183.69999999999996, 183.7, 183.7, 25, '2023-10-01', '2025-10-01', 9, 2.4, 4015100, 732, 6.2739071038251355, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8818275356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '现代言情', '总裁豪门', '已完结', 'women', 23580.7, 943.2280000000001, 982.5, 0.7, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 4.899999999999999, 2314600, 732, 32.21407103825137, 1.0416357444859567, 0.0007421323370383405, '长线稳定', 0.7946612768501422, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1768764', '出阳神', '罗樵森', '奇闻异事', '奇门秘术', '已完结', 'male', 7422.5, 296.9, 296.9, 296.9, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 2.5, 3374700.0000000005, 732, 10.140027322404372, 1, 1, '长线稳定', 0.8899407356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1771336', '王妃她五行缺德', '棠花落', '古代言情', '宫闱宅斗', '已完结', 'women', 10, 0.4, 0.4, 0.4, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 2, 1021800.0000000001, 732, 0.01366120218579235, 1, 1, '长线稳定', 0.8956442356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1838037', '典狱长大人深不可测！', '黄泉隼', '都市', '都市高武', '已完结', 'male', 4697.500000000001, 187.90000000000003, 187.9, 187.9, 25, '2023-10-01', '2025-10-01', 9.5, 1.6, 3406600.0000000005, 732, 6.417349726775957, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8918317356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1858392', '咬春靥', '空酒瓶', '古代言情', '宫闱宅斗', '已完结', 'women', 8177.5, 327.1, 327.1, 327.1, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 4.5, 1926800, 732, 11.171448087431694, 1, 1, '长线稳定', 0.8699709356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1867139', '师叔，你的法宝太不正经了', '李别浪', '玄幻奇幻', '东方玄幻', '连载中', 'male', 11590.599999999999, 463.62399999999997, 482.9, 1, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 14.900000000000004, 2249100, 732, 15.83415300546448, 1.0415767949890429, 0.0021569202629717187, '长线稳定', 0.7903231516427356, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1871612', '爹爹开门，系窝呀！', '垂耳兔', '古代言情', '古代情缘', '已完结', 'women', 5904.999999999999, 236.19999999999996, 236.2, 236.2, 25, '2023-10-01', '2025-10-01', 9.799999999999997, 5.299999999999999, 1000100, 732, 8.066939890710382, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8978800356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1880008', '吞天神体：从仙女奉献开始无敌', '南云月', '玄幻奇幻', '东方玄幻', '连载中', 'male', 1699.3999999999996, 67.97599999999998, 70.8, 0.2, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 15.800000000000002, 1834800, 732, 2.3215846994535516, 1.0415440743791928, 0.0029422148993762513, '长线稳定', 0.7860060331063761, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1929412', '重生：清纯转校生表白我，校花哭惨了', '一缕微光', '都市', '热血校园', '已完结', 'male', 2039.9999999999998, 81.6, 81.6, 81.6, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 2, 1208600, 732, 2.786885245901639, 1, 1, '长线稳定', 0.8897254356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1945519', '马甲藏不住，假千金炸翻全京圈', '程不言', '现代言情', '青春校园', '已完结', 'women', 11559.999999999998, 462.3999999999999, 462.4, 462.4, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 6.700000000000002, 1003900, 732, 15.792349726775953, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8981062356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1950540', '傅律师，太太说她不回头了', '荣荣子铱', '现代言情', '总裁豪门', '连载中', 'women', 2962.5, 118.5, 118.5, 118.5, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 6.299999999999998, 1877200, 732, 4.047131147540983, 1, 1, '长线稳定', 0.8897623356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1965987', '被贬边疆，成就最强藩王', '绯雨', '历史', '架空历史', '连载中', 'male', 4287.5, 171.5, 171.5, 171.5, 25, '2023-10-01', '2025-10-01', 9, 12.099999999999996, 1157900, 732, 5.85724043715847, 1, 1, '长线稳定', 0.8818153356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1968483', '霍总，太太不复婚，只改嫁！', '相思一顾', '现代言情', '总裁豪门', '连载中', 'women', 1032.3, 41.292, 63.9, 1.1, 25, '2023-10-01', '2025-10-01', 9.5, 8, 1316399.9999999998, 732, 1.4102459016393443, 1.5475152571926765, 0.02663954276857503, '长线稳定', 0.794349081893296, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '都市', '都市高武', '已完结', 'male', 5170.000000000001, 206.80000000000004, 206.8, 206.8, 25, '2023-10-01', '2025-10-01', 9.2, 6.700000000000002, 1513100, 732, 7.062841530054646, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8858506356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1977771', '傅总，夫人不想当首富太太了', '蓝尧', '现代言情', '总裁豪门', '连载中', 'women', 4689.999999999998, 187.59999999999994, 187.6, 187.6, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 15.699999999999998, 1665100, 732, 6.40710382513661, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8898314356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1978748', '重生61，我带了一座军火库', '小白兔吃萝卜', '都市', '都市生活', '连载中', 'male', 4105.1, 164.204, 171, 1.1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 11.099999999999996, 1339800, 732, 5.608060109289618, 1.0413875423254, 0.006698984190397311, '长线稳定', 0.784477938035478, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1992776', '我叫二狗，一条会咬人的狗！', '半解不解', '都市', '都市生活', '已完结', 'male', 822.4999999999998, 32.89999999999999, 32.9, 32.9, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.3000000000000003, 1041500, 732, 1.1236338797814205, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8836767356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2011930', '末世别人砍丧尸，我在房车炫美食', '槿花篱', '幻想言情', '末世求生', '连载中', 'women', 1042.4999999999998, 41.69999999999999, 41.7, 41.7, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 3.100000000000001, 771600, 732, 1.424180327868852, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956855356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2014393', '掌门怀孕，关我一个杂役什么事', '雨夜终曲', '玄幻奇幻', '东方玄幻', '连载中', 'male', 6347.500000000002, 253.90000000000006, 253.9, 253.9, 25, '2023-10-01', '2025-10-01', 9, 30.899999999999995, 949300.0000000001, 732, 8.671448087431697, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8818977356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2019227', '随母改嫁旺新家，重生嫡女嘎嘎乱杀', '三十嘉', '古代言情', '宫闱宅斗', '连载中', 'women', 1500.5000000000007, 60.020000000000024, 87.7, 1.2, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 14.599999999999996, 866760, 732, 2.049863387978143, 1.4611796067977336, 0.019993335554815053, '长线稳定', 0.79570318917192, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2032046', '守活寡两年去随军，改嫁绝嗣大佬', '糖煵五加', '现代言情', '年代重生', '连载中', 'women', 1154.8000000000002, 46.19200000000001, 48.1, 0.4, 25, '2023-10-01', '2025-10-01', 9.5, 4.299999999999999, 648500, 732, 1.5775956284153008, 1.0413058538275024, 0.00865950813993765, '长线稳定', 0.7925559784304322, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2032899', '让你当书童，你成大夏文圣', '炫迈', '历史', '架空历史', '连载中', 'male', 1486.0999999999997, 59.44399999999999, 61.9, 0.5, 25, '2023-10-01', '2025-10-01', 9, 3.600000000000001, 714000, 732, 2.0301912568306006, 1.0413161967566114, 0.008411277841329657, '长线稳定', 0.7825444074005714, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2040657', '末世抢机缘：我的我的都是我的！', '文鳐', '幻想言情', '末世求生', '连载中', 'women', 102.50000000000003, 4.100000000000001, 4.1, 4.1, 25, '2023-10-01', '2025-10-01', 9.5, 0.29999999999999993, 488300, 732, 0.14002732240437163, 0.9999999999999996, 0.9999999999999996, '长线稳定', 0.8916479356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2044077', '妾本丝萝，只图钱帛', '锅包又又又', '古代言情', '宫闱宅斗', '连载中', 'women', 585, 23.4, 23.4, 23.4, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.4, 444900, 732, 0.7991803278688525, 1, 1, '长线稳定', 0.8936672356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2046394', '直播审判罪女！结果全国为她痛哭', '财神爷独生女', '现代言情', '总裁豪门', '连载中', 'women', 52.500000000000014, 2.1000000000000005, 2.1, 2.1, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.1, 440300, 732, 0.07172131147540986, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856459356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2048050', '抢我婚约嫁太子？我携孕肚嫁皇帝', '缓缓归', '古代言情', '宫闱宅斗', '连载中', 'women', 1272.4999999999995, 50.899999999999984, 50.9, 50.9, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 17.800000000000004, 448900, 732, 1.738387978142076, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8936947356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2055374', '七零美人要离婚，冷面军少他急了', '钱小二', '现代言情', '年代重生', '连载中', 'women', 659.4000000000001, 26.376000000000005, 28.6, 0.8, 25, '2023-10-01', '2025-10-01', 9.5, 10.7, 445000, 732, 0.9008196721311477, 1.084319077949651, 0.03033060357901122, '长线稳定', 0.7947032719743395, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2059139', '听懂兽语后，被皇家全员团宠了', '桃酥', '古代言情', '宫闱宅斗', '连载中', 'women', 107.49999999999997, 4.299999999999999, 4.3, 4.3, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 0.5999999999999999, 360500, 732, 0.14685792349726773, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8896481356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2060824', '让你当狱长，没让你把神魔改造成卷王', '最怕取名字', '玄幻奇幻', '东方玄幻', '连载中', 'male', 27.499999999999996, 1.0999999999999999, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 406400, 732, 0.037568306010928955, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8736449356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061257', '重生七零：我家老祖宗能通古今', '烟花璀璨', '现代言情', '年代重生', '连载中', 'women', 47.49999999999999, 1.8999999999999997, 1.9, 1.9, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 351800, 732, 0.06489071038251365, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8696457356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062265', '换父兄后流放？真千金成了边疆团宠', '君染染', '古代言情', '种田经商', '连载中', 'women', 130, 5.2, 5.2, 5.2, 25, '2023-10-01', '2025-10-01', 8.799999999999999, 0.8000000000000002, 313700, 732, 0.17759562841530055, 1, 1, '长线稳定', 0.8776490356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062422', '惨死认亲日，嫡女夺回凤命杀疯了', '雪落听风', '古代言情', '宫闱宅斗', '连载中', 'women', 352.4999999999999, 14.099999999999996, 14.1, 14.1, 25, '2023-10-01', '2025-10-01', 9.5, 2.7999999999999994, 462500, 732, 0.48155737704918017, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8916579356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062428', '99次逃婚后，她攀上了京圈权贵', '栗子甜豆糕', '现代言情', '总裁豪门', '连载中', 'women', 40.00000000000001, 1.6000000000000003, 1.6, 1.6, 25, '2023-10-01', '2025-10-01', 9.2, 0.10000000000000002, 300100, 732, 0.05464480874316941, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8856454356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063237', '怀孕生女他不管，提离婚他崩溃了', '凌淮', '现代言情', '总裁豪门', '连载中', 'women', 14.999999999999996, 0.5999999999999999, 0.6, 0.6, 25, '2023-10-01', '2025-10-01', 8.799999999999999, 0.5999999999999999, 318300, 732, 0.02049180327868852, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776444356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063608', '边疆老卒，御赐老婆后我越活越勇', '月光大妖怪', '历史', '架空历史', '连载中', 'male', 272.5000000000001, 10.900000000000004, 10.9, 10.9, 25, '2023-10-01', '2025-10-01', 9, 3.100000000000001, 375800, 732, 0.3722677595628417, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8816547356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2063611', '小蘑菇今天也在吃软饭', '垂耳兔', '古代言情', '古代情缘', '连载中', 'women', 107.49999999999997, 4.299999999999999, 4.3, 4.3, 25, '2023-10-01', '2025-10-01', 9.8, 1.3000000000000003, 282200, 732, 0.14685792349726773, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8976481356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064055', '挺孕肚离婚二嫁财阀，渣前夫悔疯了', '一颗胖梨', '现代言情', '总裁豪门', '连载中', 'women', 487.5, 19.5, 19.5, 19.5, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 8.5, 432800, 732, 0.6659836065573771, 1, 1, '长线稳定', 0.8896633356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064344', '都市绝品神医', '就爱吃牛肉', '都市', '都市高手', '连载中', 'male', 97.49999999999997, 3.899999999999999, 3.9, 3.9, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.2, 473800, 732, 0.13319672131147536, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776477356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064747', '都市狠人', '北冥鱼', '都市', '商战职场', '连载中', 'male', 140, 5.6, 5.6, 5.6, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.8999999999999997, 305000, 732, 0.1912568306010929, 1, 1, '长线稳定', 0.8836494356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064966', '成全他和青梅后，我却成了白月光', '墨墨卿卿', '现代言情', '总裁豪门', '连载中', 'women', 902.5000000000002, 36.10000000000001, 36.1, 36.1, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 17.199999999999996, 377299.99999999994, 732, 1.2329234972677598, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8936799356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065274', '英雄本色', '疯十八', '都市', '商战职场', '连载中', 'male', 35, 1.4, 1.4, 1.4, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 326400, 732, 0.04781420765027322, 1, 1, '长线稳定', 0.8736452356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065877', '医路情劫', '微微狂笑', '都市', '都市高手', '连载中', 'male', 119.99999999999997, 4.799999999999999, 4.8, 4.8, 25, '2023-10-01', '2025-10-01', 8.799999999999999, 0.8, 323000, 732, 0.16393442622950816, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776486356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067244', '开局杀敌爆属性，我功力滔天', '潇湘烨雨', '玄幻奇幻', '东方玄幻', '连载中', 'male', 67.5, 2.7, 2.7, 2.7, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.29999999999999993, 355900.00000000006, 732, 0.09221311475409837, 1, 1, '长线稳定', 0.8856465356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067317', '夫人拒不原谅，高冷渣夫失控了', '严以妃', '现代言情', '总裁豪门', '连载中', 'women', 57.5, 2.3, 2.3, 2.3, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 195700, 732, 0.07855191256830601, 1, 1, '长线稳定', 0.8856461356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2067319', '闪婚后，老公竟是我大学教授', '多多美', '现代言情', '职场情缘', '连载中', 'women', 29, 1.16, 2, 1, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.29999999999999993, 249500, 732, 0.03961748633879782, 1.7241379310344829, 0.8620689655172414, '长线稳定', 0.8558518921681626, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2072337', '开局撞破皇帝女儿身', '拉满弓月', '历史', '架空历史', '连载中', 'male', 35, 1.4, 1.4, 1.4, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.2, 392500, 732, 0.04781420765027322, 1, 1, '长线稳定', 0.8736452356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074218', '贪恋她', '谢九笙', '现代言情', '总裁豪门', '连载中', 'women', 17.499999999999996, 0.6999999999999998, 0.7, 0.7, 25, '2023-10-01', '2025-10-01', 9.199999999999998, 0.5, 212300, 732, 0.023907103825136607, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856445356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074368', '职路扶摇', '桑迪', '都市', '商战职场', '连载中', 'male', 32.50000000000001, 1.3000000000000003, 1.3, 1.3, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 502200, 732, 0.044398907103825144, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696451356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074459', '重生2006，从被白富美包车开始', '隔壁小王本尊', '都市', '都市生活', '连载中', 'male', 52.500000000000014, 2.1000000000000005, 2.1, 2.1, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.29999999999999993, 218500, 732, 0.07172131147540986, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856459356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074544', '年代军工：让你当厂长，你整出了蘑菇蛋', '三鹿天下', '都市', '都市生活', '连载中', 'male', 65.00000000000001, 2.6000000000000005, 2.6, 2.6, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.4, 322100, 732, 0.08879781420765029, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856464356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074547', '请神弼马温，被嘲猴子D级神官？', '黑鱼鱼鱼鱼', '都市', '都市高武', '连载中', 'male', 54.999999999999986, 2.1999999999999993, 2.2, 2.2, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.1, 277600, 732, 0.07513661202185791, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856460356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2075352', '资本家假千金，搬空家产嫁糙汉', '韶光煮雪', '现代言情', '年代重生', '连载中', 'women', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 9.2, 0.4000000000000001, 221600, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856462356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2075975', 'SSSSSSS级医武至尊', '大盘鸡仙尊', '都市', '都市高手', '连载中', 'male', 72.49999999999997, 2.899999999999999, 2.9, 2.9, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.2, 313800, 732, 0.09904371584699449, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8696467356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076866', '竹马护资本家小姐，重生改嫁他急了！', '枝云梦', '现代言情', '年代重生', '连载中', 'women', 70, 2.8, 2.8, 2.8, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.5999999999999999, 197700, 732, 0.09562841530054644, 1, 1, '长线稳定', 0.8856466356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2077477', '上界帝子你敢甩，我娶女帝你哭什么？', '墨白', '玄幻奇幻', '东方玄幻', '连载中', 'male', 59.999999999999986, 2.3999999999999995, 2.4, 2.4, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.2, 231500, 732, 0.08196721311475408, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8856462356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('210771', '万古龙帝', '拓跋流云', '玄幻奇幻', '东方玄幻', '已完结', 'male', 867.5, 34.7, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.1, 2, 8647200, 732, 1.1851092896174864, 1, 1, '长线稳定', 0.8836785356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213853', '极品小相师', '大丙', '都市', '都市高武', '已完结', 'male', 4625, 185, 185, 185, 25, '2023-10-01', '2025-10-01', 9.3, 1.8000000000000005, 4571400, 732, 6.3183060109289615, 1, 1, '长线稳定', 0.8878288356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('219660', '臭保镖，求你放过我们吧！', '流水不逝', '都市', '都市高手', '已完结', 'male', 6757.500000000002, 270.30000000000007, 270.3, 270.3, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 1.8999999999999997, 2588600, 732, 9.231557377049183, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8859141356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('221137', '网游之全服公敌', '黑白相间', '游戏', '虚拟网游', '已完结', 'male', 17897.499999999993, 715.8999999999997, 715.9, 715.9, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 1.8000000000000005, 1748200, 732, 24.450136612021847, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8883597356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('222767', '离婚后她惊艳了世界', '明婳', '现代言情', '总裁豪门', '连载中', 'women', 799.0999999999999, 31.963999999999995, 34.7, 0.5, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 100, 7311000, 732, 1.0916666666666666, 1.0855962958328123, 0.015642597922663, '长线稳定', 0.7952400594087047, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1648167', '开局截胡五虎上将', '孔明很愁', '历史', '穿越历史', '已完结', 'male', 19382.5, 775.3, 775.3, 775.3, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.7, 4845700, 732, 26.478825136612024, 1, 1, '长线稳定', 0.8844191356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1654596', '退婚后被权爷宠上天', '一川风月', '现代言情', '总裁豪门', '已完结', 'women', 9101.499999999996, 364.05999999999983, 379.2, 0.7, 25, '2023-10-01', '2025-10-01', 9.7, 5.4, 2118700, 732, 12.433743169398902, 1.041586551667308, 0.0019227599846179208, '长线稳定', 0.7962001716149003, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1699328', '大佬归来，假千金她不装了', '骑着猫的小鱼干', '现代言情', '总裁豪门', '已完结', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 52.70000000000001, 2734500, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1741639', '九零军媳：兵王老公不见面', '香辣小螃蟹', '现代言情', '年代重生', '已完结', 'women', 10.000000000000002, 0.4000000000000001, 0.4, 0.4, 25, '2023-10-01', '2025-10-01', 9.7, 1.8000000000000003, 1220400, 732, 0.013661202185792353, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8956442356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1747899', '无敌六皇子', '梁山老鬼', '历史', '架空历史', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 39.30000000000001, 3502500, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8876785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1764634', '七零：最硬糙汉被媳妇撩红了眼', '一尾小锦鲤', '现代言情', '年代重生', '已完结', 'women', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 16.800000000000004, 1328300.0000000002, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8876785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1765545', '轻熟', '乌木桃枝', '现代言情', '职场情缘', '已完结', 'women', 20, 0.8, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.799999999999997, 2.5, 1192700, 732, 0.0273224043715847, 1, 1, '长线稳定', 0.8976446356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1778388', '灵骨被夺，帝女她觉醒神脉杀回来了', '澜岸', '幻想言情', '玄幻仙侠', '已完结', 'women', 27.499999999999993, 1.0999999999999996, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 2.6000000000000005, 1863400, 732, 0.037568306010928955, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956449356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1780393', '蛇骨阴香', '北派无尽夏', '现代言情', '现代悬疑', '已完结', 'women', 7.499999999999998, 0.29999999999999993, 0.3, 0.3, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.6999999999999995, 1838200, 732, 0.01024590163934426, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8936441356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1805751', '开局被女土匪看中，我占山为王', '键盘起灰', '历史', '架空历史', '已完结', 'male', 4152.499999999999, 166.09999999999997, 166.1, 166.1, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 1.6999999999999995, 2957600, 732, 5.672814207650272, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8878099356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1817221', '史上最强师父', '炒方便面', '玄幻奇幻', '东方玄幻', '连载中', 'male', 24412.5, 976.5, 976.5, 976.5, 25, '2023-10-01', '2025-10-01', 9.2, 25.699999999999992, 3439400, 732, 33.35040983606557, 1, 1, '长线稳定', 0.8866203356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1828483', '乾坤塔', '新闻工作者', '玄幻奇幻', '东方玄幻', '已完结', 'male', 7662.5, 306.5, 306.5, 306.5, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 4.200000000000001, 3984700.0000000005, 732, 10.467896174863387, 1, 1, '长线稳定', 0.8799503356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1834789', '警报！真龙出狱！', '红透半边天', '都市', '都市高手', '连载中', 'male', 20490.000000000004, 819.6000000000001, 819.6, 819.6, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 71.10000000000001, 2155300, 732, 27.99180327868853, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8864634356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1837360', '昭春意', '犹鱼丝', '古代言情', '宫闱宅斗', '已完结', 'women', 25, 1, 1, 1, 25, '2023-10-01', '2025-10-01', 9.7, 2.5, 1048600, 732, 0.03415300546448088, 1, 1, '长线稳定', 0.8956448356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1861632', '我有一家纸扎铺', '花萝吱吱', '现代言情', '现代悬疑', '已完结', 'women', 89.10000000000008, 3.564000000000003, 79.5, 0.4, 25, '2023-10-01', '2025-10-01', 9.7, 2.899999999999999, 2034400, 732, 0.12172131147540995, 22.306397306397287, 0.1122334455667788, '波动型', 0.8068707441731162, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1863508', '重生1994，逃婚海钓赢麻了！', '林溪', '现代言情', '年代重生', '连载中', 'women', 2487.5, 99.5, 99.5, 99.5, 25, '2023-10-01', '2025-10-01', 9.7, 7.5, 2840899.9999999995, 732, 3.398224043715847, 1, 1, '长线稳定', 0.8957433356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1864493', '打到北极圈了，你让我继承皇位？', '橡皮泥', '历史', '架空历史', '连载中', 'male', 7212.7, 288.508, 300.5, 0.7, 25, '2023-10-01', '2025-10-01', 9.3, 11.5, 2248200, 732, 9.853415300546448, 1.0415655718385626, 0.0024262758744991474, '长线稳定', 0.7881749712038884, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1871052', '为奴十年', '探花大人', '古代言情', '古代情缘', '已完结', 'women', 2315, 92.6, 92.6, 92.6, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 2.5, 1100600, 732, 3.162568306010929, 1, 1, '长线稳定', 0.8957364356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1873810', '换婚病危世子，她一胎三宝赢麻了', '雨过阳光', '古代言情', '宫闱宅斗', '已完结', 'women', 816.0000000000006, 32.64000000000002, 401.1, 0.6, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 2.5, 1251000, 732, 1.1147540983606565, 12.288602941176464, 0.018382352941176457, '波动型', 0.795514710910556, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1879542', '我宫斗冠军，矜贵世子俯首称臣', '唐荔枝', '古代言情', '宫闱宅斗', '已完结', 'women', 16922.499999999996, 676.8999999999999, 676.9, 676.9, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 6.4, 1118700, 732, 23.1181693989071, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8963207356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1889690', '暗恋她的第十一年', '有香如故', '现代言情', '总裁豪门', '已完结', 'women', 18715.000000000007, 748.6000000000003, 748.6, 748.6, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 12, 1033300, 732, 25.566939890710394, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8983924356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1936358', '大楚第一逍遥王', '打得你喵喵叫', '历史', '架空历史', '连载中', 'male', 1868.0999999999997, 74.72399999999999, 77.8, 0.9, 25, '2023-10-01', '2025-10-01', 9, 5, 1259100, 732, 2.5520491803278684, 1.0411648198704566, 0.012044323109041273, '长线稳定', 0.7829229919273426, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1946350', '玄幻：长生神子，证道何须退婚挖骨！', '王二的刀', '玄幻奇幻', '诸天万界', '已完结', 'male', 3432.5, 137.3, 137.3, 137.3, 25, '2023-10-01', '2025-10-01', 9.2, 1.8000000000000005, 1086700, 732, 4.689207650273224, 1, 1, '长线稳定', 0.8857811356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1948025', '夺妻', '将满', '现代言情', '总裁豪门', '已完结', 'women', 8029.999999999998, 321.19999999999993, 321.2, 321.2, 25, '2023-10-01', '2025-10-01', 9.5, 3.7000000000000006, 1028500, 732, 10.969945355191255, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8919650356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1948430', '重生60：从深山打猎开始致富', 'KITTT', '都市', '乡村生活', '连载中', 'male', 1942.6999999999998, 77.708, 80.9, 1.1, 25, '2023-10-01', '2025-10-01', 9.299999999999997, 4.200000000000001, 1238008, 732, 2.6539617486338796, 1.0410768518041902, 0.014155556699438927, '长线稳定', 0.7891370992863822, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1971590', '众仙俯首', '咸鱼老白', '玄幻奇幻', '东方玄幻', '连载中', 'male', 4418.799999999999, 176.75199999999998, 184.1, 0.4, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 12.599999999999996, 1744736, 732, 6.0366120218579224, 1.0415723725898434, 0.002263057843758487, '长线稳定', 0.7900468934008144, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('197810', '都市最狂医仙', '花小刺', '都市', '都市高武', '已完结', 'male', 19745, 789.8, 789.8, 789.8, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.1000000000000005, 7812500, 732, 26.974043715846996, 1, 1, '长线稳定', 0.8844336356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1978753', '权臣兼祧两房？郡主重生不嫁了', '景惠', '古代言情', '宫闱宅斗', '已完结', 'women', 745.7000000000002, 29.828000000000007, 80.9, 1.1, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 1.5, 779599.9999999999, 732, 1.0187158469945357, 2.7122167091323583, 0.03687810111304814, '波动型', 0.7973614737277431, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1991811', '错良缘', '雨山雪', '古代言情', '宫闱宅斗', '已完结', 'women', 1544.9999999999998, 61.79999999999999, 61.8, 61.8, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 3.2999999999999994, 1344000, 732, 2.1106557377049175, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8937056356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2002910', '嫁太监？踏破鬼门女帝凤临天下', '狐狸九', '古代言情', '宫闱宅斗', '连载中', 'women', 2969.9999999999995, 118.79999999999998, 118.8, 118.8, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 26, 882700, 732, 4.057377049180327, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8937626356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2012529', '极品女神赖上我', '陈行者', '都市', '商战职场', '连载中', 'male', 4342.5, 173.7, 173.7, 173.7, 25, '2023-10-01', '2025-10-01', 9, 23.300000000000008, 1459900, 732, 5.932377049180328, 1, 1, '长线稳定', 0.8818175356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2020570', '重生70：让你守门，你整了个蘑菇云？', '历史小尘埃', '都市', '都市生活', '已完结', 'male', 517.4999999999999, 20.699999999999996, 20.7, 20.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.0999999999999996, 1278600, 732, 0.706967213114754, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8836645356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2021943', '诱哄，假千金被禁欲商总拉去领证了', '雾里重逢', '现代言情', '总裁豪门', '已完结', 'women', 431.1999999999998, 17.247999999999994, 47.2, 0.4, 25, '2023-10-01', '2025-10-01', 9.7, 3.2999999999999994, 367200, 732, 0.5890710382513659, 2.7365491651205947, 0.023191094619666057, '波动型', 0.797980193078405, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('2027735', '三国：我，赤壁周瑜，揽二乔脱离江东', '老骥伏枥', '历史', '穿越历史', '已完结', 'male', 734.9999999999999, 29.399999999999995, 29.4, 29.4, 25, '2023-10-01', '2025-10-01', 9, 1.5, 1060600, 732, 1.0040983606557377, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8816732356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2027737', '向上登攀', '老虎本尊', '都市', '商战职场', '连载中', 'male', 706.5999999999999, 28.263999999999996, 29.4, 1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 5.799999999999998, 1056500, 732, 0.9653005464480873, 1.0401924709878292, 0.03538069629210303, '长线稳定', 0.7872101692456487, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2029607', '我的道侣是诸天第一女帝', '虎眸', '玄幻奇幻', '东方玄幻', '连载中', 'male', 105.00000000000003, 4.200000000000001, 4.2, 4.2, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 494099.99999999994, 732, 0.14344262295081972, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8696480356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2041071', '捡个混球当奶爸，炸翻京圈做团宠！', '夜风微微', '现代言情', '总裁豪门', '连载中', 'women', 92.50000000000001, 3.7000000000000006, 3.7, 3.7, 25, '2023-10-01', '2025-10-01', 9.5, 0.7, 470900.00000000006, 732, 0.12636612021857926, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8916475356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2052832', '北地悍枭', '狼太孤', '历史', '架空历史', '连载中', 'male', 757.5000000000002, 30.300000000000008, 30.3, 30.3, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 3.600000000000001, 722200, 732, 1.0348360655737707, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856741356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2053895', '带崽搬空婆家，易孕娇女随军被亲哭', '金岁岁', '现代言情', '年代重生', '连载中', 'women', 565, 22.6, 22.6, 22.6, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 4, 411800, 732, 0.7718579234972678, 1, 1, '长线稳定', 0.8896664356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2055904', '被沈家抛弃后，真千金她马甲炸翻全球', '鹿笙', '现代言情', '总裁豪门', '连载中', 'women', 75, 3, 3, 3, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.2, 333200, 732, 0.10245901639344263, 1, 1, '长线稳定', 0.8696468356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2056878', '大小姐重生选夫，小小硬汉拿捏拿捏', '暖宝宝爱吃饭', '现代言情', '年代重生', '连载中', 'women', 230, 9.2, 9.2, 9.2, 25, '2023-10-01', '2025-10-01', 9.3, 3.2999999999999994, 377100, 732, 0.31420765027322406, 1, 1, '长线稳定', 0.8876530356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2057124', '靠私房菜名震京城，凤印上门了！', '宋九九', '古代言情', '种田经商', '连载中', 'women', 172.50000000000003, 6.900000000000001, 6.9, 6.9, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 2.1999999999999993, 332700.00000000006, 732, 0.23565573770491807, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8976507356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2057569', '领主：我招募的士兵怎么都是玩家', '禅心道骨', '玄幻奇幻', '异世大陆', '连载中', 'male', 242.5, 9.7, 9.7, 9.7, 25, '2023-10-01', '2025-10-01', 9.5, 2.8999999999999995, 374200, 732, 0.3312841530054645, 1, 1, '长线稳定', 0.8916535356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2057884', '神级捡漏王：无良校花逼我去扯证', '李卯卯', '都市', '都市高武', '连载中', 'male', 132.49999999999997, 5.299999999999999, 5.3, 5.3, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 0.7, 357500, 732, 0.18101092896174859, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8796491356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2058468', '快穿：小狐狸她漂亮但能打', '十一肆', '幻想言情', '无限快穿', '连载中', 'women', 82.49999999999999, 3.2999999999999994, 3.3, 3.3, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.2, 356900, 732, 0.11270491803278687, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776471356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061266', '边荒小吏', '东门吹牛', '历史', '架空历史', '连载中', 'male', 67.5, 2.7, 2.7, 2.7, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 381599.99999999994, 732, 0.09221311475409837, 1, 1, '长线稳定', 0.8696465356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062279', '考中状元又怎样，我娘是长公主', '汐家锦锂', '古代言情', '宫闱宅斗', '连载中', 'women', 12.5, 0.5, 0.5, 0.5, 25, '2023-10-01', '2025-10-01', 9.5, 3.600000000000001, 366100, 732, 0.01707650273224044, 1, 1, '长线稳定', 0.8916443356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065348', '父兄拿我当草，随母改嫁断亲当皇后', '饱福福', '古代言情', '宫闱宅斗', '连载中', 'women', 50, 2, 2, 2, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 277000, 732, 0.06830601092896176, 1, 1, '长线稳定', 0.8696458356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065353', '只剩七天寿命？先休渣夫再杀全家', '南山野', '古代言情', '宫闱宅斗', '连载中', 'women', 20, 0.8, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 0.29999999999999993, 250212, 732, 0.0273224043715847, 1, 1, '长线稳定', 0.8856446356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065792', '边军老卒，从娶媳妇开始横扫六国！', '齐天小圣', '历史', '架空历史', '连载中', 'male', 77.50000000000003, 3.100000000000001, 3.1, 3.1, 25, '2023-10-01', '2025-10-01', 8.700000000000003, 0.2, 409099.99999999994, 732, 0.10587431693989074, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8756469356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2065896', '重生孕肚藏福宝，灾年养崽掀族祠', '瑞侈', '古代言情', '种田经商', '连载中', 'women', 87.5, 3.5, 3.5, 3.5, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 275300, 732, 0.11953551912568305, 1, 1, '长线稳定', 0.8856473356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074363', '被逼自刎，嫡女重生撕婚书覆皇朝', '柠檬小丸子', '古代言情', '宫闱宅斗', '连载中', 'women', 77.50000000000003, 3.100000000000001, 3.1, 3.1, 25, '2023-10-01', '2025-10-01', 9.2, 0.8, 197399.99999999997, 732, 0.10587431693989074, 0.9999999999999997, 0.9999999999999997, '长线稳定', 0.8856469356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2075109', '四合院：从火车列车员开始', '我家有母老虎', 'N次元', '衍生同人', '连载中', 'male', 82.49999999999999, 3.2999999999999994, 3.3, 3.3, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.5999999999999999, 223700, 732, 0.11270491803278687, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776471356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2078304', '转生狗妖，我在万世轮回成仙！', '六尺七寸', '玄幻奇幻', '东方玄幻', '连载中', 'male', 50, 2, 2, 2, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.2, 193800, 732, 0.06830601092896176, 1, 1, '长线稳定', 0.8856458356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('208897', '极品天师', '月下冰河', '都市', '都市高武', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 1.4, 4314600, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8856785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('214514', '活人阴差', '末日诗人', '奇闻异事', '恐怖灵异', '已完结', 'male', 13652.500000000004, 546.1000000000001, 546.1, 546.1, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.1000000000000005, 5434299.999999999, 732, 18.65095628415301, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8841899356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '都市', '热血校园', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 8.099999999999998, 3000400, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8956785356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('215067', '九转修罗诀', '李中有梦', '玄幻奇幻', '东方玄幻', '已完结', 'male', 7742.499999999998, 309.69999999999993, 309.7, 309.7, 25, '2023-10-01', '2025-10-01', 9, 2.1000000000000005, 6457600, 732, 10.577185792349724, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8819535356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('215780', '绝世强龙', '张龙虎', '都市', '都市高手', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 3.2, 5086600, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8776785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('217770', '全师门就我一个废柴', '白木木', '幻想言情', '玄幻仙侠', '已完结', 'women', 732.6999999999998, 29.307999999999993, 34.7, 1, 25, '2023-10-01', '2025-10-01', 9.799999999999999, 7.900000000000001, 4408300, 732, 1.0009562841530053, 1.1839770711068653, 0.034120376688958655, '长线稳定', 0.8010851812853342, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('149769', '九阳武神', '我吃面包', '玄幻奇幻', '东方玄幻', '连载中', 'male', 834, 33.36, 34.7, 1.2, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 16.199999999999996, 11201500, 732, 1.139344262295082, 1.0401678657074342, 0.03597122302158273, '长线稳定', 0.7872743179185966, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1672578', '逃荒后三岁福宝被团宠了', '时好', '古代言情', '种田经商', '已完结', 'women', 12.5, 0.5, 0.5, 0.5, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 3.2, 2552700, 732, 0.01707650273224044, 1, 1, '长线稳定', 0.8956443356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1683831', '重生八零嫁给全军第一硬汉', '九羊猪猪', '现代言情', '年代重生', '连载中', 'women', 9350, 374, 374, 374, 25, '2023-10-01', '2025-10-01', 9.5, 5.6, 4786100, 732, 12.773224043715848, 1, 1, '长线稳定', 0.8920178356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1711646', '阎王下山', '苍月夜', '都市', '都市高手', '连载中', 'male', 867.4999999999999, 34.699999999999996, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 24, 4186800, 732, 1.1851092896174862, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8796785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1719564', '重生七零再高嫁', '星月相随', '现代言情', '年代重生', '已完结', 'women', 23397.499999999993, 935.8999999999997, 935.9, 935.9, 25, '2023-10-01', '2025-10-01', 9.7, 8.5, 2151000, 732, 31.96379781420764, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8965797356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1723049', '天门神医', '小楼听雨本尊', '都市', '都市高手', '连载中', 'male', 6586.100000000001, 263.4440000000001, 274.4, 0.5, 25, '2023-10-01', '2025-10-01', 9.2, 5.9, 3697700, 732, 8.997404371584702, 1.041587585976526, 0.0018979365633683054, '长线稳定', 0.7860970732727752, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1776773', '第一召唤师', '喵喵大人', '幻想言情', '玄幻仙侠', '已完结', 'women', 10140, 405.6, 405.6, 405.6, 25, '2023-10-01', '2025-10-01', 9.7, 5.5, 2507100, 732, 13.852459016393443, 1, 1, '长线稳定', 0.8960494356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1780456', '混沌鼎', '鬼疯子', '玄幻奇幻', '东方玄幻', '已完结', 'male', 3039.9999999999995, 121.59999999999998, 121.6, 121.6, 25, '2023-10-01', '2025-10-01', 9, 1.4, 2138600, 732, 4.153005464480874, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8817654356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1839533', '锦帐春深', '温流', '古代言情', '宫闱宅斗', '已完结', 'women', 12372.499999999998, 494.8999999999999, 494.9, 494.9, 25, '2023-10-01', '2025-10-01', 9.700000000000001, 5.9, 1116600, 732, 16.90232240437158, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8961387356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1848650', '夜火缠绵', '骨子鱼', '现代言情', '总裁豪门', '已完结', 'women', 27.499999999999996, 1.0999999999999999, 1.1, 1.1, 25, '2023-10-01', '2025-10-01', 9.5, 1.5, 700100, 732, 0.037568306010928955, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8916449356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1868453', '噬神鼎', '三千晴空', '玄幻奇幻', '东方玄幻', '连载中', 'male', 5653.1, 226.12400000000002, 235.5, 1.1, 25, '2023-10-01', '2025-10-01', 8.900000000000002, 4.799999999999999, 2472400, 732, 7.7228142076502735, 1.0414639755178574, 0.0048645875714209905, '长线稳定', 0.7803564183735806, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1871638', '你迎娶平妻？我带崽入宫当皇后', '虎金金', '古代言情', '古代情缘', '已完结', 'women', 750.1999999999997, 30.00799999999999, 370.5, 0.4, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 2.1000000000000005, 1018800, 732, 1.0248633879781417, 12.346707544654764, 0.01332977872567316, '波动型', 0.7950068214890057, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1885415', '再睁眼！高冷女知青在我怀里哭唧唧', '九伐', '都市', '都市生活', '已完结', 'male', 2207.499999999999, 88.29999999999997, 88.3, 88.3, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 1564500, 732, 3.0157103825136597, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8857321356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1891461', '主播万人迷，榜一大哥争着宠', '熊就要有个熊样', '现代言情', '娱乐明星', '已完结', 'women', 16877.5, 675.1, 675.1, 675.1, 25, '2023-10-01', '2025-10-01', 9.9, 7.700000000000001, 977600, 732, 23.05669398907104, 1, 1, '长线稳定', 0.9003189356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1893629', '捡了小福星后，将军府旺疯了', '树己不树人', '古代言情', '宫闱宅斗', '已完结', 'women', 151.79999999999987, 6.071999999999995, 69, 0.6, 25, '2023-10-01', '2025-10-01', 9.5, 1.3000000000000003, 1210100, 732, 0.20737704918032768, 11.363636363636374, 0.09881422924901194, '波动型', 0.8015313305413397, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('1941553', '我的峥嵘岁月', '牛不易', '都市', '都市生活', '连载中', 'male', 1937.2000000000003, 77.48800000000001, 80.7, 0.4, 25, '2023-10-01', '2025-10-01', 9.2, 5.5, 1835500, 732, 2.6464480874316942, 1.0414515795994217, 0.005162089613875696, '长线稳定', 0.786237532577826, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1948198', '半熟', '槿郗', '现代言情', '总裁豪门', '连载中', 'women', 2222.5, 88.9, 88.9, 88.9, 25, '2023-10-01', '2025-10-01', 9.5, 8.5, 1081600, 732, 3.03620218579235, 1, 1, '长线稳定', 0.8917327356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1949070', '孩子谁爱生谁生，我勾帝心夺凤位', '爱吃石榴', '古代言情', '宫闱宅斗', '连载中', 'women', 3837.4999999999986, 153.49999999999994, 382.1, 1.1, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 28.699999999999992, 1563600.0000000002, 732, 5.2424863387978125, 2.4892508143322485, 0.007166123778501632, '波动型', 0.7945139479942885, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('197091', '民间诡闻实录', '罗樵森', '奇闻异事', '奇门秘术', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 8.400000000000002, 2435000, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8936785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1971248', '在恋综当老六？一句泡面仙人全网暴火', '肉包打狗', '都市', '明星娱乐', '已完结', 'male', 2000, 80, 80, 80, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 1.6999999999999995, 1273900, 732, 2.73224043715847, 1, 1, '长线稳定', 0.8837238356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1975352', '叉腰腰，全家都是我捡来哒！', '柠檬鱼头', '幻想言情', '玄幻仙侠', '连载中', 'women', 2548.499999999999, 101.93999999999997, 195.3, 0.8, 25, '2023-10-01', '2025-10-01', 9.700000000000003, 11.2, 1201100, 732, 3.481557377049179, 1.9158328428487352, 0.007847753580537574, '长线稳定', 0.7965305509744922, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '武侠仙侠', '上古洪荒', '已完结', 'male', 1647.4999999999995, 65.89999999999998, 65.9, 65.9, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 2.3999999999999995, 1623700, 732, 2.250683060109289, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8857097356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1982193', '我的26岁女总裁', '卧龙岗小弟', '都市', '都市生活', '已完结', 'male', 1737.5, 69.5, 69.5, 69.5, 25, '2023-10-01', '2025-10-01', 9, 3.5, 1179600, 732, 2.373633879781421, 1, 1, '长线稳定', 0.8817133356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1992339', '重回七零，搬空养父母家库房下乡了', '暖以沐', '现代言情', '年代重生', '连载中', 'women', 2344.999999999999, 93.79999999999997, 93.8, 93.8, 25, '2023-10-01', '2025-10-01', 9.5, 5.6, 972600, 732, 3.203551912568305, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8917376356164386, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1995023', '边关兵王', '青岳', '历史', '架空历史', '连载中', 'male', 8677.5, 347.1, 347.1, 347.1, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 41.60000000000001, 1069000, 732, 11.854508196721312, 1, 1, '长线稳定', 0.8899909356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('1996931', '不务正夜', '谈栖', '现代言情', '总裁豪门', '连载中', 'women', 2869.999999999999, 114.79999999999997, 114.8, 114.8, 25, '2023-10-01', '2025-10-01', 9.3, 7.599999999999999, 850200, 732, 3.9207650273224033, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8877586356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2004005', '傅总，太太瞒着你生了个童模', '七桉', '现代言情', '总裁豪门', '连载中', 'women', 1380.0000000000002, 55.20000000000001, 55.2, 55.2, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 3.7999999999999994, 759200, 732, 1.8852459016393446, 0.9999999999999999, 0.9999999999999999, '长线稳定', 0.8896990356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2015177', '喜报！资本家小姐来海岛随军了', '十肆1', '现代言情', '年代重生', '已完结', 'women', 522.4000000000002, 20.896000000000008, 63.6, 0.8, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 5.100000000000001, 818800, 732, 0.7136612021857927, 3.0436447166921887, 0.038284839203675335, '波动型', 0.7974932155368059, 'B级', '适合短期营销炒作');
+INSERT INTO `ads_capital_ltv` VALUES ('202636', '九转星辰诀', '晨弈', '玄幻奇幻', '东方玄幻', '已完结', 'male', 19020, 760.8, 760.8, 760.8, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 4.299999999999999, 8428000, 732, 25.983606557377048, 1, 1, '长线稳定', 0.8864046356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2047215', '皇后谁爱当谁当，我嫁权臣横着走', '素手摘星', '古代言情', '权谋天下', '连载中', 'women', 202.49999999999994, 8.099999999999998, 8.1, 8.1, 25, '2023-10-01', '2025-10-01', 9.5, 3.399999999999999, 377299.99999999994, 732, 0.27663934426229503, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8916519356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2048060', '从酒肆杂役开始武道化圣', '为你傲视蒼穹', '玄幻奇幻', '东方玄幻', '连载中', 'male', 169.99999999999994, 6.799999999999998, 6.8, 6.8, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 0.5999999999999999, 459600, 732, 0.23224043715846987, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8836506356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2051697', '末世，从吞尸体开始进化', '只是小脑虎', '科幻', '末世危机', '连载中', 'male', 1017.9999999999998, 40.71999999999999, 42.4, 0.4, 25, '2023-10-01', '2025-10-01', 9.200000000000001, 5.9, 621900, 732, 1.3907103825136609, 1.0412573673870336, 0.009823182711198431, '长线稳定', 0.7866668738875583, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2052699', '主播甜又野，六个顶级大佬缠着宠', '墨如金', '现代言情', '总裁豪门', '连载中', 'women', 12.5, 0.5, 0.5, 0.5, 25, '2023-10-01', '2025-10-01', 8.599999999999998, 0.1, 497700.00000000006, 732, 0.01707650273224044, 1, 1, '长线稳定', 0.8736443356164383, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061267', '边军枭卒：从领媳妇开始皇图霸业', '凉小城', '历史', '架空历史', '连载中', 'male', 47.49999999999999, 1.8999999999999997, 1.9, 1.9, 25, '2023-10-01', '2025-10-01', 8.799999999999997, 0.2, 329799.99999999994, 732, 0.06489071038251365, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8776457356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2061856', '王府里来了个捡破烂的崽崽', '三颗小石头', '古代言情', '宫闱宅斗', '连载中', 'women', 3512.5, 140.5, 140.5, 140.5, 25, '2023-10-01', '2025-10-01', 9.6, 39.8, 516800, 732, 4.798497267759563, 1, 1, '长线稳定', 0.8937843356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2062836', '重回七零：跟着小白脸爸进城吃软饭', '巫颜', '现代言情', '年代重生', '连载中', 'women', 105.00000000000003, 4.200000000000001, 4.2, 4.2, 25, '2023-10-01', '2025-10-01', 9.599999999999998, 0.5999999999999999, 289500, 732, 0.14344262295081972, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8936480356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2064972', '当我捡漏古董后，前女友后悔了', '大金拿', '都市', '都市高手', '连载中', 'male', 37.5, 1.5, 1.5, 1.5, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.1, 353700, 732, 0.05122950819672131, 1, 1, '长线稳定', 0.8696453356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2073165', '被他吻时心动', '玛丽苏狗蛋', '现代言情', '总裁豪门', '连载中', 'women', 87.5, 3.5, 3.5, 3.5, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.4, 298700, 732, 0.11953551912568305, 1, 1, '长线稳定', 0.8856473356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2073625', '我都人间武圣了，你让我当傀儡皇帝？', '小呀小馒头', '玄幻奇幻', '王朝争霸', '连载中', 'male', 20, 0.8, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.1, 192700, 732, 0.0273224043715847, 1, 1, '长线稳定', 0.8856446356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2074179', '混沌吞天诀', '凭虚御风', '玄幻奇幻', '东方玄幻', '连载中', 'male', 52.500000000000014, 2.1000000000000005, 2.1, 2.1, 25, '2023-10-01', '2025-10-01', 9.200000000000003, 0.29999999999999993, 225300, 732, 0.07172131147540986, 0.9999999999999998, 0.9999999999999998, '长线稳定', 0.8856459356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2075172', '穿成掌勺丫鬟，我把病秧子喂活了', '水中有鱼', '古代言情', '种田经商', '连载中', 'women', 20, 0.8, 0.8, 0.8, 25, '2023-10-01', '2025-10-01', 9.2, 0.5, 193299.99999999997, 732, 0.0273224043715847, 1, 1, '长线稳定', 0.8856446356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('2076478', '狂野都市', '大丙', '都市', '都市生活', '连载中', 'male', 40, 1.6, 1.6, 1.6, 25, '2023-10-01', '2025-10-01', 8.400000000000002, 0.2, 269100, 732, 0.0546448087431694, 1, 1, '长线稳定', 0.8696454356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213189', '混沌剑帝', '运也', '玄幻奇幻', '东方玄幻', '已完结', 'male', 22644.999999999996, 905.7999999999998, 905.8, 905.8, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 6, 5355300, 732, 30.93579234972677, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8845496356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213190', '阴阳鲁班咒', '一气三元', '奇闻异事', '恐怖灵异', '已完结', 'male', 5664.999999999998, 226.59999999999994, 226.6, 226.6, 25, '2023-10-01', '2025-10-01', 9.400000000000002, 1.5, 2970299.9999999995, 732, 7.739071038251364, 1.0000000000000002, 1.0000000000000002, '长线稳定', 0.8898704356164384, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('213697', '葬天神帝', '我爱弹棉花', '玄幻奇幻', '东方玄幻', '连载中', 'male', 12646.199999999997, 505.8479999999999, 526.9, 0.6, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 6.700000000000002, 8113400, 732, 17.276229508196717, 1.0416172447059198, 0.0011861270579304457, '长线稳定', 0.7842682963222314, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('215169', '寒门枭士', '北川', '历史', '架空历史', '已完结', 'male', 867.4999999999998, 34.69999999999999, 34.7, 34.7, 25, '2023-10-01', '2025-10-01', 9.299999999999999, 7.700000000000002, 4409000, 732, 1.185109289617486, 1.0000000000000004, 1.0000000000000004, '长线稳定', 0.8876785356164385, 'B级', '适合影视剧、动漫、游戏');
+INSERT INTO `ads_capital_ltv` VALUES ('215874', '吞天造化经', '鬼疯子', '玄幻奇幻', '东方玄幻', '已完结', 'male', 18942.5, 757.7, 757.7, 757.7, 25, '2023-10-01', '2025-10-01', 9.099999999999998, 2.6000000000000005, 5219000, 732, 25.877732240437158, 1, 1, '长线稳定', 0.8844015356164383, 'B级', '适合影视剧、动漫、游戏');
+
+-- ----------------------------
+-- Table structure for ads_platform_heat
+-- ----------------------------
+DROP TABLE IF EXISTS `ads_platform_heat`;
+CREATE TABLE `ads_platform_heat`  (
+  `book_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `author` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category2_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `rank_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `rank_date` date NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `numeric_popularity` double NULL DEFAULT NULL,
+  `numeric_read_count` double NULL DEFAULT NULL,
+  `numeric_score` double NULL DEFAULT NULL,
+  `status` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `gender_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `prev_day_popularity` double NULL DEFAULT NULL,
+  `popularity_diff` double NULL DEFAULT NULL,
+  `popularity_growth_rate` double NULL DEFAULT NULL,
+  `prev_popularity_diff` double NULL DEFAULT NULL,
+  `popularity_acceleration` double NULL DEFAULT NULL,
+  `category_avg_growth_rate` double NULL DEFAULT NULL,
+  `is_new_book` int NULL DEFAULT NULL,
+  `is_high_growth` int NULL DEFAULT NULL,
+  `is_cold_start_quality` int NULL DEFAULT NULL,
+  `heat_level` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ads_platform_heat
+-- ----------------------------
+INSERT INTO `ads_platform_heat` VALUES ('149769', '九阳武神', '我吃面包', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 16.2, 9.1, '连载中', 'male', 34.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('152973', '最强学霸系统', '佛系和尚', '都市', '热血校园', '完结', '2025-10-01', '2025-12-15 04:20:05', 34.7, 1.7, 9.5, '已完结', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1651341', '盖世圣医', '林阳', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 268.4, 0.9, 9.1, '已完结', 'male', 268.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1654596', '退婚后被权爷宠上天', '一川风月', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 379.2, 5.4, 9.7, '已完结', 'women', 379.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1658839', '穿成孩子妈，奋斗成赢家', '冉阿冉', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.1, 1.4, 9.5, '已完结', 'women', 1.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1669963', '大景巡夜人', '藕池猫咪', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.2, 1.8, 9.8, '已完结', 'women', 1.2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1675640', '镇天神医', '五杯咖啡', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 355.8, 12.3, 9.2, '连载中', 'male', 355.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1678025', '九皇叔的神医毒妃', '柠檬小丸子', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 3.4, 9.5, '已完结', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1683831', '重生八零嫁给全军第一硬汉', '九羊猪猪', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 374, 5.6, 9.5, '连载中', 'women', 374, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1684297', '规则怪谈，欢迎来到甜蜜的家', '弦泠兮', '幻想言情', '无限快穿', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 2.9, 9.8, '已完结', 'women', 0.7, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1697498', '末世天灾，抢艘航母当基地', '封卷残云', '科幻', '末世危机', '完结', '2025-10-01', '2025-12-15 04:20:05', 460.3, 1.2, 8.8, '已完结', 'male', 460.3, 0, 0, 0, 0, 83.20754716981132, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1697715', '被关女子监狱三年，我修炼成仙了', '一只狸猫', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 183.1, 7.9, 9, '连载中', 'male', 183.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1699328', '大佬归来，假千金她不装了', '骑着猫的小鱼干', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 52.7, 9.7, '已完结', 'women', 34.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1709320', '徒儿，饶了五位绝美师父吧', '不渊', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 207.1, 2.1, 9.1, '已完结', 'male', 207.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1711646', '阎王下山', '苍月夜', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 24, 8.9, '连载中', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1719564', '重生七零再高嫁', '星月相随', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 935.9, 8.5, 9.7, '已完结', 'women', 935.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1723049', '天门神医', '小楼听雨本尊', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 274.4, 5.9, 9.2, '连载中', 'male', 274.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1723450', '被王爷赐死，医妃潇洒转身嫁皇叔', '金银满屋', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 3.8, 9.5, '已完结', 'women', 0.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1724453', '妙手大仙医', '金佛', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 686.1, 18, 9.2, '连载中', 'male', 686.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1725180', '我废柴真千金，会亿点玄学怎么了', '甜幽幽', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.8, 2.4, 9.7, '已完结', 'women', 0.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1726987', '大佬十代单传，我为他一胎生四宝', '白生米', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 637.9, 41.2, 9.4, '连载中', 'women', 637.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1729484', '凡尘飞仙', '齐甲', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 345.1, 11.4, 9.3, '连载中', 'male', 345.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1730259', '踏神界逆九州：废物七小姐权倾天下', '苏音', '幻想言情', '玄幻仙侠', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.3, 2.1, 9.7, '已完结', 'women', 0.3, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1737869', '重生七零，搬空敌人仓库去下乡', '六月无花', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 1.7, 9.6, '已完结', 'women', 1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1738575', '直播算命太准，全网蹲守吃瓜', '荷衣', '现代言情', '都市奇幻', '大热', '2025-10-01', '2025-12-15 04:22:46', 551.1, 5.9, 9.7, '已完结', 'women', 551.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1741639', '九零军媳：兵王老公不见面', '香辣小螃蟹', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.4, 1.8, 9.7, '已完结', 'women', 0.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1747899', '无敌六皇子', '梁山老鬼', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 39.3, 9.3, '已完结', 'male', 34.7, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1754203', '玲珑塔', '一丝凉意', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 268.4, 8.9, 9.3, '连载中', 'male', 268.4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1758119', '重生八零，闪婚柔情铁血硬汉', '风四爷', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.1, 1.2, 9.7, '已完结', 'women', 1.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1758273', '重生2000：从追求青涩校花同桌开始', '痞子老妖', '都市', '热血校园', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 19.4, 9.3, '连载中', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1759358', '出狱后，我闪婚了植物人大佬', '柠七七', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 293.6, 7.9, 9.4, '已完结', 'women', 293.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1759390', '分手后，捡到一只吸血鬼美少女', '黄泉隼', 'N次元', '原生幻想', '完结', '2025-10-01', '2025-12-15 04:20:05', 318.8, 1.5, 9.5, '已完结', 'male', 318.8, 0, 0, 0, 0, 0, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1761352', '易孕体质，七零长嫂凶又甜', '方赢', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.4, 2.1, 9.7, '已完结', 'women', 0.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1766962', '苟到炼气10000层，飞升回地球', '拂衣惊雪', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 219.7, 1.1, 8.5, '已完结', 'male', 219.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1767349', '父皇偷听我心声杀疯了，我负责吃奶', '安已然', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 2.7, 9.6, '已完结', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1767940', '混沌塔', '惊蛰落月', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 582.4, 32.2, 9.2, '连载中', 'male', 582.4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1771379', '大佬绝嗣！我一夜怀上他两个崽', '相思一顾', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 295.1, 4.6, 9.5, '已完结', 'women', 295.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1772694', '神尊强宠，废物小姐竟是绝世女帝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.5, 3.1, 9.6, '已完结', 'women', 0.5, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1777995', '将军她是引渡人', '指尖上的行走', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 2.2, 9.8, '已完结', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1780785', '吞天混沌经：开局先吞圣女修为', '一阵乱写', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 255.6, 6.9, 9.1, '连载中', 'male', 255.6, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1781303', '穿书反派：开局挖掉女主至尊骨', '晚风起', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 144.4, 2, 8.7, '已完结', 'male', 144.4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1781450', '无限流：在惊悚世界当万人迷', '白日宴火', '幻想言情', '无限快穿', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.4, 3.3, 9.9, '已完结', 'women', 0.4, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1802708', '神算真千金，全豪门跪下喊祖宗', '一只肉九', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.5, 2.4, 9.5, '已完结', 'women', 0.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1805751', '开局被女土匪看中，我占山为王', '键盘起灰', '历史', '架空历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 166.1, 1.7, 9.3, '已完结', 'male', 166.1, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1806041', '巅峰青云路', '登封造极', '都市', '官场', '大热', '2025-10-01', '2025-12-15 04:20:05', 180.3, 31, 9.2, '连载中', 'male', 180.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1807740', '末世前中彩票，我囤上亿物资躺赢', '诺禾', '幻想言情', '末世求生', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 1.7, 9.6, '已完结', 'women', 1, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1810234', '从女子监狱走出的修仙者', '河图大妖', '都市', '都市高武', '大热', '2025-10-01', '2025-12-15 04:20:05', 188, 5.2, 9, '连载中', 'male', 188, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1810593', '嫁权臣', '有香如故', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.3, 2.2, 9.7, '已完结', 'women', 0.3, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1812053', '警报！龙国出现SSS级修仙者！', '紫枫', '都市', '都市高武', '大热', '2025-10-01', '2025-12-15 04:20:05', 365.4, 6.7, 9.2, '连载中', 'male', 365.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1817221', '史上最强师父', '炒方便面', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 976.5, 25.7, 9.2, '连载中', 'male', 976.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1824987', '凤归', '扶苏公子', '古代言情', '权谋天下', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 1.8, 9.4, '已完结', 'women', 0.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1828483', '乾坤塔', '新闻工作者', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 306.5, 4.2, 8.9, '已完结', 'male', 306.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1834789', '警报！真龙出狱！', '红透半边天', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 819.6, 71.1, 9.2, '连载中', 'male', 819.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1846315', '小雌性是万人迷，养了一窝毛绒绒', '一个刚正不阿的女人', '幻想言情', '未来科幻', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.9, 3.2, 9.8, '已完结', 'women', 0.9, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1851521', '魔女校花从无绯闻，直到遇上了我', '铲子王', '都市', '热血校园', '完结', '2025-10-01', '2025-12-15 04:20:05', 175.8, 1.6, 9.3, '已完结', 'male', 175.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1860026', '世子无双', '宁峥', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 909.8, 16, 9.2, '连载中', 'male', 909.8, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1861632', '我有一家纸扎铺', '花萝吱吱', '现代言情', '现代悬疑', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.4, 2.9, 9.7, '已完结', 'women', 0.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1863508', '重生1994，逃婚海钓赢麻了！', '林溪', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 99.5, 7.5, 9.7, '连载中', 'women', 99.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1867208', '真福宝挥手粮满仓，全家悔断肠', '朵瑞米发娑', '古代言情', '种田经商', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 1.2, 9.3, '已完结', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1870433', '冻死风雪夜，重生真嫡女虐翻全家', '一颗胖梨', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 588.1, 15.7, 9.5, '已完结', 'women', 588.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1870439', '空间通末世：我囤亿万物资养兵王', '小桃花', '幻想言情', '末世求生', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.3, 1.6, 9.6, '已完结', 'women', 0.3, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1871052', '为奴十年', '探花大人', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 92.6, 2.5, 9.7, '已完结', 'women', 92.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1871612', '爹爹开门，系窝呀！', '垂耳兔', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 236.2, 5.3, 9.8, '已完结', 'women', 236.2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1872576', '我来自上界帝族，成婚当天媳妇跟人跑', '社恐啊社恐', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 236.5, 1.2, 8.8, '已完结', 'male', 236.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1879266', '封总，太太想跟你离婚很久了', '云中觅', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 154.6, 9.2, '连载中', 'women', 34.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1880127', '出生被活埋，萌宝回京杀疯了', '固夏', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.3, 3.7, 9.6, '已完结', 'women', 0.3, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1885468', '我医武双绝，体内还有一条龙', '月辰', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 84.6, 5, 9, '连载中', 'male', 84.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1888573', '女富婆的超级神医', '狼性佛心', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 64.7, 2, 9.1, '已完结', 'male', 64.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1888581', '葬仙棺', '执笔人', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 321.4, 15.4, 9.1, '连载中', 'male', 321.4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1889690', '暗恋她的第十一年', '有香如故', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 748.6, 12, 9.8, '已完结', 'women', 748.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1891461', '主播万人迷，榜一大哥争着宠', '熊就要有个熊样', '现代言情', '娱乐明星', '大热', '2025-10-01', '2025-12-15 04:22:46', 675.1, 7.7, 9.9, '已完结', 'women', 675.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1916703', '宁嫁牌位不当妾，国公府我说了算', '林拾酒', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.9, 2.8, 9.5, '已完结', 'women', 0.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1924831', '有帝族背景还开挂，我无敌了！', '不太勇敢', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 385.8, 15.8, 9.1, '连载中', 'male', 385.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1941553', '我的峥嵘岁月', '牛不易', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 80.7, 5.5, 9.2, '连载中', 'male', 80.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1945519', '马甲藏不住，假千金炸翻全京圈', '程不言', '现代言情', '青春校园', '大热', '2025-10-01', '2025-12-15 04:22:46', 462.4, 6.7, 9.8, '已完结', 'women', 462.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1946350', '玄幻：长生神子，证道何须退婚挖骨！', '王二的刀', '玄幻奇幻', '诸天万界', '完结', '2025-10-01', '2025-12-15 04:20:05', 137.3, 1.8, 9.2, '已完结', 'male', 137.3, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1948025', '夺妻', '将满', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 321.2, 3.7, 9.5, '已完结', 'women', 321.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1948198', '半熟', '槿郗', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 88.9, 8.5, 9.5, '连载中', 'women', 88.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1950540', '傅律师，太太说她不回头了', '荣荣子铱', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 118.5, 6.3, 9.4, '连载中', 'women', 118.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1952077', '一胎又一胎，说好的禁欲指挥官呢？', '望南云慢', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 457.9, 34.7, 9.5, '连载中', 'women', 457.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1954700', '媚君榻', '随山月', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 5.2, 9.7, '已完结', 'women', 0.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1956592', '一天一造化，苟在仙武成道祖', '日落倾河', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 52.6, 0.9, 8.8, '已完结', 'male', 52.6, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1956833', '我就上山打个猎，你让我逐鹿中原？', '张正经', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 173.8, 4.2, 9.2, '连载中', 'male', 173.8, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('195958', '盖世神医', '狐颜乱语', '都市', '都市高武', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 139.9, 9.3, '连载中', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1961152', '太阳神体：从为仙女解毒开始无敌！', '有木', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 82, 4, 9.1, '连载中', 'male', 82, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1963728', '玄黄鼎', '不做梵高', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 259.1, 17.1, 9, '连载中', 'male', 259.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1963904', '他说不爱，婚后却沦陷了', '如鱼', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 319.5, 34.8, 9.5, '连载中', 'women', 319.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1964672', '顾总，你前妻在科研界杀疯了！', '席宝贝', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 220.5, 32.5, 9.5, '连载中', 'women', 220.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1965987', '被贬边疆，成就最强藩王', '绯雨', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 171.5, 12.1, 9, '连载中', 'male', 171.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1968456', '断绝关系后，觉醒SSS级天赋百分百爆率', '赛博说书人', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 47.4, 2, 9, '已完结', 'male', 47.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '都市', '都市高武', '大热', '2025-10-01', '2025-12-15 04:20:05', 206.8, 6.7, 9.2, '已完结', 'male', 206.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1970603', '星际兽世：万人迷小人类深陷修罗场', '含冬小鱼', '幻想言情', '异世幻想', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.3, 0.5, 9.6, '连载中', 'women', 0.3, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1970645', '神级刺客，我有一支动物杀手队', '九把火', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 107.8, 3.5, 9.3, '连载中', 'male', 107.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1975889', '懂兽语穿六零，家属院里我最行', '情丝入你心', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.8, 4.2, 9.7, '已完结', 'women', 0.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1976002', '续弦小夫人', '江摇舟', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 421.4, 19.5, 9.7, '已完结', 'women', 421.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1978709', '惨死生子夜，重生嫡女屠尽侯府', '南酥青子', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 1.1, 7.6, 9.3, '连载中', 'women', 1.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1978748', '重生61，我带了一座军火库', '小白兔吃萝卜', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 171, 11.1, 9.1, '连载中', 'male', 171, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1978753', '权臣兼祧两房？郡主重生不嫁了', '景惠', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.1, 1.5, 9.6, '已完结', 'women', 1.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1979319', '邢教练，别太野', '七个菜包', '现代言情', '职场情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.2, 5.4, 9.7, '已完结', 'women', 1.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1979346', '去父留子后才知，前夫爱的人竟是我', '乐希', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 144, 20.8, 9.2, '连载中', 'women', 144, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1979356', '阴当', '北派无尽夏', '现代言情', '都市奇幻', '大热', '2025-10-01', '2025-12-15 04:22:46', 205.6, 21.3, 9.8, '连载中', 'women', 205.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1980267', '陆总别作，太太她不要你了', '是空空呀', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 0.3, 8.9, 9.4, '连载中', 'women', 0.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982358', '天黑请点灯', '罗樵森', '奇闻异事', '奇门秘术', '大热', '2025-10-01', '2025-12-15 04:20:05', 157.9, 7, 9.4, '连载中', 'male', 157.9, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982360', '步步登阶', '江湖如梦', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 377.3, 47.2, 9.2, '连载中', 'male', 377.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982723', '无敌逍遥侯', '沧海种树', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 132.5, 33.3, 9.1, '连载中', 'male', 132.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1983530', '厂长收手吧！国家真的压不住了！', '正义反派', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 102.3, 9.3, 9.3, '连载中', 'male', 102.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1984430', '网游：开局刮刮乐，觉醒唯一SSS天赋', '亦晨', '游戏', '虚拟网游', '大热', '2025-10-01', '2025-12-15 04:20:05', 183, 9.6, 9, '连载中', 'male', 183, 0, 0, 0, 0, 148.2470837515334, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1984439', '炼仙鼎', '在下不求人', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 58.7, 7.3, 9.2, '连载中', 'male', 58.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1985055', '摆摊开饭馆，她惊动全京城', '幸运团团', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 61.4, 5.8, 9.8, '连载中', 'women', 61.4, 0, 0, 60.699999999999996, -60.699999999999996, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1989239', '财戒', '嚣张农民', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 238.5, 12, 9.1, '连载中', 'male', 238.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1989600', '掌天图', '四眼秀才', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 325.8, 27, 9.1, '连载中', 'male', 325.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1989835', '刚入截教，听到截教气运在抱怨', '超爱吃甜粽子', '武侠仙侠', '上古洪荒', '完结', '2025-10-01', '2025-12-15 04:20:05', 74.9, 1.3, 9.2, '已完结', 'male', 74.9, 0, 0, 0, 0, 119.8909823948394, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1992339', '重回七零，搬空养父母家库房下乡了', '暖以沐', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 93.8, 5.6, 9.5, '连载中', 'women', 93.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1992776', '我叫二狗，一条会咬人的狗！', '半解不解', '都市', '都市生活', '完结', '2025-10-01', '2025-12-15 04:20:05', 32.9, 1.3, 9.1, '已完结', 'male', 32.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1994117', '婚后上瘾', '卢平凡', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 715.2, 65.4, 9.6, '连载中', 'women', 715.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1996523', '全队笑我是傻子，我反手娶了俏知青！', '红色小晶体', '都市', '乡村生活', '完结', '2025-10-01', '2025-12-15 04:20:05', 44.4, 0.8, 8.8, '已完结', 'male', 44.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1996931', '不务正夜', '谈栖', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 114.8, 7.6, 9.3, '连载中', 'women', 114.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1996973', '赌石，我的龙瞳能鉴定一切！', '一梅独秀', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 32.5, 3, 9, '已完结', 'male', 32.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2002910', '嫁太监？踏破鬼门女帝凤临天下', '狐狸九', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 118.8, 26, 9.6, '连载中', 'women', 118.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2004005', '傅总，太太瞒着你生了个童模', '七桉', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 55.2, 3.8, 9.4, '连载中', 'women', 55.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2014120', '雨夜你陪白月光，我让位后你哭啥', '露将熹', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 1, 9.1, '已完结', 'women', 0.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2014975', '重生84：九个赔钱货？我把女儿宠上天', '一只大香蕉', '都市', '乡村生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 88.3, 5.6, 9.2, '连载中', 'male', 88.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2015177', '喜报！资本家小姐来海岛随军了', '十肆1', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.8, 5.1, 9.6, '已完结', 'women', 0.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2016334', '深情失控，他服软低哄别离婚', '林深深', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 0.9, 8.7, 9.4, '连载中', 'women', 0.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2022495', '情劫', '花小刺', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 82, 6.6, 9.1, '连载中', 'male', 82, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2023697', '男人野性', '月下冰河', '都市', '商战职场', '大热', '2025-10-01', '2025-12-15 04:20:05', 262.1, 51, 9.1, '连载中', 'male', 262.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2024150', '玄幻：从炼制合情丹开始长生！', '柿饼吃个糖', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 70.5, 1.1, 9, '已完结', 'male', 70.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2024793', '五年冷婚，我跑路了你发什么疯', '一尾小锦鲤', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 118.2, 32.7, 9.1, '连载中', 'women', 118.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2024794', '武圣看门武王扫地，你嫌我武馆太垃圾？', '白鹫', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 10.9, 0.4, 9, '已完结', 'male', 10.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('202636', '九转星辰诀', '晨弈', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 760.8, 4.3, 9.2, '已完结', 'male', 760.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2027735', '三国：我，赤壁周瑜，揽二乔脱离江东', '老骥伏枥', '历史', '穿越历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 29.4, 1.5, 9, '已完结', 'male', 29.4, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2027737', '向上登攀', '老虎本尊', '都市', '商战职场', '大热', '2025-10-01', '2025-12-15 04:20:05', 29.4, 5.8, 9.1, '连载中', 'male', 29.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2027742', 'SSSSSSSSSS级狂龙出狱', '成书', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 73.1, 4.8, 9, '连载中', 'male', 73.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2027749', '刚抽中SSS级天赋，你跟我说游戏停服', '吃猫的鱼仔', '玄幻奇幻', '异世大陆', '大热', '2025-10-01', '2025-12-15 04:20:05', 74.5, 4.2, 9.2, '连载中', 'male', 74.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2032046', '守活寡两年去随军，改嫁绝嗣大佬', '糖煵五加', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 48.1, 4.3, 9.5, '连载中', 'women', 48.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2033005', 'SSSSSSSSSSSSSS满级神医', '星空野狼', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 174.7, 20.7, 9, '连载中', 'male', 174.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2033943', '再亲一下，高冷校草诱哄小娇娇', '逸捅天下', '现代言情', '青春校园', '新书', '2025-10-01', '2025-12-15 04:22:46', 16.5, 2, 9.6, '连载中', 'women', 16.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2034828', '唯一真神', '北冥', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 65.6, 2.2, 9.1, '已完结', 'male', 65.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2036574', '被贬北凉，我打造了无敌大雪龙骑！', '画虫的小龙', '历史', '架空历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 24.5, 1.1, 8.9, '已完结', 'male', 24.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2036642', '暗恋十年，庄先生他藏不住了', '雯锦', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 72.6, 4.3, 9.5, '连载中', 'women', 72.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2037407', '炼妖塔', '霸业', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.4, 0.1, 8.6, '连载中', 'male', 2.4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2038910', '你惹她干什么？她修的是杀道啊', '璃焰', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 57, 6.3, 9.6, '连载中', 'women', 57, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2040906', '边军悍卒：从鸡蛋换老婆开始！', '黑夜残影', '历史', '架空历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 23.5, 2.5, 9.2, '已完结', 'male', 23.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2041071', '捡个混球当奶爸，炸翻京圈做团宠！', '夜风微微', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.7, 0.7, 9.5, '连载中', 'women', 3.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2041092', '无双公子', '小陈叔叔', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.6, 0.2, 9.2, '连载中', 'male', 1.6, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2046394', '直播审判罪女！结果全国为她痛哭', '财神爷独生女', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.1, 0.1, 9.2, '连载中', 'women', 2.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2046408', '逆子，开门！你娘回来整顿家风了', '黑葡萄', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 5.1, 0.4, 9.2, '连载中', 'women', 5.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2047644', '我的钱全捐了，老婆竟是天后', '伤心小呆', '都市', '明星娱乐', '新书', '2025-10-01', '2025-12-15 04:20:05', 6.7, 0.2, 8.8, '连载中', 'male', 6.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2048046', '重生70当猎王', '吴家三少', '都市', '乡村生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.8, 0.1, 8, '连载中', 'male', 1.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2050780', '渣夫骗我领假证，转身携千亿资产嫁权少', '唐小糖', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 133.9, 30.1, 9.5, '连载中', 'women', 133.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2051697', '末世，从吞尸体开始进化', '只是小脑虎', '科幻', '末世危机', '大热', '2025-10-01', '2025-12-15 04:20:05', 42.4, 5.9, 9.2, '连载中', 'male', 42.4, 0, 0, 0, 0, 83.20754716981132, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2052700', '小司机的美女总裁老婆', '最爱老板娘', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 91.8, 23.9, 9.1, '连载中', 'male', 91.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2052703', '双生兄弟要换亲？我稳做侯门主母', '林拾酒', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 75.1, 8.8, 9.5, '连载中', 'women', 75.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2052832', '北地悍枭', '狼太孤', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 30.3, 3.6, 9.2, '连载中', 'male', 30.3, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2052834', '魂穿吕布：貂蝉离间弑父？那是我亲爹！', '八方来才', '历史', '穿越历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 8.8, 0.7, 9.2, '连载中', 'male', 8.8, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2053254', '混沌神鼎：从为女帝解毒开始无敌', '战神宇哥', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.3, 0.4, 8.9, '连载中', 'male', 3.3, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2053900', '下山后，漂亮姐姐蠢蠢欲动', '神笔马丁爷', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 3, 0.3, 8.4, '连载中', 'male', 3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2054284', '快穿：我要当绝嗣大佬独生女', '挽书', '幻想言情', '无限快穿', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.7, 1.8, 9.4, '连载中', 'women', 0.7, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2054306', '无敌皇子：从边关开始制霸天下！', '大内低手', '历史', '穿越历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 3, 0.2, 8.4, '连载中', 'male', 3, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2055377', '你偏心，我改嫁！赶紧喊我小婶婶', '江梧蘅', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.3, 0.7, 9.3, '连载中', 'women', 4.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2055380', '哑奴带崽改嫁，清冷权臣悔疯了', '桐原雪穗穗穗穗', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 2, 0.3, 8.6, '连载中', 'women', 2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2055904', '被沈家抛弃后，真千金她马甲炸翻全球', '鹿笙', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 3, 0.2, 8.4, '连载中', 'women', 3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2057069', '穿书八零，养崽训夫我手拿把掐', '菠萝小微', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.6, 0.1, 8.6, '连载中', 'women', 1.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2057851', '从把傲娇室友捧成娱乐天后开始', '罗宝爱花卷', '都市', '明星娱乐', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.9, 0.1, 9.2, '连载中', 'male', 1.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2058468', '快穿：小狐狸她漂亮但能打', '十一肆', '幻想言情', '无限快穿', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.3, 0.2, 8.8, '连载中', 'women', 3.3, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2059102', '让你求生，你竟在疯狂摸尸？', '半山闲客', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 5.9, 1, 8.9, '连载中', 'male', 5.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2059742', '带球上门后，我成陆少心尖宠', '幸夷', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 6.4, 0.9, 9.5, '连载中', 'women', 6.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2060184', '开局娶女囚，我成就最强悍卒', '青衫酌酒', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 6.4, 0.5, 9.2, '连载中', 'male', 6.4, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2060462', '七零闪婚不见面，带娃炸翻家属院', '桃桃宝宝', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 38.3, 26.2, 9.4, '连载中', 'women', 38.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2060801', '穿成反派，开局迎娶主角未婚妻', '毛毛超爱吃', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.1, 0.1, 8.4, '连载中', 'male', 1.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2060816', '重生78：我靠岛赶海，带全家暴富！', '夕墨沉烟', '都市', '乡村生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.7, 0.2, 8.8, '连载中', 'male', 2.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061257', '重生七零：我家老祖宗能通古今', '烟花璀璨', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.9, 0.1, 8.4, '连载中', 'women', 1.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061268', '结婚三年不同房，离婚后她显怀了', '墨堑', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 5.2, 0.9, 8.4, '连载中', 'women', 5.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061856', '王府里来了个捡破烂的崽崽', '三颗小石头', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 140.5, 39.8, 9.6, '连载中', 'women', 140.5, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061931', '八零：渣夫骗婚娶大嫂，我转身嫁首长', '锦禾', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 18.5, 3.6, 9.3, '连载中', 'women', 18.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061932', '九零带崽寻亲，被绝嗣大佬宠疯了', '树梢上', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 10.8, 1.2, 9.4, '连载中', 'women', 10.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062265', '换父兄后流放？真千金成了边疆团宠', '君染染', '古代言情', '种田经商', '新书', '2025-10-01', '2025-12-15 04:22:46', 5.2, 0.8, 8.8, '连载中', 'women', 5.2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062279', '考中状元又怎样，我娘是长公主', '汐家锦锂', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.5, 3.6, 9.5, '连载中', 'women', 0.5, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062370', '边疆发男人，从被罪女买走开始！', '陈火火', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 3, 0.4, 8.8, '连载中', 'male', 3, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062422', '惨死认亲日，嫡女夺回凤命杀疯了', '雪落听风', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 14.1, 2.8, 9.5, '连载中', 'women', 14.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062428', '99次逃婚后，她攀上了京圈权贵', '栗子甜豆糕', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.6, 0.1, 9.2, '连载中', 'women', 1.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062825', '捡漏！', '外八字', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.4, 0.1, 8.6, '连载中', 'male', 1.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062835', '小貔貅掉七零军区大院，被全军抢着宠', '加菲不是猫', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.6, 0.1, 8.4, '连载中', 'women', 2.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063300', '五个大佬命里缺我，我只管吃奶', '舒展v', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.6, 0.1, 9.2, '连载中', 'women', 1.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('206343', '恐怖复苏之全球武装怪胎', '老郭在此', '科幻', '末世危机', '完结', '2025-10-01', '2025-12-15 04:20:05', 602.2, 0.9, 9.4, '已完结', 'male', 602.2, 0, 0, 0, 0, 83.20754716981132, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063608', '边疆老卒，御赐老婆后我越活越勇', '月光大妖怪', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 10.9, 3.1, 9, '连载中', 'male', 10.9, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063976', '都市情劫', '御龙', '都市', '都市生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 3, 1, 8.8, '连载中', 'male', 3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064308', '妖魔乱世逢灾年，我每日一卦粮肉满仓', '灶食', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.8, 0.1, 8.4, '连载中', 'male', 1.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064344', '都市绝品神医', '就爱吃牛肉', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.9, 0.2, 8.8, '连载中', 'male', 3.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064353', '八零随军：退婚神医被绝嗣大佬宠上天', '煎bingo子', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 5.5, 2.5, 9.3, '连载中', 'women', 5.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064964', '规则怪谈：我的超能力给诡异整破防了', 'fishlike', '幻想言情', '无限快穿', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.7, 0.1, 8.6, '连载中', 'women', 0.7, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064972', '当我捡漏古董后，前女友后悔了', '大金拿', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.5, 0.1, 8.4, '连载中', 'male', 1.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064995', '重回六十年代，从挖何首乌开始', '巍巍青山', '都市', '乡村生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.1, 0.1, 9.2, '连载中', 'male', 3.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064998', '开局抄家，姐姐抢着去流放', '一个豆包', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.7, 0.6, 9.2, '连载中', 'women', 4.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065348', '父兄拿我当草，随母改嫁断亲当皇后', '饱福福', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 2, 0.1, 8.4, '连载中', 'women', 2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065813', '开局捉奸，傍上权臣好孕来', '雨过阳光', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.3, 0.7, 9.2, '连载中', 'women', 3.3, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065885', '重生85：带猫咪去赶海，狂宠九个女儿', '咸鱼咸鱼', '都市', '都市生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.1, 0.8, 9.2, '连载中', 'male', 4.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065888', '解春衫', '随山月', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 122, 61, 9.7, '连载中', 'women', 122, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065894', '神医下山：美女总裁非我不嫁', '月下无人', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 5, 0.8, 8.8, '连载中', 'male', 5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065959', '让我进京当质子，我开局带兵强掳花魁', '有点刺挠', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 5.5, 0.5, 9.2, '连载中', 'male', 5.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066484', '四合院：从技术员到人生赢家', '辰语', 'N次元', '衍生同人', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.5, 0.1, 8.4, '连载中', 'male', 2.5, 0, 0, 0, 0, 0, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066492', '空间系统穿七零，肥妻暴瘦暴富样样行', '慕荣华', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.2, 0.5, 8.8, '连载中', 'women', 3.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066494', '换嫁绝嗣大佬，我胎胎多宝赢麻了', '猫猫鱼吃果果', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 3, 0.4, 9.2, '连载中', 'women', 3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066505', '侯府捡的小福星，全城大佬争着宠', '鱼芽', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 6.4, 2.7, 9.5, '连载中', 'women', 6.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066841', '混元书', '枫如江画', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.3, 0.5, 9.2, '连载中', 'male', 2.3, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066874', '七五：虎妞为伴，再收个落难大小姐', '任性的狮子', '都市', '乡村生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.1, 0.4, 9.1, '连载中', 'male', 4.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067420', '年代：开局一把小猎枪，娇妻貌美肉满仓', '钓鱼捞', '都市', '乡村生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 6, 0.7, 8.9, '连载中', 'male', 6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067715', '嫌我劳改犯？我神医身份曝光了', '瓜神驾到', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.2, 0.1, 8.4, '连载中', 'male', 2.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067718', '四合院：开局猎户，邻居喝风我吃肉！', '刚烈的汉子', 'N次元', '衍生同人', '新书', '2025-10-01', '2025-12-15 04:20:05', 5.2, 0.4, 8.9, '连载中', 'male', 5.2, 0, 0, 0, 0, 0, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('207105', '傲世潜龙', '西装暴徒', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 30.6, 9.1, '连载中', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2071506', '开局玉女宗，被仙子挑走当人丹', '三明治', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2, 0.4, 8.4, '连载中', 'male', 2, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2072331', '假嫡女重生想抢婚？再嫁你也得下跪', '木怜青', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.9, 0.1, 8.6, '连载中', 'women', 1.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2072337', '开局撞破皇帝女儿身', '拉满弓月', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.4, 0.2, 8.6, '连载中', 'male', 1.4, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2072619', '长生：从寿元零点一年开始', '馀杯', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 8, 3.1, 9.1, '连载中', 'male', 8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2073050', '权力巅峰：SSSS级村书记！', '荒苑爆红', '都市', '官场', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.9, 1.4, 9.3, '连载中', 'male', 3.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2073625', '我都人间武圣了，你让我当傀儡皇帝？', '小呀小馒头', '玄幻奇幻', '王朝争霸', '新书', '2025-10-01', '2025-12-15 04:20:05', 0.8, 0.1, 9.2, '连载中', 'male', 0.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074086', '偏护寡嫂不成婚？扇完巴掌嫁权臣', '喵大仙儿', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.6, 0.5, 8.4, '连载中', 'women', 0.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074090', '挖我灵根？重生后新师门待我如宝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.4, 0.3, 9.2, '连载中', 'women', 2.4, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074181', '权力巅峰：从市委大秘开始', '鹏鹏君本尊', '都市', '官场', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.8, 1.1, 9, '连载中', 'male', 4.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074192', '影帝高冷捂不热？那就离婚！', '兔子不爱吃胡萝卜', '现代言情', '娱乐明星', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.4, 0.3, 9.2, '连载中', 'women', 2.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074218', '贪恋她', '谢九笙', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.7, 0.5, 9.2, '连载中', 'women', 0.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074327', '御堂春事', '荞麦十二画', '古代言情', '古代情缘', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.8, 0.1, 8, '连载中', 'women', 0.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074330', '穿成六零小炮灰，大小姐带物资养兵王', '娮小夕', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.7, 0.4, 9.2, '连载中', 'women', 0.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074333', '一掌退大帝，你说他是杂役弟子？', '百万单机王', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.2, 0.1, 8.6, '连载中', 'male', 1.2, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074412', '和初恋官宣后，装瘸前夫气得站起来了', '青时序', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.7, 0.2, 9.2, '连载中', 'women', 0.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2075109', '四合院：从火车列车员开始', '我家有母老虎', 'N次元', '衍生同人', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.3, 0.6, 8.8, '连载中', 'male', 3.3, 0, 0, 0, 0, 0, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2075347', '被退婚五次，她嫁残王夫君却躺赢', '瓜田立夏', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.5, 0.2, 9.2, '连载中', 'women', 2.5, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2075352', '资本家假千金，搬空家产嫁糙汉', '韶光煮雪', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.4, 0.4, 9.2, '连载中', 'women', 2.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2075975', 'SSSSSSS级医武至尊', '大盘鸡仙尊', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.9, 0.2, 8.4, '连载中', 'male', 2.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076487', '极品九千岁：我在后宫无法无天！', '莫不愁', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.5, 0.4, 9.2, '连载中', 'male', 2.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076863', '换宗门，当团宠，师妹她修生钱道', '金池', '幻想言情', '玄幻仙侠', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.8, 0.3, 9.2, '连载中', 'women', 1.8, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076866', '竹马护资本家小姐，重生改嫁他急了！', '枝云梦', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.8, 0.6, 9.2, '连载中', 'women', 2.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2077580', '裴大人，表小姐她又跑了', '蓝莓爆珠', '古代言情', '古代情缘', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.3, 0.3, 9.2, '连载中', 'women', 2.3, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2077779', '规则怪谈：我能找出错误的规则', '老猫写文', '奇闻异事', '恐怖灵异', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.3, 0.2, 9.2, '连载中', 'male', 2.3, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2077960', '刚下山，全球大佬跪迎我回家', '霜叶红于二月花', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.4, 0.4, 9.2, '连载中', 'male', 2.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2078304', '转生狗妖，我在万世轮回成仙！', '六尺七寸', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2, 0.2, 9.2, '连载中', 'male', 2, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2078351', '四合院：开局爆锤众禽', '沉鱼', 'N次元', '衍生同人', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.2, 0.3, 8.6, '连载中', 'male', 2.2, 0, 0, 0, 0, 0, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('208594', '吞天圣帝', '枫落忆痕', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 483.6, 8, 9.1, '连载中', 'male', 483.6, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('208898', '极品小侯爷', '梦入山河', '历史', '架空历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 676.5, 1.5, 9.2, '已完结', 'male', 676.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('209888', '重回1991', '南三石', '都市', '商战职场', '完结', '2025-10-01', '2025-12-15 04:20:05', 581.2, 1.3, 9.3, '已完结', 'male', 581.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('209898', '我能采集万物', '存叶', '科幻', '末世危机', '完结', '2025-10-01', '2025-12-15 04:20:05', 34.7, 1.5, 9.2, '已完结', 'male', 34.7, 0, 0, 0, 0, 83.20754716981132, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('210771', '万古龙帝', '拓跋流云', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 34.7, 2, 9.1, '已完结', 'male', 34.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('211115', '都市逍遥天医', '星空野狼', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 435.9, 1.4, 9.3, '已完结', 'male', 435.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213092', '吞噬古帝', '黑白仙鹤', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 13.3, 9.2, '连载中', 'male', 34.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213190', '阴阳鲁班咒', '一气三元', '奇闻异事', '恐怖灵异', '完结', '2025-10-01', '2025-12-15 04:20:05', 226.6, 1.5, 9.4, '已完结', 'male', 226.6, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213697', '葬天神帝', '我爱弹棉花', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 526.9, 6.7, 9.1, '连载中', 'male', 526.9, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('214783', '山野诡闻笔记', '吴大胆', '奇闻异事', '奇门秘术', '完结', '2025-10-01', '2025-12-15 04:20:05', 414, 3.4, 9.5, '已完结', 'male', 414, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '都市', '热血校园', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 8.1, 9.7, '已完结', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('214890', '混沌天尊', '新闻工作者', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 315.1, 2.9, 9, '已完结', 'male', 315.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('215067', '九转修罗诀', '李中有梦', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 309.7, 2.1, 9, '已完结', 'male', 309.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('215169', '寒门枭士', '北川', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 7.7, 9.3, '已完结', 'male', 34.7, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('215243', '第一瞳术师', '喵喵大人', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 0.8, 19.5, 9.8, '已完结', 'women', 0.8, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('215780', '绝世强龙', '张龙虎', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 34.7, 3.2, 8.8, '已完结', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('216404', '荒古武神', '化十', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 527.2, 8.3, 9.1, '连载中', 'male', 527.2, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('217822', '天命成凰', '赵小球', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 3.2, 9.4, '已完结', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('218179', '天命风水神相', '半盏清茶', '奇闻异事', '奇门秘术', '完结', '2025-10-01', '2025-12-15 04:20:05', 59.1, 1.4, 9.2, '已完结', 'male', 59.1, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('219660', '臭保镖，求你放过我们吧！', '流水不逝', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 270.3, 1.9, 9.2, '已完结', 'male', 270.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('151584', '极品戒指', '淮阴小侯', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 34.7, 1.4, 9.1, '已完结', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1647094', '九转吞天诀', '萧逆天', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 323.7, 7.1, 9.1, '连载中', 'male', 323.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1648167', '开局截胡五虎上将', '孔明很愁', '历史', '穿越历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 775.3, 2.7, 9.1, '已完结', 'male', 775.3, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1648172', '仙棺，神墟，剑无敌！', '千年老龟', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 359.2, 9.5, 9, '连载中', 'male', 359.2, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '游戏', '虚拟网游', '大热', '2025-10-01', '2025-12-15 04:20:05', 709.5, 6.9, 9.2, '已完结', 'male', 709.5, 0, 0, 0, 0, 148.2470837515334, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1653604', '我的冰山女神老婆', '冰城妖玉', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 853.2, 1.4, 9.3, '已完结', 'male', 853.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1654986', '团宠小师妹才是真大佬', '千金兔', '幻想言情', '玄幻仙侠', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 2.5, 9.7, '已完结', 'women', 0.7, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1655407', '鸿蒙霸体诀', '鱼初见', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 791.6, 34.3, 9.1, '连载中', 'male', 791.6, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1665743', '皇室奶团萌翻全京城', '司司', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.8, 4.8, 9.7, '已完结', 'women', 0.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1666957', '重生后我顶替了前夫白月光', '九九月', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.9, 1.6, 9.1, '已完结', 'women', 0.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1670199', '我的养成系女友', '佛系和尚', '都市', '热血校园', '完结', '2025-10-01', '2025-12-15 04:20:05', 509.7, 1.6, 9.5, '已完结', 'male', 509.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1672578', '逃荒后三岁福宝被团宠了', '时好', '古代言情', '种田经商', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.5, 3.2, 9.7, '已完结', 'women', 0.5, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1672801', '太古吞天诀', '心无尘', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 183.7, 2.4, 9, '已完结', 'male', 183.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1673461', '三个缩小版大佬带百亿资产上门', '一轮玫瑰', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 2.2, 9.5, '已完结', 'women', 0.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 4.9, 9.6, '已完结', 'women', 982.5, -981.8, -99.92875318066157, 0, -981.8, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1684583', '春棠欲醉', '锦一', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 20.6, 9.7, '已完结', 'women', 34.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1689214', '藏起孕肚离婚，郁总全球疯找', '苏小鱼', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.2, 1.6, 9.4, '已完结', 'women', 1.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1693832', '超神玩家', '失落叶', '游戏', '虚拟网游', '完结', '2025-10-01', '2025-12-15 04:20:05', 444.1, 1.3, 9.3, '已完结', 'male', 444.1, 0, 0, 0, 0, 148.2470837515334, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 199.6, 6, 9.1, '已完结', 'male', 199.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1706674', '开局麒麟肾，吓哭九个绝色娇妻', '神级大牛', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 494.6, 2.1, 9.1, '已完结', 'male', 494.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1730848', '徒儿快下山，你师姐等不及了', '雨落狂流', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 139.8, 2.1, 9.1, '已完结', 'male', 139.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1738577', '女神的逍遥狂医', '东方天策', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 176.5, 1.4, 9.2, '已完结', 'male', 176.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1761978', '葬神棺', '浮生一诺', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 50.2, 9.3, '连载中', 'male', 34.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1763089', '喜棺开，百鬼散，王妃她从地狱来', '一碗佛跳墙', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 8.5, 9.8, '已完结', 'women', 34.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1763673', '捉奸当天，豪门继承人拉我去领证', '慕容悠然', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 378.7, 19.6, 9.4, '连载中', 'women', 378.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1764505', '我团宠小师妹，嚣张点怎么了', '瑰夏', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 365, 13, 9.7, '已完结', 'women', 365, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1764634', '七零：最硬糙汉被媳妇撩红了眼', '一尾小锦鲤', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 16.8, 9.3, '已完结', 'women', 34.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1765545', '轻熟', '乌木桃枝', '现代言情', '职场情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.8, 2.5, 9.8, '已完结', 'women', 0.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1768764', '出阳神', '罗樵森', '奇闻异事', '奇门秘术', '完结', '2025-10-01', '2025-12-15 04:20:05', 296.9, 2.5, 9.4, '已完结', 'male', 296.9, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1771336', '王妃她五行缺德', '棠花落', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.4, 2, 9.7, '已完结', 'women', 0.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1776773', '第一召唤师', '喵喵大人', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 405.6, 5.5, 9.7, '已完结', 'women', 405.6, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1778388', '灵骨被夺，帝女她觉醒神脉杀回来了', '澜岸', '幻想言情', '玄幻仙侠', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.1, 2.6, 9.7, '已完结', 'women', 1.1, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1780456', '混沌鼎', '鬼疯子', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 121.6, 1.4, 9, '已完结', 'male', 121.6, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1783142', '天剑神狱', '叶问', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 91.5, 1.6, 9.1, '已完结', 'male', 91.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1801623', '帝国皇太子，老子不干了！', '灰色小猫', '历史', '架空历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 338.6, 2.4, 8.9, '已完结', 'male', 338.6, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1802216', '诱她，一夜成瘾', '壹鹿小跑', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 549.9, 4.4, 9.4, '已完结', 'women', 549.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1803024', '神算萌妻：傅太太才是玄学真大佬', '易小升', '现代言情', '都市奇幻', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 12.7, 9.7, '已完结', 'women', 34.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1803136', '第一凤女', '十二妖', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 38.5, 9.7, '已完结', 'women', 34.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1803283', '皇叔借点功德，王妃把符画猛了', '安卿心', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 104.4, 9.7, '连载中', 'women', 34.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1804346', '绝世天命大反派', '金裘花马', '玄幻奇幻', '异世大陆', '大热', '2025-10-01', '2025-12-15 04:20:05', 834.3, 14.8, 9, '连载中', 'male', 834.3, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1809333', '网游：我召唤的骷髅全是位面之子？', '禅心道骨', '游戏', '虚拟网游', '完结', '2025-10-01', '2025-12-15 04:20:05', 220.1, 1.5, 9.4, '已完结', 'male', 220.1, 0, 0, 0, 0, 148.2470837515334, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1809361', '逍遥四公子', '修果', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 78.8, 9.3, '连载中', 'male', 34.7, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1815020', '巅峰权途', '争渡', '都市', '官场', '大热', '2025-10-01', '2025-12-15 04:20:05', 436.2, 45.5, 9.3, '连载中', 'male', 436.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1819118', '八零养崽：清冷美人被科研大佬宠上天！', '桔子阿宝', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.2, 1.9, 9.6, '已完结', 'women', 1.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1830569', '凤池生春', '秦安安', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 527.5, 12.9, 9.7, '已完结', 'women', 527.5, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1830570', '世子先别死，夫人有喜了', '沙拉薯条', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 13, 9.6, '已完结', 'women', 34.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1833599', '枭龙出山', '轩仔', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 81.6, 5.2, 9.1, '连载中', 'male', 81.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1837360', '昭春意', '犹鱼丝', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 2.5, 9.7, '已完结', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1838037', '典狱长大人深不可测！', '黄泉隼', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 187.9, 1.6, 9.5, '已完结', 'male', 187.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1838355', '离婚后，前妻姐崩溃了', '洛王', '都市', '都市生活', '完结', '2025-10-01', '2025-12-15 04:20:05', 620.3, 2.8, 8.7, '已完结', 'male', 620.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1840296', '夫君清心寡欲，我却连生三胎', '米团开花', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 296.4, 6.1, 9.7, '已完结', 'women', 296.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1844850', '饥荒年，我囤货娇养了古代大将军', '苜肉', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 13.1, 9.6, '连载中', 'women', 34.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1847406', '此夜逢君', '晨露嫣然', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 1, 2.8, 9.7, '已完结', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1848642', '离婚吧，真当我是废物啊', '凝望之影', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 103.6, 2.4, 8.9, '已完结', 'male', 103.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1848650', '夜火缠绵', '骨子鱼', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.1, 1.5, 9.5, '已完结', 'women', 1.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1850556', '让我娶傻千金，你又回来求我离婚？', '摸鱼小将', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 161.7, 5.5, 9.1, '连载中', 'male', 161.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1850695', '炼神鼎', '秋月梧桐', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 193.6, 15.2, 9, '连载中', 'male', 193.6, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1853441', '春华照灼', '蝉不知雪', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 2.6, 9.7, '已完结', 'women', 0.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1854610', '八零娇女一撒娇，高冷军少领证了', '白茶流萤', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 510.4, 15.1, 9.2, '连载中', 'women', 510.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1857847', '重生再嫁皇胄，我只想乱帝心夺凤位', '月下小兔', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 593, 9.5, 9.4, '连载中', 'women', 593, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1858392', '咬春靥', '空酒瓶', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 327.1, 4.5, 8.4, '已完结', 'women', 327.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1858924', '无间令', '无间之令', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 1.1, 2.7, 9.3, '已完结', 'women', 1.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1863729', '断亲不伺候了，哥哥们破产睡天桥', '红十三', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 566.4, 3, 9.1, '已完结', 'women', 566.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1864493', '打到北极圈了，你让我继承皇位？', '橡皮泥', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 300.5, 11.5, 9.3, '连载中', 'male', 300.5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1867139', '师叔，你的法宝太不正经了', '李别浪', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 482.9, 14.9, 9.4, '连载中', 'male', 482.9, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1871638', '你迎娶平妻？我带崽入宫当皇后', '虎金金', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.4, 2.1, 9.6, '已完结', 'women', 0.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1872563', '为奴三年后，整个侯府跪求我原谅', '莫小弃', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 38.9, 8.8, '连载中', 'women', 34.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1873655', '重生八零：离婚后被军少宠上天', '小白蛇', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 607.4, 6.6, 9.7, '已完结', 'women', 607.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1875137', '断绝关系后，我的召唤兽全是黑暗生物', '可破', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 294.3, 1.8, 9.1, '已完结', 'male', 294.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1876687', '和离前夜，她重生回了出嫁前', '柳程安', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 434.1, 5.2, 9.5, '已完结', 'women', 434.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1879542', '我宫斗冠军，矜贵世子俯首称臣', '唐荔枝', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 676.9, 6.4, 9.7, '已完结', 'women', 676.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1882743', '郡主她百鬼送嫁，少将军敢娶吗？', '一碗佛跳墙', '古代言情', '古代情缘', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.5, 2.5, 9.8, '已完结', 'women', 0.5, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1882754', '边军悍卒', '木有金箍', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 552, 36.1, 9.3, '连载中', 'male', 552, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1885415', '再睁眼！高冷女知青在我怀里哭唧唧', '九伐', '都市', '都市生活', '完结', '2025-10-01', '2025-12-15 04:20:05', 88.3, 0.5, 9.2, '已完结', 'male', 88.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1893629', '捡了小福星后，将军府旺疯了', '树己不树人', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 1.3, 9.5, '已完结', 'women', 0.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1929412', '重生：清纯转校生表白我，校花哭惨了', '一缕微光', '都市', '热血校园', '完结', '2025-10-01', '2025-12-15 04:20:05', 81.6, 2, 9.4, '已完结', 'male', 81.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1936358', '大楚第一逍遥王', '打得你喵喵叫', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 77.8, 5, 9, '连载中', 'male', 77.8, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1941048', '全能真千金归来，发现家人住狗窝', '温小浅', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.3, 1.9, 9.4, '已完结', 'women', 0.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1946790', '谁说校花高冷？这校花可太甜软了', '佛系和尚', '都市', '热血校园', '完结', '2025-10-01', '2025-12-15 04:20:05', 107.2, 1.9, 9.6, '已完结', 'male', 107.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1949070', '孩子谁爱生谁生，我勾帝心夺凤位', '爱吃石榴', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 1.1, 28.7, 9.6, '连载中', 'women', 1.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1949695', '被贵妃配给太监当对食后', '沙子', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 1.2, 24.7, 9.5, '连载中', 'women', 1.2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1957149', '出宫前夜，沦为暴君掌中物', '素律', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 341, 16.4, 9.4, '连载中', 'women', 341, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1959895', '十二只SSS级鬼宠，你管这叫差班生', '洛青澜', '都市', '灵气复苏', '完结', '2025-10-01', '2025-12-15 04:20:05', 104, 0.9, 9.2, '已完结', 'male', 104, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1960821', '雪夜活埋后，我夺了假千金凤命', '柠檬小丸子', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 136.8, 8.1, 9.5, '连载中', 'women', 136.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1960964', '从小媳妇要传宗接代开始', '断章', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 202.6, 9, 9.2, '连载中', 'male', 202.6, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1965108', '召诸神，踏万界，天命帝女逆乾坤', '澜岸', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 74.8, 6.7, 9.7, '连载中', 'women', 74.8, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1968483', '霍总，太太不复婚，只改嫁！', '相思一顾', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 1.1, 8, 9.5, '连载中', 'women', 1.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1968910', '全家夺我军功，重生嫡女屠了满门', '我吃饱饱', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 467.6, 38.3, 9.6, '连载中', 'women', 467.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1971248', '在恋综当老六？一句泡面仙人全网暴火', '肉包打狗', '都市', '明星娱乐', '完结', '2025-10-01', '2025-12-15 04:20:05', 80, 1.7, 9.1, '已完结', 'male', 80, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1971590', '众仙俯首', '咸鱼老白', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 184.1, 12.6, 9.4, '连载中', 'male', 184.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1975352', '叉腰腰，全家都是我捡来哒！', '柠檬鱼头', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 0.8, 11.2, 9.7, '连载中', 'women', 0.8, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1976312', '观音泥', '溪芝', '现代言情', '现代悬疑', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.3, 0.1, 8.6, '连载中', 'women', 2.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('197810', '都市最狂医仙', '花小刺', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 789.8, 2.1, 9.1, '已完结', 'male', 789.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '武侠仙侠', '上古洪荒', '大热', '2025-10-01', '2025-12-15 04:20:05', 65.9, 2.4, 9.2, '已完结', 'male', 65.9, 0, 0, 0, 0, 119.8909823948394, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982193', '我的26岁女总裁', '卧龙岗小弟', '都市', '都市生活', '完结', '2025-10-01', '2025-12-15 04:20:05', 69.5, 3.5, 9, '已完结', 'male', 69.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982371', '你宠白月光，我收凤印你急什么', '江墨甜', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 62.6, 6.4, 8.9, '连载中', 'women', 62.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982718', '真没必要让我重生', '刘大咪', '都市', '都市生活', '完结', '2025-10-01', '2025-12-15 04:20:05', 30.5, 1.2, 8.9, '已完结', 'male', 30.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1988961', '重生1984：我靠赶海打渔成首富', '菠萝炒饭', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 172.9, 16, 9, '连载中', 'male', 172.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1989780', '权力医途', '端午', '都市', '官场', '大热', '2025-10-01', '2025-12-15 04:20:05', 189.3, 19.5, 9.1, '连载中', 'male', 189.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1991675', '我赚够两千就下播，榜一大哥却急了', '哼哼哈哈', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 251.7, 8.2, 9.8, '连载中', 'women', 251.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1991811', '错良缘', '雨山雪', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 61.8, 3.3, 9.6, '已完结', 'women', 61.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1994128', '搬空婆家离婚后，被八零京少宠上天', '猫爱锅包肉', '现代言情', '年代重生', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 2.1, 9.5, '已完结', 'women', 0.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1994174', '恶婆婆重生后，怂包儿媳被宠成宝！', '洇鹤', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.8, 0.2, 8.9, '连载中', 'women', 3.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1994365', '高门长媳', 'Ms腊肠', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 63.1, 3.8, 9.5, '已完结', 'women', 63.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2003997', '末世囤货养崽，从娘胎开始旺妈咪', '小桃花', '幻想言情', '末世求生', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 1.5, 9.6, '已完结', 'women', 0.6, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('200456', '在他深情中陨落', '浮生三千', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.3, 1.9, 9.7, '已完结', 'women', 0.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2004996', '仙侣', '鬼疯子', '武侠仙侠', '幻想修真', '大热', '2025-10-01', '2025-12-15 04:20:05', 106.3, 11.3, 8.9, '连载中', 'male', 106.3, 0, 0, 0, 0, 119.8909823948394, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2007504', '结婚三年喊错名，成对家老公了你哭什么', '木易未央', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 20.5, 0.3, 8.7, '已完结', 'male', 20.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2010008', '高武校长，我的实力是全校总和！', '邯郸财阀', '都市', '都市高武', '大热', '2025-10-01', '2025-12-15 04:20:05', 122.9, 5.7, 9.3, '连载中', 'male', 122.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2012529', '极品女神赖上我', '陈行者', '都市', '商战职场', '大热', '2025-10-01', '2025-12-15 04:20:05', 173.7, 23.3, 9, '连载中', 'male', 173.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2014122', '于他怀中轻颤', '苏晚舟', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 0.7, 8.7, 9.6, '连载中', 'women', 0.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2014393', '掌门怀孕，关我一个杂役什么事', '雨夜终曲', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 253.9, 30.9, 9, '连载中', 'male', 253.9, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2015371', '再近点，就失控了', '雪泥', '现代言情', '青春校园', '大热', '2025-10-01', '2025-12-15 04:22:46', 274.3, 11.3, 9.9, '连载中', 'women', 274.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2018535', '洪荒：我屡出毒计，十二祖巫劝我冷静！', '橘黄的橙子', '武侠仙侠', '上古洪荒', '完结', '2025-10-01', '2025-12-15 04:20:05', 47.3, 1.9, 8.9, '已完结', 'male', 47.3, 0, 0, 0, 0, 119.8909823948394, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2019227', '随母改嫁旺新家，重生嫡女嘎嘎乱杀', '三十嘉', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 1.2, 14.6, 9.6, '连载中', 'women', 1.2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2020570', '重生70：让你守门，你整了个蘑菇云？', '历史小尘埃', '都市', '都市生活', '完结', '2025-10-01', '2025-12-15 04:20:05', 20.7, 1.1, 9.1, '已完结', 'male', 20.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2020674', '从市委大秘到权力之巅', '洗礼先生', '都市', '官场', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 5.5, 9.1, '连载中', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2021927', '西游：取经？关我混沌魔猿什么事！', '南木北树', '武侠仙侠', '上古洪荒', '完结', '2025-10-01', '2025-12-15 04:20:05', 69.7, 2.4, 9, '已完结', 'male', 69.7, 0, 0, 0, 0, 119.8909823948394, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2021943', '诱哄，假千金被禁欲商总拉去领证了', '雾里重逢', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.4, 3.3, 9.7, '已完结', 'women', 0.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('202630', '道门诡谈', '李十一', '奇闻异事', '奇门秘术', '完结', '2025-10-01', '2025-12-15 04:20:05', 155.7, 1.4, 9.2, '已完结', 'male', 155.7, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2027063', '敲骨吸髓？重生另选家人宠我如宝', '清砚', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 138.2, 37.7, 9.5, '连载中', 'women', 138.2, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2028957', '桃花劫', '推窗望岳', '都市', '商战职场', '大热', '2025-10-01', '2025-12-15 04:20:05', 224.8, 40.4, 9.2, '连载中', 'male', 224.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2029607', '我的道侣是诸天第一女帝', '虎眸', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.2, 0.1, 8.4, '连载中', 'male', 4.2, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2029739', '穿成恶毒继母，手握空间灵泉养崽崽', 'YJ紫霞仙子', '古代言情', '种田经商', '新书', '2025-10-01', '2025-12-15 04:22:46', 3, 0.1, 8.4, '连载中', 'women', 3, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2032899', '让你当书童，你成大夏文圣', '炫迈', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 61.9, 3.6, 9, '连载中', 'male', 61.9, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2038328', '重生不嫁高门后，高冷权臣追疯了！', '溪午闻钟', '古代言情', '古代情缘', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.9, 0.1, 8.4, '连载中', 'women', 2.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2038351', '公府上下宠我如宝，养兄一家后悔了', '钱多多君', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.8, 0.1, 8.4, '连载中', 'women', 2.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2038385', 'SSSSSSSSSSSSS级镇狱狂龙', '封情老衲', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 101.9, 51.5, 9.1, '连载中', 'male', 101.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2040657', '末世抢机缘：我的我的都是我的！', '文鳐', '幻想言情', '末世求生', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.1, 0.3, 9.5, '连载中', 'women', 4.1, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2044077', '妾本丝萝，只图钱帛', '锅包又又又', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 23.4, 1.4, 9.6, '连载中', 'women', 23.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2046282', '人生赢家', '烟云客横渡积水潭', '都市', '商战职场', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.5, 0.5, 8.9, '连载中', 'male', 4.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2046772', '纵情人生', '一缕微光', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 38.4, 4.5, 9, '连载中', 'male', 38.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2048050', '抢我婚约嫁太子？我携孕肚嫁皇帝', '缓缓归', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 50.9, 17.8, 9.6, '连载中', 'women', 50.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2048060', '从酒肆杂役开始武道化圣', '为你傲视蒼穹', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 6.8, 0.6, 9.1, '连载中', 'male', 6.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2052699', '主播甜又野，六个顶级大佬缠着宠', '墨如金', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.5, 0.1, 8.6, '连载中', 'women', 0.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2053703', '三年同房两次，要离婚他跪求复合', '一只小甜饼', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 37.8, 6.5, 9.3, '连载中', 'women', 37.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2053895', '带崽搬空婆家，易孕娇女随军被亲哭', '金岁岁', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 22.6, 4, 9.4, '连载中', 'women', 22.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2053898', '他的小撩精', '街灯读我', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 0.6, 18.5, 9.7, '连载中', 'women', 0.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2054267', '三年婚姻喂了狗，二嫁律师宠疯了', '炎热的夏天', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.7, 0.1, 8.6, '连载中', 'women', 1.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2054313', '阴阳塔', '水管开花', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 11.2, 1.7, 9, '连载中', 'male', 11.2, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2055375', '姜医生，贺总约你去民政局', '江月何年', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 6.4, 0.3, 8.8, '连载中', 'women', 6.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2056878', '大小姐重生选夫，小小硬汉拿捏拿捏', '暖宝宝爱吃饭', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 9.2, 3.3, 9.3, '连载中', 'women', 9.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2057124', '靠私房菜名震京城，凤印上门了！', '宋九九', '古代言情', '种田经商', '新书', '2025-10-01', '2025-12-15 04:22:46', 6.9, 2.2, 9.8, '连载中', 'women', 6.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2057468', '权力巅峰：从县委大院开始', '今晚吃鸡', '都市', '官场', '新书', '2025-10-01', '2025-12-15 04:20:05', 9, 1.3, 9.1, '连载中', 'male', 9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2057573', '窃医术，夺至亲？神医嫡女杀疯了！', '九汐公子', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 1, 4.1, 9.4, '连载中', 'women', 1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2059138', '救命！求生综里看风水，爆火全网', '桑桑籽', '现代言情', '娱乐明星', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.3, 0.1, 8.6, '连载中', 'women', 2.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2059139', '听懂兽语后，被皇家全员团宠了', '桃酥', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.3, 0.6, 9.4, '连载中', 'women', 4.3, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2059140', '戍边斥候：从奉旨传宗接代开始！', '般若菠萝', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 5, 0.3, 8.8, '连载中', 'male', 5, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2060174', '转职：我死亡天灾，站起来为了你的君主', '懒惰的帅比', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 3, 0.2, 8.4, '连载中', 'male', 3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2060180', '科举：开局官府发妻，卷成状元', '明月天衣', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.1, 0.3, 9.2, '连载中', 'male', 3.1, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2060824', '让你当狱长，没让你把神魔改造成卷王', '最怕取名字', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.1, 0.1, 8.6, '连载中', 'male', 1.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061260', '七零读心，掏空家产带福宝寻夫随军', '沫沫无闻', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 5.1, 0.3, 9, '连载中', 'women', 5.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061262', '哑巴小向导，被七个顶级哨兵缠上了', '疯麦', '幻想言情', '未来科幻', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.4, 0.1, 8.8, '连载中', 'women', 0.4, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061266', '边荒小吏', '东门吹牛', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.7, 0.1, 8.4, '连载中', 'male', 2.7, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061267', '边军枭卒：从领媳妇开始皇图霸业', '凉小城', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.9, 0.2, 8.8, '连载中', 'male', 1.9, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061269', '七零美人二嫁后，随军西北撩硬汉', '一然', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.4, 0.1, 8.6, '连载中', 'women', 0.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061794', '开局送老婆，我成了众仙之父！', '西地那非', '玄幻奇幻', '异世大陆', '新书', '2025-10-01', '2025-12-15 04:20:05', 4, 0.5, 9.2, '连载中', 'male', 4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061800', '重生1985，我靠万物标签赶海发家', '吃不完的荔枝', '都市', '都市生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.4, 0.1, 8.6, '连载中', 'male', 1.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061849', '官府发男人，绝色罪女抬我回家', '凶名赫赫', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 5.2, 0.4, 8.8, '连载中', 'male', 5.2, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2061854', '恐怖时代：从斩诡开始永生不死', '戒律', '都市', '灵气复苏', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.1, 0.1, 8.4, '连载中', 'male', 2.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062320', '随母改嫁换新爹，拖油瓶成了团宠', '萝兹萝丝', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.3, 1.2, 9.5, '连载中', 'women', 4.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062787', '镇世龙王，你说他是废物赘婿？', '小只气球', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.5, 0.1, 8.4, '连载中', 'male', 1.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062788', '穿越大唐：从驿站小卒到帝国巨擘', '亲爱的葡萄', '历史', '穿越历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.7, 0.1, 9.2, '连载中', 'male', 1.7, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062836', '重回七零：跟着小白脸爸进城吃软饭', '巫颜', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.2, 0.6, 9.6, '连载中', 'women', 4.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063237', '怀孕生女他不管，提离婚他崩溃了', '凌淮', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.6, 0.6, 8.8, '连载中', 'women', 0.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063605', '九阴九阳', '仗剑修真', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 28, 17.7, 9.1, '连载中', 'male', 28, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063611', '小蘑菇今天也在吃软饭', '垂耳兔', '古代言情', '古代情缘', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.3, 1.3, 9.8, '连载中', 'women', 4.3, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063933', '网游：进化万物，我成唯一至高神！', '苍月翔', '游戏', '虚拟网游', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.2, 0.3, 9.2, '连载中', 'male', 3.2, 0, 0, 0, 0, 148.2470837515334, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064055', '挺孕肚离婚二嫁财阀，渣前夫悔疯了', '一颗胖梨', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 19.5, 8.5, 9.4, '连载中', 'women', 19.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065349', '每日情报：乱世边军一小兵', '推拿医生', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.4, 0.1, 8.6, '连载中', 'male', 1.4, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065792', '边军老卒，从娶媳妇开始横扫六国！', '齐天小圣', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.1, 0.2, 8.7, '连载中', 'male', 3.1, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065877', '医路情劫', '微微狂笑', '都市', '都市高手', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.8, 0.8, 8.8, '连载中', 'male', 4.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065893', '太监无双', '水山', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.4, 0.6, 9.1, '连载中', 'male', 3.4, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066872', '离婚后，从幼儿园会演开始爆火全网', '烂番薯', '都市', '明星娱乐', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.1, 0.2, 9.2, '连载中', 'male', 4.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2066875', '种田修仙：从随机刷新词条开始', '浪兰飞山', '玄幻奇幻', '异世大陆', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.7, 0.1, 8.6, '连载中', 'male', 1.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067201', '掏空仇家空间流放，亲爹一家悔哭', '景惠', '古代言情', '种田经商', '新书', '2025-10-01', '2025-12-15 04:22:46', 15, 5.8, 9.5, '连载中', 'women', 15, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067310', '问鼎：从选调警员到权力巅峰', '叶少华', '都市', '官场', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.8, 0.5, 9.2, '连载中', 'male', 2.8, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067312', '网游：开局一条龙服务', '黑白相间', '游戏', '虚拟网游', '新书', '2025-10-01', '2025-12-15 04:20:05', 5.1, 0.9, 9.3, '连载中', 'male', 5.1, 0, 0, 0, 0, 148.2470837515334, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067421', '你爱绿茶我让位，再嫁大佬你别跪', '落雪颂梅', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.2, 0.3, 8.4, '连载中', 'women', 2.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2070054', '穿成恶女向导，七个顶级哨兵疯抢！', '贰一陆', '幻想言情', '未来科幻', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.6, 0.4, 9.2, '连载中', 'women', 2.6, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2071753', '全球异能觉醒，我修肉身横推万古', '笔下再生', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.3, 0.4, 9.2, '连载中', 'male', 3.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2072940', '第五年重逢，驰先生再度失控', '锦锦不是妖', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.5, 3.7, 9.9, '连载中', 'women', 0.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2073165', '被他吻时心动', '玛丽苏狗蛋', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.5, 0.4, 9.2, '连载中', 'women', 3.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2073577', '人在废丹房，我以丹药证道成仙！', '伽蓝之梦', '玄幻奇幻', '异世大陆', '新书', '2025-10-01', '2025-12-15 04:20:05', 35.5, 16.4, 9.3, '连载中', 'male', 35.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2073626', '万倍返还！我靠荒野求生养活龙国', '年年有玉', '玄幻奇幻', '异世大陆', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.3, 0.1, 8.4, '连载中', 'male', 1.3, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074077', '开局一辆垃圾车，假千金杀穿末世', '温念君', '幻想言情', '末世求生', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.6, 0.1, 9.2, '连载中', 'women', 0.6, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074179', '混沌吞天诀', '凭虚御风', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.1, 0.3, 9.2, '连载中', 'male', 2.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074326', '萌兽驾到，京圈大佬集体翘班洗奶瓶', '听听不听', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.7, 0.2, 9.2, '连载中', 'women', 0.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074363', '被逼自刎，嫡女重生撕婚书覆皇朝', '柠檬小丸子', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.1, 0.8, 9.2, '连载中', 'women', 3.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074393', '乱世荒年：从打猎开始无限抽奖', '可破', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.2, 0.3, 9.2, '连载中', 'male', 2.2, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074395', '断绝关系？我转身科举成状元！', '天霸', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 2, 0.1, 8.4, '连载中', 'male', 2, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074408', '全星际都想rua元帅的小奶崽', '未礼', '幻想言情', '未来科幻', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.6, 0.2, 8.4, '连载中', 'women', 2.6, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074459', '重生2006，从被白富美包车开始', '隔壁小王本尊', '都市', '都市生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.1, 0.3, 9.2, '连载中', 'male', 2.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074462', '七零孕妻进军营，野痞兵王缠吻不休', '玖甜妹子', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 4.6, 0.9, 9.2, '连载中', 'women', 4.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074544', '年代军工：让你当厂长，你整出了蘑菇蛋', '三鹿天下', '都市', '都市生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.6, 0.4, 9.2, '连载中', 'male', 2.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074547', '请神弼马温，被嘲猴子D级神官？', '黑鱼鱼鱼鱼', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.2, 0.1, 9.2, '连载中', 'male', 2.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2075172', '穿成掌勺丫鬟，我把病秧子喂活了', '水中有鱼', '古代言情', '种田经商', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.8, 0.5, 9.2, '连载中', 'women', 0.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076380', '女子监狱出真龙，出狱后全球震动', '我非良人', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.9, 1, 9.6, '连载中', 'male', 3.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076400', '镇荒印', '李中有梦', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.1, 0.2, 9.2, '连载中', 'male', 2.1, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076478', '狂野都市', '大丙', '都市', '都市生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.6, 0.2, 8.4, '连载中', 'male', 1.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076479', '净身出户后，大佬全部身家求复合', '夜微雨', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.9, 0.1, 8.4, '连载中', 'women', 0.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076498', '一觉醒来三年后，七零长姐凶又甜', '叫我富贵叭', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.4, 0.4, 9.2, '连载中', 'women', 2.4, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076502', '斗罗V：人面魔蛛，多子多福', '龙小君', 'N次元', '衍生同人', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.5, 0.5, 8.8, '连载中', 'male', 4.5, 0, 0, 0, 0, 0, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2076515', '乾元混沌塔', '织花明路', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.9, 0.2, 8.6, '连载中', 'male', 1.9, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2077477', '上界帝子你敢甩，我娶女帝你哭什么？', '墨白', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.4, 0.2, 9.2, '连载中', 'male', 2.4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2078333', '边境反贼：从解救女囚开始', '女帝', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.2, 0.6, 9.2, '连载中', 'male', 3.2, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2078905', '夺我灵泉空间？掏空资产嫁京少爽翻天', '桃乐漫', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.1, 1.3, 9.2, '连载中', 'women', 1.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2079417', '经常杀人的朋友', '魂燚', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.6, 0.7, 9.2, '连载中', 'male', 3.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('208897', '极品天师', '月下冰河', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 34.7, 1.4, 9.2, '已完结', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('210772', '都市之最强仙医', '夫子', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 534.5, 1.5, 9, '已完结', 'male', 534.5, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213108', '都市全能医圣', '玖月天', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 181.7, 1.4, 9.1, '已完结', 'male', 181.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213189', '混沌剑帝', '运也', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 905.8, 6, 9.1, '已完结', 'male', 905.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213502', '小皇叔腹黑又难缠', '一碧榶榶', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 2, 9.6, '已完结', 'women', 0.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213692', '武帝归来', '修果', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 948, 1.8, 9.1, '已完结', 'male', 948, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('213853', '极品小相师', '大丙', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 185, 1.8, 9.3, '已完结', 'male', 185, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('214147', '阴阳诡匠', '洛小阳', '奇闻异事', '奇门秘术', '完结', '2025-10-01', '2025-12-15 04:20:05', 259.2, 1.9, 9.6, '已完结', 'male', 259.2, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('214514', '活人阴差', '末日诗人', '奇闻异事', '恐怖灵异', '完结', '2025-10-01', '2025-12-15 04:20:05', 546.1, 2.1, 9.1, '已完结', 'male', 546.1, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('215264', '都市战狼', '荆南', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 415.2, 1.8, 9.2, '已完结', 'male', 415.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('215476', '学霸女王马甲多', '灰夫人', '现代言情', '总裁豪门', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.8, 2.2, 9.8, '已完结', 'women', 0.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('215874', '吞天造化经', '鬼疯子', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 757.7, 2.6, 9.1, '已完结', 'male', 757.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('216054', '极品小道长', '任公独钓', '奇闻异事', '奇门秘术', '完结', '2025-10-01', '2025-12-15 04:20:05', 124.4, 0.8, 9.3, '已完结', 'male', 124.4, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('217267', '民间诡闻实录之阴阳先生', '罗樵森', '奇闻异事', '奇门秘术', '完结', '2025-10-01', '2025-12-15 04:20:05', 428.5, 1.3, 9.5, '已完结', 'male', 428.5, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('217770', '全师门就我一个废柴', '白木木', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 1, 7.9, 9.8, '已完结', 'women', 1, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('219040', '极道剑尊', '二十七杯酒', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 872.4, 16, 9.2, '连载中', 'male', 872.4, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('219310', '全世界都玩异能只有我修仙', '缘起云涌', 'N次元', '原生幻想', '完结', '2025-10-01', '2025-12-15 04:20:05', 126.1, 1.4, 9.2, '已完结', 'male', 126.1, 0, 0, 0, 0, 0, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('219498', '君夫人的马甲层出不穷', '荷衣', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 1.2, 5.1, 9.7, '已完结', 'women', 1.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('221137', '网游之全服公敌', '黑白相间', '游戏', '虚拟网游', '完结', '2025-10-01', '2025-12-15 04:20:05', 715.9, 1.8, 9.3, '已完结', 'male', 715.9, 0, 0, 0, 0, 148.2470837515334, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1655967', '吞噬九重天', '屠刀成佛', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 360.3, 20.8, 9.1, '连载中', 'male', 360.3, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1658048', '六年后，我携四个幼崽炸翻前夫家', '相思一顾', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 30.1, 9.6, '连载中', 'women', 34.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1669371', '吞天神帝', '小三叔', '玄幻奇幻', '东方玄幻', '完结', '2025-10-01', '2025-12-15 04:20:05', 106.5, 1.5, 9, '已完结', 'male', 106.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1694124', '女总裁的贴身龙帅', '枯木封雨', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 50.1, 1, 9, '已完结', 'male', 50.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1710753', '舔狗反派只想苟，女主不按套路走！', '我是愤怒', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 32.9, 9.5, '连载中', 'male', 34.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1780393', '蛇骨阴香', '北派无尽夏', '现代言情', '现代悬疑', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.3, 1.7, 9.6, '已完结', 'women', 0.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1807804', '重启2008：从拯救绝色女老师开始逆袭', '封尘往昔', '都市', '商战职场', '完结', '2025-10-01', '2025-12-15 04:20:05', 384.9, 1, 9, '已完结', 'male', 384.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1836527', '凰宫梦', '蓝九九', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 938.4, 38.2, 9.7, '连载中', 'women', 938.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1837399', '圣手大医仙', '带刺的毛球', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 30.7, 1.1, 8.9, '已完结', 'male', 30.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1839533', '锦帐春深', '温流', '古代言情', '宫闱宅斗', '大热', '2025-10-01', '2025-12-15 04:22:46', 494.9, 5.9, 9.7, '已完结', 'women', 494.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1850580', '我非池中物', '夜泊秦淮', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 115, 8.4, 9.1, '连载中', 'male', 115, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1851542', '麒麟出世，师父让我下山去结婚', '御龙', '都市', '都市高手', '完结', '2025-10-01', '2025-12-15 04:20:05', 85, 3.4, 9, '已完结', 'male', 85, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1864909', '将军活不过仨月，换亲后我旺他百年', '不知绿', '古代言情', '古代情缘', '大热', '2025-10-01', '2025-12-15 04:22:46', 138.1, 4.9, 9.6, '已完结', 'women', 138.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1868453', '噬神鼎', '三千晴空', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 235.5, 4.8, 8.9, '连载中', 'male', 235.5, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1873716', '换嫁给绝嗣太子后我连生三胎', '昔也', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 2.5, 9.5, '已完结', 'women', 0.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1873810', '换婚病危世子，她一胎三宝赢麻了', '雨过阳光', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.6, 2.5, 9.6, '已完结', 'women', 0.6, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1880008', '吞天神体：从仙女奉献开始无敌', '南云月', '玄幻奇幻', '东方玄幻', '大热', '2025-10-01', '2025-12-15 04:20:05', 70.8, 15.8, 9.2, '连载中', 'male', 70.8, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1887846', '七零美人到西北，硬汉红温了', '棠元', '现代言情', '年代重生', '大热', '2025-10-01', '2025-12-15 04:22:46', 236, 5.1, 9.7, '已完结', 'women', 236, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1924828', '还不起人情债，我只好当她男朋友了', '无色', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 145.7, 4.6, 9, '连载中', 'male', 145.7, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1927415', '离婚三天：我冷淡至极，他索吻成瘾', '风羽轻轻', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 224.5, 13.5, 9.5, '连载中', 'women', 224.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1946720', '1977，开局女知青以身相许', '家有十猫', '都市', '都市生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 185.2, 13.9, 9, '连载中', 'male', 185.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1948430', '重生60：从深山打猎开始致富', 'KITTT', '都市', '乡村生活', '大热', '2025-10-01', '2025-12-15 04:20:05', 80.9, 4.2, 9.3, '连载中', 'male', 80.9, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1956587', '五岁萌妃炸京城，我阿娘是侯府真千金', '幻想鱼', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.9, 2, 9.6, '已完结', 'women', 0.9, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1965109', '守寡重生，送断袖夫君下黄泉', '指尖上的行走', '古代言情', '宫闱宅斗', '完结', '2025-10-01', '2025-12-15 04:22:46', 0.7, 4.1, 9.7, '已完结', 'women', 0.7, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('197091', '民间诡闻实录', '罗樵森', '奇闻异事', '奇门秘术', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 8.4, 9.6, '已完结', 'male', 34.7, 0, 0, 0, 0, 104.60105552037155, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1977771', '傅总，夫人不想当首富太太了', '蓝尧', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 187.6, 15.7, 9.4, '连载中', 'women', 187.6, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1978758', '小姑奶奶下山了，在桥洞底下摆摊算命', '骑着猫的小鱼干', '现代言情', '都市奇幻', '大热', '2025-10-01', '2025-12-15 04:22:46', 1.1, 11.4, 9.7, '连载中', 'women', 1.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1981956', '柔弱医修今天也在背地里暴打魔尊', '白木木', '幻想言情', '玄幻仙侠', '大热', '2025-10-01', '2025-12-15 04:22:46', 263.9, 16.9, 9.8, '连载中', 'women', 263.9, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982356', '渣夫别跪了，夫人嫁顶级大佬啦', '乐恩', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 704.5, 47.5, 9.2, '连载中', 'women', 704.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1982967', '厉总，太太在外面有两个私生子', '十里山河', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 94.7, 2.4, 9.1, '已完结', 'women', 94.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1994507', '权力争锋', '东流无歇', '都市', '官场', '大热', '2025-10-01', '2025-12-15 04:20:05', 37, 5, 9.1, '连载中', 'male', 37, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('1995023', '边关兵王', '青岳', '历史', '架空历史', '大热', '2025-10-01', '2025-12-15 04:20:05', 347.1, 41.6, 9.4, '连载中', 'male', 347.1, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2011930', '末世别人砍丧尸，我在房车炫美食', '槿花篱', '幻想言情', '末世求生', '大热', '2025-10-01', '2025-12-15 04:22:46', 41.7, 3.1, 9.7, '连载中', 'women', 41.7, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2016384', '冷婚五年，离婚夜他却失控了', '温见鹿', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.9, 1.2, 9, '连载中', 'women', 0.9, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2024797', '七零资本娇小姐，下放后硬汉宠上天', '梅才华', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 7.8, 0.3, 8.8, '连载中', 'women', 7.8, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2027484', '领证爽约？我转嫁你哥哭什么', '欧橙', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 126.2, 10.4, 9.2, '连载中', 'women', 126.2, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2028796', '陛下管管吧，六皇子又发疯了！', '追风boy', '历史', '架空历史', '完结', '2025-10-01', '2025-12-15 04:20:05', 14.2, 0.8, 9, '已完结', 'male', 14.2, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2029029', '离婚后，我权势滔天，你哭什么', '水门绅士', '都市', '都市高手', '大热', '2025-10-01', '2025-12-15 04:20:05', 181.6, 18.2, 8.9, '连载中', 'male', 181.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2047215', '皇后谁爱当谁当，我嫁权臣横着走', '素手摘星', '古代言情', '权谋天下', '新书', '2025-10-01', '2025-12-15 04:22:46', 8.1, 3.4, 9.5, '连载中', 'women', 8.1, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2052831', '长生从助仙子修行开始', '勿问', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 3, 0.3, 8.6, '连载中', 'male', 3, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2053789', '权力沉浮', '空中鹰', '都市', '官场', '新书', '2025-10-01', '2025-12-15 04:20:05', 6.1, 1, 8.8, '连载中', 'male', 6.1, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2055000', '快穿好孕美人，绝嗣反派黑化了', '虞忧', '幻想言情', '无限快穿', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.4, 0.2, 8.4, '连载中', 'women', 3.4, 0, 0, 0, 0, 45.70385206034494, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2055374', '七零美人要离婚，冷面军少他急了', '钱小二', '现代言情', '年代重生', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.8, 10.7, 9.5, '连载中', 'women', 28.6, -27.8, -97.2027972027972, 0, -27.8, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2057569', '领主：我招募的士兵怎么都是玩家', '禅心道骨', '玄幻奇幻', '异世大陆', '新书', '2025-10-01', '2025-12-15 04:20:05', 9.7, 2.9, 9.5, '连载中', 'male', 9.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2057884', '神级捡漏王：无良校花逼我去扯证', '李卯卯', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 5.3, 0.7, 8.9, '连载中', 'male', 5.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2062363', '离婚后，我转嫁大佬你哭什么？', '舒子曦', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.5, 0.1, 8.6, '连载中', 'women', 0.5, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063290', '让我做外室？我另嫁你哭什么', '皎皎朗月', '古代言情', '古代情缘', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.4, 0.3, 9.2, '连载中', 'women', 2.4, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2063306', '重返二十岁心动，他才是白月光', '浮景', '现代言情', '青春校园', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.1, 0.1, 9.2, '连载中', 'women', 1.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064747', '都市狠人', '北冥鱼', '都市', '商战职场', '新书', '2025-10-01', '2025-12-15 04:20:05', 5.6, 1.9, 9.1, '连载中', 'male', 5.6, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2064966', '成全他和青梅后，我却成了白月光', '墨墨卿卿', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 36.1, 17.2, 9.6, '连载中', 'women', 36.1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065274', '英雄本色', '疯十八', '都市', '商战职场', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.4, 0.1, 8.6, '连载中', 'male', 1.4, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065353', '只剩七天寿命？先休渣夫再杀全家', '南山野', '古代言情', '宫闱宅斗', '新书', '2025-10-01', '2025-12-15 04:22:46', 0.8, 0.3, 9.2, '连载中', 'women', 0.8, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065807', '重生下乡：我才不当冤大头！', '清蒸大白蛆', '都市', '乡村生活', '新书', '2025-10-01', '2025-12-15 04:20:05', 13.2, 2.7, 8.9, '连载中', 'male', 13.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065879', '一天暴涨一年修为，你说你后悔了？', '小陈little', '都市', '都市高武', '新书', '2025-10-01', '2025-12-15 04:20:05', 4.2, 0.3, 9.2, '连载中', 'male', 4.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2065896', '重生孕肚藏福宝，灾年养崽掀族祠', '瑞侈', '古代言情', '种田经商', '新书', '2025-10-01', '2025-12-15 04:22:46', 3.5, 0.5, 9.2, '连载中', 'women', 3.5, 0, 0, 0, 0, 73.37790904154299, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067244', '开局杀敌爆属性，我功力滔天', '潇湘烨雨', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 2.7, 0.3, 9.2, '连载中', 'male', 2.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067317', '夫人拒不原谅，高冷渣夫失控了', '严以妃', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 2.3, 0.5, 9.2, '连载中', 'women', 2.3, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2067319', '闪婚后，老公竟是我大学教授', '多多美', '现代言情', '职场情缘', '新书', '2025-10-01', '2025-12-15 04:22:46', 1, 0.3, 8.4, '连载中', 'women', 1, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074368', '职路扶摇', '桑迪', '都市', '商战职场', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.3, 0.1, 8.4, '连载中', 'male', 1.3, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2074390', '错虐白月光，祁总跪地求复合', '鹿景景', '现代言情', '总裁豪门', '新书', '2025-10-01', '2025-12-15 04:22:46', 1.7, 0.1, 9.2, '连载中', 'women', 1.7, 0, 0, 0, 0, 59.57179382757553, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2075201', '魔道神豪携亿万魔晶，在两界杀疯了', '风九元', '玄幻奇幻', '东方玄幻', '新书', '2025-10-01', '2025-12-15 04:20:05', 1.7, 0.3, 9.2, '连载中', 'male', 1.7, 0, 0, 0, 0, 482.7784140502575, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('2077743', '灾荒年捡回姐妹花，我粮肉满仓！', '小小月月落落', '历史', '架空历史', '新书', '2025-10-01', '2025-12-15 04:20:05', 3.1, 0.5, 9.2, '连载中', 'male', 3.1, 0, 0, 0, 0, 136.1821124917748, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '科幻', '末世危机', '大热', '2025-10-01', '2025-12-15 04:20:05', 34.7, 9, 9, '已完结', 'male', 34.7, 0, 0, 0, 0, 83.20754716981132, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('222157', '我有神级收益系统', '不是蚊子', '都市', '都市高武', '完结', '2025-10-01', '2025-12-15 04:20:05', 921.2, 2.8, 9.2, '已完结', 'male', 921.2, 0, 0, 0, 0, 187.43677521162405, 1, 0, 0, '冷门');
+INSERT INTO `ads_platform_heat` VALUES ('222767', '离婚后她惊艳了世界', '明婳', '现代言情', '总裁豪门', '大热', '2025-10-01', '2025-12-15 04:22:46', 34.7, 100, 9.6, '连载中', 'women', 0.5, 34.2, 6840.000000000001, 0, 34.2, 59.57179382757553, 1, 1, 1, '冷门');
+
+-- ----------------------------
+-- Table structure for ads_platform_ranking_trend
+-- ----------------------------
+DROP TABLE IF EXISTS `ads_platform_ranking_trend`;
+CREATE TABLE `ads_platform_ranking_trend`  (
+  `book_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `author` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `rank_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `rank_date` date NULL DEFAULT NULL,
+  `numeric_popularity` double NULL DEFAULT NULL,
+  `numeric_read_count` double NULL DEFAULT NULL,
+  `numeric_score` double NULL DEFAULT NULL,
+  `status` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `gender_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `prev_read_count` double NULL DEFAULT NULL,
+  `read_count_growth` double NULL DEFAULT NULL,
+  `read_count_growth_rate` double NULL DEFAULT NULL,
+  `ranking_conversion_rate` double NULL DEFAULT NULL,
+  `is_unworthy` int NULL DEFAULT NULL,
+  `is_high_conversion` int NULL DEFAULT NULL,
+  `recommend_weight` double NULL DEFAULT NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ads_platform_ranking_trend
+-- ----------------------------
+INSERT INTO `ads_platform_ranking_trend` VALUES ('149769', '九阳武神', '我吃面包', '大热', '玄幻奇幻', '2025-10-01', 34.7, 16.2, 9.1, '连载中', 'male', 16.2, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('152973', '最强学霸系统', '佛系和尚', '完结', '都市', '2025-10-01', 34.7, 1.7, 9.5, '已完结', 'male', 1.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1651341', '盖世圣医', '林阳', '完结', '都市', '2025-10-01', 268.4, 0.9, 9.1, '已完结', 'male', 0.9, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1654596', '退婚后被权爷宠上天', '一川风月', '大热', '现代言情', '2025-10-01', 379.2, 5.4, 9.7, '已完结', 'women', 5.4, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1658839', '穿成孩子妈，奋斗成赢家', '冉阿冉', '完结', '现代言情', '2025-10-01', 1.1, 1.4, 9.5, '已完结', 'women', 1.4, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1669963', '大景巡夜人', '藕池猫咪', '完结', '古代言情', '2025-10-01', 1.2, 1.8, 9.8, '已完结', 'women', 1.8, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1675640', '镇天神医', '五杯咖啡', '大热', '都市', '2025-10-01', 355.8, 12.3, 9.2, '连载中', 'male', 12.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1678025', '九皇叔的神医毒妃', '柠檬小丸子', '完结', '古代言情', '2025-10-01', 1, 3.4, 9.5, '已完结', 'women', 3.4, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1683831', '重生八零嫁给全军第一硬汉', '九羊猪猪', '大热', '现代言情', '2025-10-01', 374, 5.6, 9.5, '连载中', 'women', 5.6, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1684297', '规则怪谈，欢迎来到甜蜜的家', '弦泠兮', '完结', '幻想言情', '2025-10-01', 0.7, 2.9, 9.8, '已完结', 'women', 2.9, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1697498', '末世天灾，抢艘航母当基地', '封卷残云', '完结', '科幻', '2025-10-01', 460.3, 1.2, 8.8, '已完结', 'male', 1.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1697715', '被关女子监狱三年，我修炼成仙了', '一只狸猫', '大热', '都市', '2025-10-01', 183.1, 7.9, 9, '连载中', 'male', 7.9, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1699328', '大佬归来，假千金她不装了', '骑着猫的小鱼干', '大热', '现代言情', '2025-10-01', 34.7, 52.7, 9.7, '已完结', 'women', 52.7, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1709320', '徒儿，饶了五位绝美师父吧', '不渊', '完结', '都市', '2025-10-01', 207.1, 2.1, 9.1, '已完结', 'male', 2.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1711646', '阎王下山', '苍月夜', '大热', '都市', '2025-10-01', 34.7, 24, 8.9, '连载中', 'male', 24, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1719564', '重生七零再高嫁', '星月相随', '大热', '现代言情', '2025-10-01', 935.9, 8.5, 9.7, '已完结', 'women', 8.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1723049', '天门神医', '小楼听雨本尊', '大热', '都市', '2025-10-01', 274.4, 5.9, 9.2, '连载中', 'male', 5.9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1723450', '被王爷赐死，医妃潇洒转身嫁皇叔', '金银满屋', '完结', '古代言情', '2025-10-01', 0.6, 3.8, 9.5, '已完结', 'women', 3.8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1724453', '妙手大仙医', '金佛', '大热', '都市', '2025-10-01', 686.1, 18, 9.2, '连载中', 'male', 18, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1725180', '我废柴真千金，会亿点玄学怎么了', '甜幽幽', '完结', '现代言情', '2025-10-01', 0.8, 2.4, 9.7, '已完结', 'women', 2.4, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1726987', '大佬十代单传，我为他一胎生四宝', '白生米', '大热', '现代言情', '2025-10-01', 637.9, 41.2, 9.4, '连载中', 'women', 41.2, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1729484', '凡尘飞仙', '齐甲', '大热', '玄幻奇幻', '2025-10-01', 345.1, 11.4, 9.3, '连载中', 'male', 11.4, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1730259', '踏神界逆九州：废物七小姐权倾天下', '苏音', '完结', '幻想言情', '2025-10-01', 0.3, 2.1, 9.7, '已完结', 'women', 2.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1737869', '重生七零，搬空敌人仓库去下乡', '六月无花', '完结', '现代言情', '2025-10-01', 1, 1.7, 9.6, '已完结', 'women', 1.7, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1738575', '直播算命太准，全网蹲守吃瓜', '荷衣', '大热', '现代言情', '2025-10-01', 551.1, 5.9, 9.7, '已完结', 'women', 5.9, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1741639', '九零军媳：兵王老公不见面', '香辣小螃蟹', '完结', '现代言情', '2025-10-01', 0.4, 1.8, 9.7, '已完结', 'women', 1.8, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1747899', '无敌六皇子', '梁山老鬼', '大热', '历史', '2025-10-01', 34.7, 39.3, 9.3, '已完结', 'male', 39.3, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1754203', '玲珑塔', '一丝凉意', '大热', '玄幻奇幻', '2025-10-01', 268.4, 8.9, 9.3, '连载中', 'male', 8.9, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1758119', '重生八零，闪婚柔情铁血硬汉', '风四爷', '完结', '现代言情', '2025-10-01', 1.1, 1.2, 9.7, '已完结', 'women', 1.2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1758273', '重生2000：从追求青涩校花同桌开始', '痞子老妖', '大热', '都市', '2025-10-01', 34.7, 19.4, 9.3, '连载中', 'male', 19.4, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1759358', '出狱后，我闪婚了植物人大佬', '柠七七', '大热', '现代言情', '2025-10-01', 293.6, 7.9, 9.4, '已完结', 'women', 7.9, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1759390', '分手后，捡到一只吸血鬼美少女', '黄泉隼', '完结', 'N次元', '2025-10-01', 318.8, 1.5, 9.5, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1761352', '易孕体质，七零长嫂凶又甜', '方赢', '完结', '现代言情', '2025-10-01', 0.4, 2.1, 9.7, '已完结', 'women', 2.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1766962', '苟到炼气10000层，飞升回地球', '拂衣惊雪', '完结', '都市', '2025-10-01', 219.7, 1.1, 8.5, '已完结', 'male', 1.1, 0, 0, 0, 0, 0, 0.425);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1767349', '父皇偷听我心声杀疯了，我负责吃奶', '安已然', '完结', '古代言情', '2025-10-01', 1, 2.7, 9.6, '已完结', 'women', 2.7, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1767940', '混沌塔', '惊蛰落月', '大热', '玄幻奇幻', '2025-10-01', 582.4, 32.2, 9.2, '连载中', 'male', 32.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1771379', '大佬绝嗣！我一夜怀上他两个崽', '相思一顾', '大热', '现代言情', '2025-10-01', 295.1, 4.6, 9.5, '已完结', 'women', 4.6, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1772694', '神尊强宠，废物小姐竟是绝世女帝', '动物园在逃小熊猫', '完结', '幻想言情', '2025-10-01', 0.5, 3.1, 9.6, '已完结', 'women', 3.1, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1777995', '将军她是引渡人', '指尖上的行走', '完结', '古代言情', '2025-10-01', 1, 2.2, 9.8, '已完结', 'women', 2.2, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1780785', '吞天混沌经：开局先吞圣女修为', '一阵乱写', '大热', '玄幻奇幻', '2025-10-01', 255.6, 6.9, 9.1, '连载中', 'male', 6.9, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1781303', '穿书反派：开局挖掉女主至尊骨', '晚风起', '完结', '玄幻奇幻', '2025-10-01', 144.4, 2, 8.7, '已完结', 'male', 2, 0, 0, 0, 0, 0, 0.43499999999999994);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1781450', '无限流：在惊悚世界当万人迷', '白日宴火', '完结', '幻想言情', '2025-10-01', 0.4, 3.3, 9.9, '已完结', 'women', 3.3, 0, 0, 0, 0, 0, 0.495);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1802708', '神算真千金，全豪门跪下喊祖宗', '一只肉九', '完结', '现代言情', '2025-10-01', 0.5, 2.4, 9.5, '已完结', 'women', 2.4, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1805751', '开局被女土匪看中，我占山为王', '键盘起灰', '完结', '历史', '2025-10-01', 166.1, 1.7, 9.3, '已完结', 'male', 1.7, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1806041', '巅峰青云路', '登封造极', '大热', '都市', '2025-10-01', 180.3, 31, 9.2, '连载中', 'male', 31, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1807740', '末世前中彩票，我囤上亿物资躺赢', '诺禾', '完结', '幻想言情', '2025-10-01', 1, 1.7, 9.6, '已完结', 'women', 1.7, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1810234', '从女子监狱走出的修仙者', '河图大妖', '大热', '都市', '2025-10-01', 188, 5.2, 9, '连载中', 'male', 5.2, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1810593', '嫁权臣', '有香如故', '完结', '古代言情', '2025-10-01', 0.3, 2.2, 9.7, '已完结', 'women', 2.2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1812053', '警报！龙国出现SSS级修仙者！', '紫枫', '大热', '都市', '2025-10-01', 365.4, 6.7, 9.2, '连载中', 'male', 6.7, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1817221', '史上最强师父', '炒方便面', '大热', '玄幻奇幻', '2025-10-01', 976.5, 25.7, 9.2, '连载中', 'male', 25.7, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1824987', '凤归', '扶苏公子', '完结', '古代言情', '2025-10-01', 0.7, 1.8, 9.4, '已完结', 'women', 1.8, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1828483', '乾坤塔', '新闻工作者', '完结', '玄幻奇幻', '2025-10-01', 306.5, 4.2, 8.9, '已完结', 'male', 4.2, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1834789', '警报！真龙出狱！', '红透半边天', '大热', '都市', '2025-10-01', 819.6, 71.1, 9.2, '连载中', 'male', 71.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1846315', '小雌性是万人迷，养了一窝毛绒绒', '一个刚正不阿的女人', '完结', '幻想言情', '2025-10-01', 0.9, 3.2, 9.8, '已完结', 'women', 3.2, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1851521', '魔女校花从无绯闻，直到遇上了我', '铲子王', '完结', '都市', '2025-10-01', 175.8, 1.6, 9.3, '已完结', 'male', 1.6, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1860026', '世子无双', '宁峥', '大热', '历史', '2025-10-01', 909.8, 16, 9.2, '连载中', 'male', 16, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1861632', '我有一家纸扎铺', '花萝吱吱', '完结', '现代言情', '2025-10-01', 0.4, 2.9, 9.7, '已完结', 'women', 2.9, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1863508', '重生1994，逃婚海钓赢麻了！', '林溪', '大热', '现代言情', '2025-10-01', 99.5, 7.5, 9.7, '连载中', 'women', 7.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1867208', '真福宝挥手粮满仓，全家悔断肠', '朵瑞米发娑', '完结', '古代言情', '2025-10-01', 1, 1.2, 9.3, '已完结', 'women', 1.2, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1870433', '冻死风雪夜，重生真嫡女虐翻全家', '一颗胖梨', '大热', '古代言情', '2025-10-01', 588.1, 15.7, 9.5, '已完结', 'women', 15.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1870439', '空间通末世：我囤亿万物资养兵王', '小桃花', '完结', '幻想言情', '2025-10-01', 0.3, 1.6, 9.6, '已完结', 'women', 1.6, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1871052', '为奴十年', '探花大人', '大热', '古代言情', '2025-10-01', 92.6, 2.5, 9.7, '已完结', 'women', 2.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1871612', '爹爹开门，系窝呀！', '垂耳兔', '大热', '古代言情', '2025-10-01', 236.2, 5.3, 9.8, '已完结', 'women', 5.3, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1872576', '我来自上界帝族，成婚当天媳妇跟人跑', '社恐啊社恐', '完结', '玄幻奇幻', '2025-10-01', 236.5, 1.2, 8.8, '已完结', 'male', 1.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1879266', '封总，太太想跟你离婚很久了', '云中觅', '大热', '现代言情', '2025-10-01', 34.7, 154.6, 9.2, '连载中', 'women', 154.6, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1880127', '出生被活埋，萌宝回京杀疯了', '固夏', '完结', '古代言情', '2025-10-01', 0.3, 3.7, 9.6, '已完结', 'women', 3.7, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1885468', '我医武双绝，体内还有一条龙', '月辰', '大热', '都市', '2025-10-01', 84.6, 5, 9, '连载中', 'male', 5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1888573', '女富婆的超级神医', '狼性佛心', '完结', '都市', '2025-10-01', 64.7, 2, 9.1, '已完结', 'male', 2, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1888581', '葬仙棺', '执笔人', '大热', '玄幻奇幻', '2025-10-01', 321.4, 15.4, 9.1, '连载中', 'male', 15.4, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1889690', '暗恋她的第十一年', '有香如故', '大热', '现代言情', '2025-10-01', 748.6, 12, 9.8, '已完结', 'women', 12, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1891461', '主播万人迷，榜一大哥争着宠', '熊就要有个熊样', '大热', '现代言情', '2025-10-01', 675.1, 7.7, 9.9, '已完结', 'women', 7.7, 0, 0, 0, 0, 0, 0.495);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1916703', '宁嫁牌位不当妾，国公府我说了算', '林拾酒', '完结', '古代言情', '2025-10-01', 0.9, 2.8, 9.5, '已完结', 'women', 2.8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1924831', '有帝族背景还开挂，我无敌了！', '不太勇敢', '大热', '玄幻奇幻', '2025-10-01', 385.8, 15.8, 9.1, '连载中', 'male', 15.8, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1941553', '我的峥嵘岁月', '牛不易', '大热', '都市', '2025-10-01', 80.7, 5.5, 9.2, '连载中', 'male', 5.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1945519', '马甲藏不住，假千金炸翻全京圈', '程不言', '大热', '现代言情', '2025-10-01', 462.4, 6.7, 9.8, '已完结', 'women', 6.7, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1946350', '玄幻：长生神子，证道何须退婚挖骨！', '王二的刀', '完结', '玄幻奇幻', '2025-10-01', 137.3, 1.8, 9.2, '已完结', 'male', 1.8, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1948025', '夺妻', '将满', '大热', '现代言情', '2025-10-01', 321.2, 3.7, 9.5, '已完结', 'women', 3.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1948198', '半熟', '槿郗', '大热', '现代言情', '2025-10-01', 88.9, 8.5, 9.5, '连载中', 'women', 8.5, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1950540', '傅律师，太太说她不回头了', '荣荣子铱', '大热', '现代言情', '2025-10-01', 118.5, 6.3, 9.4, '连载中', 'women', 6.3, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1952077', '一胎又一胎，说好的禁欲指挥官呢？', '望南云慢', '大热', '现代言情', '2025-10-01', 457.9, 34.7, 9.5, '连载中', 'women', 34.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1954700', '媚君榻', '随山月', '完结', '古代言情', '2025-10-01', 0.7, 5.2, 9.7, '已完结', 'women', 5.2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1956592', '一天一造化，苟在仙武成道祖', '日落倾河', '完结', '玄幻奇幻', '2025-10-01', 52.6, 0.9, 8.8, '已完结', 'male', 0.9, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1956833', '我就上山打个猎，你让我逐鹿中原？', '张正经', '大热', '历史', '2025-10-01', 173.8, 4.2, 9.2, '连载中', 'male', 4.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('195958', '盖世神医', '狐颜乱语', '大热', '都市', '2025-10-01', 34.7, 139.9, 9.3, '连载中', 'male', 139.9, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1961152', '太阳神体：从为仙女解毒开始无敌！', '有木', '大热', '玄幻奇幻', '2025-10-01', 82, 4, 9.1, '连载中', 'male', 4, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1963728', '玄黄鼎', '不做梵高', '大热', '玄幻奇幻', '2025-10-01', 259.1, 17.1, 9, '连载中', 'male', 17.1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1963904', '他说不爱，婚后却沦陷了', '如鱼', '大热', '现代言情', '2025-10-01', 319.5, 34.8, 9.5, '连载中', 'women', 34.8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1964672', '顾总，你前妻在科研界杀疯了！', '席宝贝', '大热', '现代言情', '2025-10-01', 220.5, 32.5, 9.5, '连载中', 'women', 32.5, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1965987', '被贬边疆，成就最强藩王', '绯雨', '大热', '历史', '2025-10-01', 171.5, 12.1, 9, '连载中', 'male', 12.1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1968456', '断绝关系后，觉醒SSS级天赋百分百爆率', '赛博说书人', '完结', '都市', '2025-10-01', 47.4, 2, 9, '已完结', 'male', 2, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '大热', '都市', '2025-10-01', 206.8, 6.7, 9.2, '已完结', 'male', 6.7, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '完结', '都市', '2023-11-01', 206.8, 6.7, 9.2, '已完结', 'male', 6.7, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1970603', '星际兽世：万人迷小人类深陷修罗场', '含冬小鱼', '新书', '幻想言情', '2025-10-01', 0.3, 0.5, 9.6, '连载中', 'women', 0.5, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1970645', '神级刺客，我有一支动物杀手队', '九把火', '大热', '玄幻奇幻', '2025-10-01', 107.8, 3.5, 9.3, '连载中', 'male', 3.5, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1975889', '懂兽语穿六零，家属院里我最行', '情丝入你心', '完结', '现代言情', '2025-10-01', 0.8, 4.2, 9.7, '已完结', 'women', 4.2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1976002', '续弦小夫人', '江摇舟', '大热', '古代言情', '2025-10-01', 421.4, 19.5, 9.7, '已完结', 'women', 19.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1978709', '惨死生子夜，重生嫡女屠尽侯府', '南酥青子', '大热', '古代言情', '2025-10-01', 1.1, 7.6, 9.3, '连载中', 'women', 7.6, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1978748', '重生61，我带了一座军火库', '小白兔吃萝卜', '大热', '都市', '2025-10-01', 171, 11.1, 9.1, '连载中', 'male', 11.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1978753', '权臣兼祧两房？郡主重生不嫁了', '景惠', '完结', '古代言情', '2025-10-01', 1.1, 1.5, 9.6, '已完结', 'women', 1.5, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1979319', '邢教练，别太野', '七个菜包', '完结', '现代言情', '2025-10-01', 1.2, 5.4, 9.7, '已完结', 'women', 5.4, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1979346', '去父留子后才知，前夫爱的人竟是我', '乐希', '大热', '现代言情', '2025-10-01', 144, 20.8, 9.2, '连载中', 'women', 20.8, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1979356', '阴当', '北派无尽夏', '大热', '现代言情', '2025-10-01', 205.6, 21.3, 9.8, '连载中', 'women', 21.3, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1980267', '陆总别作，太太她不要你了', '是空空呀', '大热', '现代言情', '2025-10-01', 0.3, 8.9, 9.4, '连载中', 'women', 8.9, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982358', '天黑请点灯', '罗樵森', '大热', '奇闻异事', '2025-10-01', 157.9, 7, 9.4, '连载中', 'male', 7, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982360', '步步登阶', '江湖如梦', '大热', '都市', '2025-10-01', 377.3, 47.2, 9.2, '连载中', 'male', 47.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982723', '无敌逍遥侯', '沧海种树', '大热', '历史', '2025-10-01', 132.5, 33.3, 9.1, '连载中', 'male', 33.3, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1983530', '厂长收手吧！国家真的压不住了！', '正义反派', '大热', '都市', '2025-10-01', 102.3, 9.3, 9.3, '连载中', 'male', 9.3, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1984430', '网游：开局刮刮乐，觉醒唯一SSS天赋', '亦晨', '大热', '游戏', '2025-10-01', 183, 9.6, 9, '连载中', 'male', 9.6, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1984439', '炼仙鼎', '在下不求人', '大热', '玄幻奇幻', '2025-10-01', 58.7, 7.3, 9.2, '连载中', 'male', 7.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1985055', '摆摊开饭馆，她惊动全京城', '幸运团团', '大热', '古代言情', '2025-10-01', 61.4, 5.8, 9.8, '连载中', 'women', 5.8, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1989239', '财戒', '嚣张农民', '大热', '都市', '2025-10-01', 238.5, 12, 9.1, '连载中', 'male', 12, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1989600', '掌天图', '四眼秀才', '大热', '玄幻奇幻', '2025-10-01', 325.8, 27, 9.1, '连载中', 'male', 27, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1989835', '刚入截教，听到截教气运在抱怨', '超爱吃甜粽子', '完结', '武侠仙侠', '2025-10-01', 74.9, 1.3, 9.2, '已完结', 'male', 1.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1992339', '重回七零，搬空养父母家库房下乡了', '暖以沐', '大热', '现代言情', '2025-10-01', 93.8, 5.6, 9.5, '连载中', 'women', 5.6, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1992776', '我叫二狗，一条会咬人的狗！', '半解不解', '完结', '都市', '2025-10-01', 32.9, 1.3, 9.1, '已完结', 'male', 1.3, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1994117', '婚后上瘾', '卢平凡', '大热', '现代言情', '2025-10-01', 715.2, 65.4, 9.6, '连载中', 'women', 65.4, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1996523', '全队笑我是傻子，我反手娶了俏知青！', '红色小晶体', '完结', '都市', '2025-10-01', 44.4, 0.8, 8.8, '已完结', 'male', 0.8, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1996931', '不务正夜', '谈栖', '大热', '现代言情', '2025-10-01', 114.8, 7.6, 9.3, '连载中', 'women', 7.6, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1996973', '赌石，我的龙瞳能鉴定一切！', '一梅独秀', '完结', '都市', '2025-10-01', 32.5, 3, 9, '已完结', 'male', 3, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2002910', '嫁太监？踏破鬼门女帝凤临天下', '狐狸九', '大热', '古代言情', '2025-10-01', 118.8, 26, 9.6, '连载中', 'women', 26, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2004005', '傅总，太太瞒着你生了个童模', '七桉', '大热', '现代言情', '2025-10-01', 55.2, 3.8, 9.4, '连载中', 'women', 3.8, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2014120', '雨夜你陪白月光，我让位后你哭啥', '露将熹', '完结', '现代言情', '2025-10-01', 0.7, 1, 9.1, '已完结', 'women', 1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2014975', '重生84：九个赔钱货？我把女儿宠上天', '一只大香蕉', '大热', '都市', '2025-10-01', 88.3, 5.6, 9.2, '连载中', 'male', 5.6, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2015177', '喜报！资本家小姐来海岛随军了', '十肆1', '完结', '现代言情', '2025-10-01', 0.8, 5.1, 9.6, '已完结', 'women', 5.1, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2016334', '深情失控，他服软低哄别离婚', '林深深', '大热', '现代言情', '2025-10-01', 0.9, 8.7, 9.4, '连载中', 'women', 8.7, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2022495', '情劫', '花小刺', '大热', '都市', '2025-10-01', 82, 6.6, 9.1, '连载中', 'male', 6.6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2023697', '男人野性', '月下冰河', '大热', '都市', '2025-10-01', 262.1, 51, 9.1, '连载中', 'male', 51, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2024150', '玄幻：从炼制合情丹开始长生！', '柿饼吃个糖', '完结', '玄幻奇幻', '2025-10-01', 70.5, 1.1, 9, '已完结', 'male', 1.1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2024793', '五年冷婚，我跑路了你发什么疯', '一尾小锦鲤', '大热', '现代言情', '2025-10-01', 118.2, 32.7, 9.1, '连载中', 'women', 32.7, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2024794', '武圣看门武王扫地，你嫌我武馆太垃圾？', '白鹫', '完结', '都市', '2025-10-01', 10.9, 0.4, 9, '已完结', 'male', 0.4, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('202636', '九转星辰诀', '晨弈', '完结', '玄幻奇幻', '2025-10-01', 760.8, 4.3, 9.2, '已完结', 'male', 4.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2027735', '三国：我，赤壁周瑜，揽二乔脱离江东', '老骥伏枥', '完结', '历史', '2025-10-01', 29.4, 1.5, 9, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2027737', '向上登攀', '老虎本尊', '大热', '都市', '2025-10-01', 29.4, 5.8, 9.1, '连载中', 'male', 5.8, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2027742', 'SSSSSSSSSS级狂龙出狱', '成书', '大热', '都市', '2025-10-01', 73.1, 4.8, 9, '连载中', 'male', 4.8, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2027749', '刚抽中SSS级天赋，你跟我说游戏停服', '吃猫的鱼仔', '大热', '玄幻奇幻', '2025-10-01', 74.5, 4.2, 9.2, '连载中', 'male', 4.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2032046', '守活寡两年去随军，改嫁绝嗣大佬', '糖煵五加', '大热', '现代言情', '2025-10-01', 48.1, 4.3, 9.5, '连载中', 'women', 4.3, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2033005', 'SSSSSSSSSSSSSS满级神医', '星空野狼', '大热', '都市', '2025-10-01', 174.7, 20.7, 9, '连载中', 'male', 20.7, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2033943', '再亲一下，高冷校草诱哄小娇娇', '逸捅天下', '新书', '现代言情', '2025-10-01', 16.5, 2, 9.6, '连载中', 'women', 2, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2034828', '唯一真神', '北冥', '完结', '都市', '2025-10-01', 65.6, 2.2, 9.1, '已完结', 'male', 2.2, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2036574', '被贬北凉，我打造了无敌大雪龙骑！', '画虫的小龙', '完结', '历史', '2025-10-01', 24.5, 1.1, 8.9, '已完结', 'male', 1.1, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2036642', '暗恋十年，庄先生他藏不住了', '雯锦', '大热', '现代言情', '2025-10-01', 72.6, 4.3, 9.5, '连载中', 'women', 4.3, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2037407', '炼妖塔', '霸业', '新书', '玄幻奇幻', '2025-10-01', 2.4, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2038910', '你惹她干什么？她修的是杀道啊', '璃焰', '大热', '幻想言情', '2025-10-01', 57, 6.3, 9.6, '连载中', 'women', 6.3, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2040906', '边军悍卒：从鸡蛋换老婆开始！', '黑夜残影', '完结', '历史', '2025-10-01', 23.5, 2.5, 9.2, '已完结', 'male', 2.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2041071', '捡个混球当奶爸，炸翻京圈做团宠！', '夜风微微', '新书', '现代言情', '2025-10-01', 3.7, 0.7, 9.5, '连载中', 'women', 0.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2041092', '无双公子', '小陈叔叔', '新书', '历史', '2025-10-01', 1.6, 0.2, 9.2, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2046394', '直播审判罪女！结果全国为她痛哭', '财神爷独生女', '新书', '现代言情', '2025-10-01', 2.1, 0.1, 9.2, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2046408', '逆子，开门！你娘回来整顿家风了', '黑葡萄', '新书', '古代言情', '2025-10-01', 5.1, 0.4, 9.2, '连载中', 'women', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2047644', '我的钱全捐了，老婆竟是天后', '伤心小呆', '新书', '都市', '2025-10-01', 6.7, 0.2, 8.8, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2048046', '重生70当猎王', '吴家三少', '新书', '都市', '2025-10-01', 1.8, 0.1, 8, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.4);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2050780', '渣夫骗我领假证，转身携千亿资产嫁权少', '唐小糖', '大热', '现代言情', '2025-10-01', 133.9, 30.1, 9.5, '连载中', 'women', 30.1, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2051697', '末世，从吞尸体开始进化', '只是小脑虎', '大热', '科幻', '2025-10-01', 42.4, 5.9, 9.2, '连载中', 'male', 5.9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2052700', '小司机的美女总裁老婆', '最爱老板娘', '大热', '都市', '2025-10-01', 91.8, 23.9, 9.1, '连载中', 'male', 23.9, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2052703', '双生兄弟要换亲？我稳做侯门主母', '林拾酒', '大热', '古代言情', '2025-10-01', 75.1, 8.8, 9.5, '连载中', 'women', 8.8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2052832', '北地悍枭', '狼太孤', '大热', '历史', '2025-10-01', 30.3, 3.6, 9.2, '连载中', 'male', 3.6, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2052834', '魂穿吕布：貂蝉离间弑父？那是我亲爹！', '八方来才', '新书', '历史', '2025-10-01', 8.8, 0.7, 9.2, '连载中', 'male', 0.7, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2053254', '混沌神鼎：从为女帝解毒开始无敌', '战神宇哥', '新书', '玄幻奇幻', '2025-10-01', 3.3, 0.4, 8.9, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2053900', '下山后，漂亮姐姐蠢蠢欲动', '神笔马丁爷', '新书', '都市', '2025-10-01', 3, 0.3, 8.4, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2054284', '快穿：我要当绝嗣大佬独生女', '挽书', '新书', '幻想言情', '2025-10-01', 0.7, 1.8, 9.4, '连载中', 'women', 1.8, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2054306', '无敌皇子：从边关开始制霸天下！', '大内低手', '新书', '历史', '2025-10-01', 3, 0.2, 8.4, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2055377', '你偏心，我改嫁！赶紧喊我小婶婶', '江梧蘅', '新书', '现代言情', '2025-10-01', 4.3, 0.7, 9.3, '连载中', 'women', 0.7, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2055380', '哑奴带崽改嫁，清冷权臣悔疯了', '桐原雪穗穗穗穗', '新书', '古代言情', '2025-10-01', 2, 0.3, 8.6, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2055904', '被沈家抛弃后，真千金她马甲炸翻全球', '鹿笙', '新书', '现代言情', '2025-10-01', 3, 0.2, 8.4, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2057069', '穿书八零，养崽训夫我手拿把掐', '菠萝小微', '新书', '现代言情', '2025-10-01', 1.6, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2057851', '从把傲娇室友捧成娱乐天后开始', '罗宝爱花卷', '新书', '都市', '2025-10-01', 1.9, 0.1, 9.2, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2058468', '快穿：小狐狸她漂亮但能打', '十一肆', '新书', '幻想言情', '2025-10-01', 3.3, 0.2, 8.8, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2059102', '让你求生，你竟在疯狂摸尸？', '半山闲客', '新书', '都市', '2025-10-01', 5.9, 1, 8.9, '连载中', 'male', 1, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2059742', '带球上门后，我成陆少心尖宠', '幸夷', '新书', '现代言情', '2025-10-01', 6.4, 0.9, 9.5, '连载中', 'women', 0.9, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2060184', '开局娶女囚，我成就最强悍卒', '青衫酌酒', '新书', '历史', '2025-10-01', 6.4, 0.5, 9.2, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2060462', '七零闪婚不见面，带娃炸翻家属院', '桃桃宝宝', '新书', '现代言情', '2025-10-01', 38.3, 26.2, 9.4, '连载中', 'women', 26.2, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2060801', '穿成反派，开局迎娶主角未婚妻', '毛毛超爱吃', '新书', '玄幻奇幻', '2025-10-01', 1.1, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2060816', '重生78：我靠岛赶海，带全家暴富！', '夕墨沉烟', '新书', '都市', '2025-10-01', 2.7, 0.2, 8.8, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061257', '重生七零：我家老祖宗能通古今', '烟花璀璨', '新书', '现代言情', '2025-10-01', 1.9, 0.1, 8.4, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061268', '结婚三年不同房，离婚后她显怀了', '墨堑', '新书', '现代言情', '2025-10-01', 5.2, 0.9, 8.4, '连载中', 'women', 0.9, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061856', '王府里来了个捡破烂的崽崽', '三颗小石头', '大热', '古代言情', '2025-10-01', 140.5, 39.8, 9.6, '连载中', 'women', 39.8, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061931', '八零：渣夫骗婚娶大嫂，我转身嫁首长', '锦禾', '新书', '现代言情', '2025-10-01', 18.5, 3.6, 9.3, '连载中', 'women', 3.6, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061932', '九零带崽寻亲，被绝嗣大佬宠疯了', '树梢上', '新书', '现代言情', '2025-10-01', 10.8, 1.2, 9.4, '连载中', 'women', 1.2, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062265', '换父兄后流放？真千金成了边疆团宠', '君染染', '新书', '古代言情', '2025-10-01', 5.2, 0.8, 8.8, '连载中', 'women', 0.8, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062279', '考中状元又怎样，我娘是长公主', '汐家锦锂', '新书', '古代言情', '2025-10-01', 0.5, 3.6, 9.5, '连载中', 'women', 3.6, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062370', '边疆发男人，从被罪女买走开始！', '陈火火', '新书', '历史', '2025-10-01', 3, 0.4, 8.8, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062422', '惨死认亲日，嫡女夺回凤命杀疯了', '雪落听风', '新书', '古代言情', '2025-10-01', 14.1, 2.8, 9.5, '连载中', 'women', 2.8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062428', '99次逃婚后，她攀上了京圈权贵', '栗子甜豆糕', '新书', '现代言情', '2025-10-01', 1.6, 0.1, 9.2, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062825', '捡漏！', '外八字', '新书', '都市', '2025-10-01', 1.4, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062835', '小貔貅掉七零军区大院，被全军抢着宠', '加菲不是猫', '新书', '现代言情', '2025-10-01', 2.6, 0.1, 8.4, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063300', '五个大佬命里缺我，我只管吃奶', '舒展v', '新书', '现代言情', '2025-10-01', 1.6, 0.1, 9.2, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('206343', '恐怖复苏之全球武装怪胎', '老郭在此', '完结', '科幻', '2025-10-01', 602.2, 0.9, 9.4, '已完结', 'male', 0.9, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063608', '边疆老卒，御赐老婆后我越活越勇', '月光大妖怪', '新书', '历史', '2025-10-01', 10.9, 3.1, 9, '连载中', 'male', 3.1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063976', '都市情劫', '御龙', '新书', '都市', '2025-10-01', 3, 1, 8.8, '连载中', 'male', 1, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064308', '妖魔乱世逢灾年，我每日一卦粮肉满仓', '灶食', '新书', '玄幻奇幻', '2025-10-01', 1.8, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064344', '都市绝品神医', '就爱吃牛肉', '新书', '都市', '2025-10-01', 3.9, 0.2, 8.8, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064353', '八零随军：退婚神医被绝嗣大佬宠上天', '煎bingo子', '新书', '现代言情', '2025-10-01', 5.5, 2.5, 9.3, '连载中', 'women', 2.5, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064964', '规则怪谈：我的超能力给诡异整破防了', 'fishlike', '新书', '幻想言情', '2025-10-01', 0.7, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064972', '当我捡漏古董后，前女友后悔了', '大金拿', '新书', '都市', '2025-10-01', 1.5, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064995', '重回六十年代，从挖何首乌开始', '巍巍青山', '新书', '都市', '2025-10-01', 3.1, 0.1, 9.2, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064998', '开局抄家，姐姐抢着去流放', '一个豆包', '新书', '古代言情', '2025-10-01', 4.7, 0.6, 9.2, '连载中', 'women', 0.6, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065348', '父兄拿我当草，随母改嫁断亲当皇后', '饱福福', '新书', '古代言情', '2025-10-01', 2, 0.1, 8.4, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065813', '开局捉奸，傍上权臣好孕来', '雨过阳光', '新书', '古代言情', '2025-10-01', 3.3, 0.7, 9.2, '连载中', 'women', 0.7, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065885', '重生85：带猫咪去赶海，狂宠九个女儿', '咸鱼咸鱼', '新书', '都市', '2025-10-01', 4.1, 0.8, 9.2, '连载中', 'male', 0.8, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065888', '解春衫', '随山月', '新书', '古代言情', '2025-10-01', 122, 61, 9.7, '连载中', 'women', 61, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065894', '神医下山：美女总裁非我不嫁', '月下无人', '新书', '都市', '2025-10-01', 5, 0.8, 8.8, '连载中', 'male', 0.8, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065959', '让我进京当质子，我开局带兵强掳花魁', '有点刺挠', '新书', '历史', '2025-10-01', 5.5, 0.5, 9.2, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066484', '四合院：从技术员到人生赢家', '辰语', '新书', 'N次元', '2025-10-01', 2.5, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066492', '空间系统穿七零，肥妻暴瘦暴富样样行', '慕荣华', '新书', '现代言情', '2025-10-01', 3.2, 0.5, 8.8, '连载中', 'women', 0.5, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066494', '换嫁绝嗣大佬，我胎胎多宝赢麻了', '猫猫鱼吃果果', '新书', '现代言情', '2025-10-01', 3, 0.4, 9.2, '连载中', 'women', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066505', '侯府捡的小福星，全城大佬争着宠', '鱼芽', '新书', '古代言情', '2025-10-01', 6.4, 2.7, 9.5, '连载中', 'women', 2.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066841', '混元书', '枫如江画', '新书', '玄幻奇幻', '2025-10-01', 2.3, 0.5, 9.2, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066874', '七五：虎妞为伴，再收个落难大小姐', '任性的狮子', '新书', '都市', '2025-10-01', 4.1, 0.4, 9.1, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067420', '年代：开局一把小猎枪，娇妻貌美肉满仓', '钓鱼捞', '新书', '都市', '2025-10-01', 6, 0.7, 8.9, '连载中', 'male', 0.7, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067715', '嫌我劳改犯？我神医身份曝光了', '瓜神驾到', '新书', '都市', '2025-10-01', 2.2, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067718', '四合院：开局猎户，邻居喝风我吃肉！', '刚烈的汉子', '新书', 'N次元', '2025-10-01', 5.2, 0.4, 8.9, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('207105', '傲世潜龙', '西装暴徒', '大热', '都市', '2025-10-01', 34.7, 30.6, 9.1, '连载中', 'male', 30.6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2071506', '开局玉女宗，被仙子挑走当人丹', '三明治', '新书', '玄幻奇幻', '2025-10-01', 2, 0.4, 8.4, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2072331', '假嫡女重生想抢婚？再嫁你也得下跪', '木怜青', '新书', '古代言情', '2025-10-01', 1.9, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2072337', '开局撞破皇帝女儿身', '拉满弓月', '新书', '历史', '2025-10-01', 1.4, 0.2, 8.6, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2072619', '长生：从寿元零点一年开始', '馀杯', '新书', '玄幻奇幻', '2025-10-01', 8, 3.1, 9.1, '连载中', 'male', 3.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2073050', '权力巅峰：SSSS级村书记！', '荒苑爆红', '新书', '都市', '2025-10-01', 3.9, 1.4, 9.3, '连载中', 'male', 1.4, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2073625', '我都人间武圣了，你让我当傀儡皇帝？', '小呀小馒头', '新书', '玄幻奇幻', '2025-10-01', 0.8, 0.1, 9.2, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074086', '偏护寡嫂不成婚？扇完巴掌嫁权臣', '喵大仙儿', '新书', '古代言情', '2025-10-01', 0.6, 0.5, 8.4, '连载中', 'women', 0.5, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074090', '挖我灵根？重生后新师门待我如宝', '动物园在逃小熊猫', '新书', '幻想言情', '2025-10-01', 2.4, 0.3, 9.2, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074181', '权力巅峰：从市委大秘开始', '鹏鹏君本尊', '新书', '都市', '2025-10-01', 4.8, 1.1, 9, '连载中', 'male', 1.1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074192', '影帝高冷捂不热？那就离婚！', '兔子不爱吃胡萝卜', '新书', '现代言情', '2025-10-01', 2.4, 0.3, 9.2, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074218', '贪恋她', '谢九笙', '新书', '现代言情', '2025-10-01', 0.7, 0.5, 9.2, '连载中', 'women', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074327', '御堂春事', '荞麦十二画', '新书', '古代言情', '2025-10-01', 0.8, 0.1, 8, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.4);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074330', '穿成六零小炮灰，大小姐带物资养兵王', '娮小夕', '新书', '现代言情', '2025-10-01', 0.7, 0.4, 9.2, '连载中', 'women', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074333', '一掌退大帝，你说他是杂役弟子？', '百万单机王', '新书', '玄幻奇幻', '2025-10-01', 1.2, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074412', '和初恋官宣后，装瘸前夫气得站起来了', '青时序', '新书', '现代言情', '2025-10-01', 0.7, 0.2, 9.2, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2075109', '四合院：从火车列车员开始', '我家有母老虎', '新书', 'N次元', '2025-10-01', 3.3, 0.6, 8.8, '连载中', 'male', 0.6, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2075347', '被退婚五次，她嫁残王夫君却躺赢', '瓜田立夏', '新书', '古代言情', '2025-10-01', 2.5, 0.2, 9.2, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2075352', '资本家假千金，搬空家产嫁糙汉', '韶光煮雪', '新书', '现代言情', '2025-10-01', 2.4, 0.4, 9.2, '连载中', 'women', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2075975', 'SSSSSSS级医武至尊', '大盘鸡仙尊', '新书', '都市', '2025-10-01', 2.9, 0.2, 8.4, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076487', '极品九千岁：我在后宫无法无天！', '莫不愁', '新书', '历史', '2025-10-01', 2.5, 0.4, 9.2, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076863', '换宗门，当团宠，师妹她修生钱道', '金池', '新书', '幻想言情', '2025-10-01', 1.8, 0.3, 9.2, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076866', '竹马护资本家小姐，重生改嫁他急了！', '枝云梦', '新书', '现代言情', '2025-10-01', 2.8, 0.6, 9.2, '连载中', 'women', 0.6, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2077580', '裴大人，表小姐她又跑了', '蓝莓爆珠', '新书', '古代言情', '2025-10-01', 2.3, 0.3, 9.2, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2077779', '规则怪谈：我能找出错误的规则', '老猫写文', '新书', '奇闻异事', '2025-10-01', 2.3, 0.2, 9.2, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2077960', '刚下山，全球大佬跪迎我回家', '霜叶红于二月花', '新书', '都市', '2025-10-01', 2.4, 0.4, 9.2, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2078304', '转生狗妖，我在万世轮回成仙！', '六尺七寸', '新书', '玄幻奇幻', '2025-10-01', 2, 0.2, 9.2, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2078351', '四合院：开局爆锤众禽', '沉鱼', '新书', 'N次元', '2025-10-01', 2.2, 0.3, 8.6, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('208594', '吞天圣帝', '枫落忆痕', '大热', '玄幻奇幻', '2025-10-01', 483.6, 8, 9.1, '连载中', 'male', 8, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('208898', '极品小侯爷', '梦入山河', '完结', '历史', '2025-10-01', 676.5, 1.5, 9.2, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('209888', '重回1991', '南三石', '完结', '都市', '2025-10-01', 581.2, 1.3, 9.3, '已完结', 'male', 1.3, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('209898', '我能采集万物', '存叶', '完结', '科幻', '2025-10-01', 34.7, 1.5, 9.2, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('210771', '万古龙帝', '拓跋流云', '完结', '玄幻奇幻', '2025-10-01', 34.7, 2, 9.1, '已完结', 'male', 2, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('211115', '都市逍遥天医', '星空野狼', '完结', '都市', '2025-10-01', 435.9, 1.4, 9.3, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213092', '吞噬古帝', '黑白仙鹤', '大热', '玄幻奇幻', '2025-10-01', 34.7, 13.3, 9.2, '连载中', 'male', 13.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213190', '阴阳鲁班咒', '一气三元', '完结', '奇闻异事', '2025-10-01', 226.6, 1.5, 9.4, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213697', '葬天神帝', '我爱弹棉花', '大热', '玄幻奇幻', '2025-10-01', 526.9, 6.7, 9.1, '连载中', 'male', 6.7, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('214783', '山野诡闻笔记', '吴大胆', '完结', '奇闻异事', '2025-10-01', 414, 3.4, 9.5, '已完结', 'male', 3.4, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '大热', '都市', '2025-10-01', 34.7, 8.1, 9.7, '已完结', 'male', 8.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '完结', '都市', '2023-11-01', 34.7, 8.1, 9.7, '已完结', 'male', 8.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('214890', '混沌天尊', '新闻工作者', '完结', '玄幻奇幻', '2025-10-01', 315.1, 2.9, 9, '已完结', 'male', 2.9, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215067', '九转修罗诀', '李中有梦', '完结', '玄幻奇幻', '2025-10-01', 309.7, 2.1, 9, '已完结', 'male', 2.1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215169', '寒门枭士', '北川', '大热', '历史', '2025-10-01', 34.7, 7.7, 9.3, '已完结', 'male', 7.7, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215169', '寒门枭士', '北川', '完结', '历史', '2023-11-01', 34.7, 7.7, 9.3, '已完结', 'male', 7.7, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215243', '第一瞳术师', '喵喵大人', '大热', '幻想言情', '2025-10-01', 0.8, 19.5, 9.8, '已完结', 'women', 19.5, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215780', '绝世强龙', '张龙虎', '完结', '都市', '2025-10-01', 34.7, 3.2, 8.8, '已完结', 'male', 3.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('216404', '荒古武神', '化十', '大热', '玄幻奇幻', '2025-10-01', 527.2, 8.3, 9.1, '连载中', 'male', 8.3, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('217822', '天命成凰', '赵小球', '完结', '古代言情', '2025-10-01', 1, 3.2, 9.4, '已完结', 'women', 3.2, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('218179', '天命风水神相', '半盏清茶', '完结', '奇闻异事', '2025-10-01', 59.1, 1.4, 9.2, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('219660', '臭保镖，求你放过我们吧！', '流水不逝', '完结', '都市', '2025-10-01', 270.3, 1.9, 9.2, '已完结', 'male', 1.9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('151584', '极品戒指', '淮阴小侯', '完结', '都市', '2025-10-01', 34.7, 1.4, 9.1, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1647094', '九转吞天诀', '萧逆天', '大热', '玄幻奇幻', '2025-10-01', 323.7, 7.1, 9.1, '连载中', 'male', 7.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1648167', '开局截胡五虎上将', '孔明很愁', '完结', '历史', '2025-10-01', 775.3, 2.7, 9.1, '已完结', 'male', 2.7, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1648172', '仙棺，神墟，剑无敌！', '千年老龟', '大热', '玄幻奇幻', '2025-10-01', 359.2, 9.5, 9, '连载中', 'male', 9.5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '大热', '游戏', '2025-10-01', 709.5, 6.9, 9.2, '已完结', 'male', 6.9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '完结', '游戏', '2023-11-01', 709.5, 6.9, 9.2, '已完结', 'male', 6.9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1653604', '我的冰山女神老婆', '冰城妖玉', '完结', '都市', '2025-10-01', 853.2, 1.4, 9.3, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1654986', '团宠小师妹才是真大佬', '千金兔', '完结', '幻想言情', '2025-10-01', 0.7, 2.5, 9.7, '已完结', 'women', 2.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1655407', '鸿蒙霸体诀', '鱼初见', '大热', '玄幻奇幻', '2025-10-01', 791.6, 34.3, 9.1, '连载中', 'male', 34.3, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1665743', '皇室奶团萌翻全京城', '司司', '完结', '古代言情', '2025-10-01', 0.8, 4.8, 9.7, '已完结', 'women', 4.8, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1666957', '重生后我顶替了前夫白月光', '九九月', '完结', '现代言情', '2025-10-01', 0.9, 1.6, 9.1, '已完结', 'women', 1.6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1670199', '我的养成系女友', '佛系和尚', '完结', '都市', '2025-10-01', 509.7, 1.6, 9.5, '已完结', 'male', 1.6, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1672578', '逃荒后三岁福宝被团宠了', '时好', '完结', '古代言情', '2025-10-01', 0.5, 3.2, 9.7, '已完结', 'women', 3.2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1672801', '太古吞天诀', '心无尘', '完结', '玄幻奇幻', '2025-10-01', 183.7, 2.4, 9, '已完结', 'male', 2.4, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1673461', '三个缩小版大佬带百亿资产上门', '一轮玫瑰', '完结', '现代言情', '2025-10-01', 0.6, 2.2, 9.5, '已完结', 'women', 2.2, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '大热', '现代言情', '2025-09-01', 982.5, 4.9, 9.6, '已完结', 'women', 4.9, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '完结', '现代言情', '2025-10-01', 0.7, 4.9, 9.6, '已完结', 'women', 4.9, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1684583', '春棠欲醉', '锦一', '大热', '古代言情', '2025-10-01', 34.7, 20.6, 9.7, '已完结', 'women', 20.6, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1689214', '藏起孕肚离婚，郁总全球疯找', '苏小鱼', '完结', '现代言情', '2025-10-01', 1.2, 1.6, 9.4, '已完结', 'women', 1.6, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1693832', '超神玩家', '失落叶', '完结', '游戏', '2025-10-01', 444.1, 1.3, 9.3, '已完结', 'male', 1.3, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '大热', '都市', '2025-10-01', 199.6, 6, 9.1, '已完结', 'male', 6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '完结', '都市', '2023-11-01', 199.6, 6, 9.1, '已完结', 'male', 6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1706674', '开局麒麟肾，吓哭九个绝色娇妻', '神级大牛', '完结', '都市', '2025-10-01', 494.6, 2.1, 9.1, '已完结', 'male', 2.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1730848', '徒儿快下山，你师姐等不及了', '雨落狂流', '完结', '都市', '2025-10-01', 139.8, 2.1, 9.1, '已完结', 'male', 2.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1738577', '女神的逍遥狂医', '东方天策', '完结', '都市', '2025-10-01', 176.5, 1.4, 9.2, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1761978', '葬神棺', '浮生一诺', '大热', '玄幻奇幻', '2025-10-01', 34.7, 50.2, 9.3, '连载中', 'male', 50.2, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1763089', '喜棺开，百鬼散，王妃她从地狱来', '一碗佛跳墙', '大热', '古代言情', '2025-10-01', 34.7, 8.5, 9.8, '已完结', 'women', 8.5, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1763673', '捉奸当天，豪门继承人拉我去领证', '慕容悠然', '大热', '现代言情', '2025-10-01', 378.7, 19.6, 9.4, '连载中', 'women', 19.6, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1764505', '我团宠小师妹，嚣张点怎么了', '瑰夏', '大热', '幻想言情', '2025-10-01', 365, 13, 9.7, '已完结', 'women', 13, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1764634', '七零：最硬糙汉被媳妇撩红了眼', '一尾小锦鲤', '大热', '现代言情', '2025-10-01', 34.7, 16.8, 9.3, '已完结', 'women', 16.8, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1765545', '轻熟', '乌木桃枝', '完结', '现代言情', '2025-10-01', 0.8, 2.5, 9.8, '已完结', 'women', 2.5, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1768764', '出阳神', '罗樵森', '完结', '奇闻异事', '2025-10-01', 296.9, 2.5, 9.4, '已完结', 'male', 2.5, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1771336', '王妃她五行缺德', '棠花落', '完结', '古代言情', '2025-10-01', 0.4, 2, 9.7, '已完结', 'women', 2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1776773', '第一召唤师', '喵喵大人', '大热', '幻想言情', '2025-10-01', 405.6, 5.5, 9.7, '已完结', 'women', 5.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1778388', '灵骨被夺，帝女她觉醒神脉杀回来了', '澜岸', '完结', '幻想言情', '2025-10-01', 1.1, 2.6, 9.7, '已完结', 'women', 2.6, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1780456', '混沌鼎', '鬼疯子', '完结', '玄幻奇幻', '2025-10-01', 121.6, 1.4, 9, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1783142', '天剑神狱', '叶问', '完结', '玄幻奇幻', '2025-10-01', 91.5, 1.6, 9.1, '已完结', 'male', 1.6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1801623', '帝国皇太子，老子不干了！', '灰色小猫', '完结', '历史', '2025-10-01', 338.6, 2.4, 8.9, '已完结', 'male', 2.4, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1802216', '诱她，一夜成瘾', '壹鹿小跑', '大热', '现代言情', '2025-10-01', 549.9, 4.4, 9.4, '已完结', 'women', 4.4, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1803024', '神算萌妻：傅太太才是玄学真大佬', '易小升', '大热', '现代言情', '2025-10-01', 34.7, 12.7, 9.7, '已完结', 'women', 12.7, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1803136', '第一凤女', '十二妖', '大热', '古代言情', '2025-10-01', 34.7, 38.5, 9.7, '已完结', 'women', 38.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1803283', '皇叔借点功德，王妃把符画猛了', '安卿心', '大热', '古代言情', '2025-10-01', 34.7, 104.4, 9.7, '连载中', 'women', 104.4, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1804346', '绝世天命大反派', '金裘花马', '大热', '玄幻奇幻', '2025-10-01', 834.3, 14.8, 9, '连载中', 'male', 14.8, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1809333', '网游：我召唤的骷髅全是位面之子？', '禅心道骨', '完结', '游戏', '2025-10-01', 220.1, 1.5, 9.4, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1809361', '逍遥四公子', '修果', '大热', '历史', '2025-10-01', 34.7, 78.8, 9.3, '连载中', 'male', 78.8, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1815020', '巅峰权途', '争渡', '大热', '都市', '2025-10-01', 436.2, 45.5, 9.3, '连载中', 'male', 45.5, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1819118', '八零养崽：清冷美人被科研大佬宠上天！', '桔子阿宝', '完结', '现代言情', '2025-10-01', 1.2, 1.9, 9.6, '已完结', 'women', 1.9, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1830569', '凤池生春', '秦安安', '大热', '古代言情', '2025-10-01', 527.5, 12.9, 9.7, '已完结', 'women', 12.9, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1830570', '世子先别死，夫人有喜了', '沙拉薯条', '大热', '古代言情', '2025-10-01', 34.7, 13, 9.6, '已完结', 'women', 13, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1833599', '枭龙出山', '轩仔', '大热', '都市', '2025-10-01', 81.6, 5.2, 9.1, '连载中', 'male', 5.2, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1837360', '昭春意', '犹鱼丝', '完结', '古代言情', '2025-10-01', 1, 2.5, 9.7, '已完结', 'women', 2.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1838037', '典狱长大人深不可测！', '黄泉隼', '完结', '都市', '2025-10-01', 187.9, 1.6, 9.5, '已完结', 'male', 1.6, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1838355', '离婚后，前妻姐崩溃了', '洛王', '完结', '都市', '2025-10-01', 620.3, 2.8, 8.7, '已完结', 'male', 2.8, 0, 0, 0, 0, 0, 0.43499999999999994);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1840296', '夫君清心寡欲，我却连生三胎', '米团开花', '大热', '古代言情', '2025-10-01', 296.4, 6.1, 9.7, '已完结', 'women', 6.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1844850', '饥荒年，我囤货娇养了古代大将军', '苜肉', '大热', '古代言情', '2025-10-01', 34.7, 13.1, 9.6, '连载中', 'women', 13.1, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1847406', '此夜逢君', '晨露嫣然', '完结', '古代言情', '2025-10-01', 1, 2.8, 9.7, '已完结', 'women', 2.8, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1848642', '离婚吧，真当我是废物啊', '凝望之影', '完结', '都市', '2025-10-01', 103.6, 2.4, 8.9, '已完结', 'male', 2.4, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1848650', '夜火缠绵', '骨子鱼', '完结', '现代言情', '2025-10-01', 1.1, 1.5, 9.5, '已完结', 'women', 1.5, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1850556', '让我娶傻千金，你又回来求我离婚？', '摸鱼小将', '大热', '都市', '2025-10-01', 161.7, 5.5, 9.1, '连载中', 'male', 5.5, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1850695', '炼神鼎', '秋月梧桐', '大热', '玄幻奇幻', '2025-10-01', 193.6, 15.2, 9, '连载中', 'male', 15.2, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1853441', '春华照灼', '蝉不知雪', '完结', '古代言情', '2025-10-01', 0.6, 2.6, 9.7, '已完结', 'women', 2.6, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1854610', '八零娇女一撒娇，高冷军少领证了', '白茶流萤', '大热', '现代言情', '2025-10-01', 510.4, 15.1, 9.2, '连载中', 'women', 15.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1857847', '重生再嫁皇胄，我只想乱帝心夺凤位', '月下小兔', '大热', '古代言情', '2025-10-01', 593, 9.5, 9.4, '连载中', 'women', 9.5, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1858392', '咬春靥', '空酒瓶', '大热', '古代言情', '2025-10-01', 327.1, 4.5, 8.4, '已完结', 'women', 4.5, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1858924', '无间令', '无间之令', '完结', '古代言情', '2025-10-01', 1.1, 2.7, 9.3, '已完结', 'women', 2.7, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1863729', '断亲不伺候了，哥哥们破产睡天桥', '红十三', '大热', '现代言情', '2025-10-01', 566.4, 3, 9.1, '已完结', 'women', 3, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1864493', '打到北极圈了，你让我继承皇位？', '橡皮泥', '大热', '历史', '2025-10-01', 300.5, 11.5, 9.3, '连载中', 'male', 11.5, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1867139', '师叔，你的法宝太不正经了', '李别浪', '大热', '玄幻奇幻', '2025-10-01', 482.9, 14.9, 9.4, '连载中', 'male', 14.9, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1871638', '你迎娶平妻？我带崽入宫当皇后', '虎金金', '完结', '古代言情', '2025-10-01', 0.4, 2.1, 9.6, '已完结', 'women', 2.1, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1872563', '为奴三年后，整个侯府跪求我原谅', '莫小弃', '大热', '古代言情', '2025-10-01', 34.7, 38.9, 8.8, '连载中', 'women', 38.9, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1873655', '重生八零：离婚后被军少宠上天', '小白蛇', '大热', '现代言情', '2025-10-01', 607.4, 6.6, 9.7, '已完结', 'women', 6.6, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1875137', '断绝关系后，我的召唤兽全是黑暗生物', '可破', '完结', '都市', '2025-10-01', 294.3, 1.8, 9.1, '已完结', 'male', 1.8, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1876687', '和离前夜，她重生回了出嫁前', '柳程安', '大热', '古代言情', '2025-10-01', 434.1, 5.2, 9.5, '已完结', 'women', 5.2, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1879542', '我宫斗冠军，矜贵世子俯首称臣', '唐荔枝', '大热', '古代言情', '2025-10-01', 676.9, 6.4, 9.7, '已完结', 'women', 6.4, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1882743', '郡主她百鬼送嫁，少将军敢娶吗？', '一碗佛跳墙', '完结', '古代言情', '2025-10-01', 0.5, 2.5, 9.8, '已完结', 'women', 2.5, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1882754', '边军悍卒', '木有金箍', '大热', '历史', '2025-10-01', 552, 36.1, 9.3, '连载中', 'male', 36.1, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1885415', '再睁眼！高冷女知青在我怀里哭唧唧', '九伐', '完结', '都市', '2025-10-01', 88.3, 0.5, 9.2, '已完结', 'male', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1893629', '捡了小福星后，将军府旺疯了', '树己不树人', '完结', '古代言情', '2025-10-01', 0.6, 1.3, 9.5, '已完结', 'women', 1.3, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1929412', '重生：清纯转校生表白我，校花哭惨了', '一缕微光', '完结', '都市', '2025-10-01', 81.6, 2, 9.4, '已完结', 'male', 2, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1936358', '大楚第一逍遥王', '打得你喵喵叫', '大热', '历史', '2025-10-01', 77.8, 5, 9, '连载中', 'male', 5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1941048', '全能真千金归来，发现家人住狗窝', '温小浅', '完结', '现代言情', '2025-10-01', 0.3, 1.9, 9.4, '已完结', 'women', 1.9, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1946790', '谁说校花高冷？这校花可太甜软了', '佛系和尚', '完结', '都市', '2025-10-01', 107.2, 1.9, 9.6, '已完结', 'male', 1.9, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1949070', '孩子谁爱生谁生，我勾帝心夺凤位', '爱吃石榴', '大热', '古代言情', '2025-10-01', 1.1, 28.7, 9.6, '连载中', 'women', 28.7, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1949695', '被贵妃配给太监当对食后', '沙子', '大热', '古代言情', '2025-10-01', 1.2, 24.7, 9.5, '连载中', 'women', 24.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1957149', '出宫前夜，沦为暴君掌中物', '素律', '大热', '古代言情', '2025-10-01', 341, 16.4, 9.4, '连载中', 'women', 16.4, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1959895', '十二只SSS级鬼宠，你管这叫差班生', '洛青澜', '完结', '都市', '2025-10-01', 104, 0.9, 9.2, '已完结', 'male', 0.9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1960821', '雪夜活埋后，我夺了假千金凤命', '柠檬小丸子', '大热', '古代言情', '2025-10-01', 136.8, 8.1, 9.5, '连载中', 'women', 8.1, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1960964', '从小媳妇要传宗接代开始', '断章', '大热', '历史', '2025-10-01', 202.6, 9, 9.2, '连载中', 'male', 9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1965108', '召诸神，踏万界，天命帝女逆乾坤', '澜岸', '大热', '幻想言情', '2025-10-01', 74.8, 6.7, 9.7, '连载中', 'women', 6.7, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1968483', '霍总，太太不复婚，只改嫁！', '相思一顾', '大热', '现代言情', '2025-10-01', 1.1, 8, 9.5, '连载中', 'women', 8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1968910', '全家夺我军功，重生嫡女屠了满门', '我吃饱饱', '大热', '古代言情', '2025-10-01', 467.6, 38.3, 9.6, '连载中', 'women', 38.3, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1971248', '在恋综当老六？一句泡面仙人全网暴火', '肉包打狗', '完结', '都市', '2025-10-01', 80, 1.7, 9.1, '已完结', 'male', 1.7, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1971590', '众仙俯首', '咸鱼老白', '大热', '玄幻奇幻', '2025-10-01', 184.1, 12.6, 9.4, '连载中', 'male', 12.6, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1975352', '叉腰腰，全家都是我捡来哒！', '柠檬鱼头', '大热', '幻想言情', '2025-10-01', 0.8, 11.2, 9.7, '连载中', 'women', 11.2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1976312', '观音泥', '溪芝', '新书', '现代言情', '2025-10-01', 2.3, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('197810', '都市最狂医仙', '花小刺', '完结', '都市', '2025-10-01', 789.8, 2.1, 9.1, '已完结', 'male', 2.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '大热', '武侠仙侠', '2025-10-01', 65.9, 2.4, 9.2, '已完结', 'male', 2.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '完结', '武侠仙侠', '2023-11-01', 65.9, 2.4, 9.2, '已完结', 'male', 2.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982193', '我的26岁女总裁', '卧龙岗小弟', '完结', '都市', '2025-10-01', 69.5, 3.5, 9, '已完结', 'male', 3.5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982371', '你宠白月光，我收凤印你急什么', '江墨甜', '大热', '古代言情', '2025-10-01', 62.6, 6.4, 8.9, '连载中', 'women', 6.4, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982718', '真没必要让我重生', '刘大咪', '完结', '都市', '2025-10-01', 30.5, 1.2, 8.9, '已完结', 'male', 1.2, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1988961', '重生1984：我靠赶海打渔成首富', '菠萝炒饭', '大热', '都市', '2025-10-01', 172.9, 16, 9, '连载中', 'male', 16, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1989780', '权力医途', '端午', '大热', '都市', '2025-10-01', 189.3, 19.5, 9.1, '连载中', 'male', 19.5, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1991675', '我赚够两千就下播，榜一大哥却急了', '哼哼哈哈', '大热', '现代言情', '2025-10-01', 251.7, 8.2, 9.8, '连载中', 'women', 8.2, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1991811', '错良缘', '雨山雪', '大热', '古代言情', '2025-10-01', 61.8, 3.3, 9.6, '已完结', 'women', 3.3, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1994128', '搬空婆家离婚后，被八零京少宠上天', '猫爱锅包肉', '完结', '现代言情', '2025-10-01', 0.7, 2.1, 9.5, '已完结', 'women', 2.1, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1994174', '恶婆婆重生后，怂包儿媳被宠成宝！', '洇鹤', '新书', '古代言情', '2025-10-01', 3.8, 0.2, 8.9, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1994365', '高门长媳', 'Ms腊肠', '大热', '古代言情', '2025-10-01', 63.1, 3.8, 9.5, '已完结', 'women', 3.8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2003997', '末世囤货养崽，从娘胎开始旺妈咪', '小桃花', '完结', '幻想言情', '2025-10-01', 0.6, 1.5, 9.6, '已完结', 'women', 1.5, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('200456', '在他深情中陨落', '浮生三千', '完结', '现代言情', '2025-10-01', 0.3, 1.9, 9.7, '已完结', 'women', 1.9, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2004996', '仙侣', '鬼疯子', '大热', '武侠仙侠', '2025-10-01', 106.3, 11.3, 8.9, '连载中', 'male', 11.3, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2007504', '结婚三年喊错名，成对家老公了你哭什么', '木易未央', '完结', '都市', '2025-10-01', 20.5, 0.3, 8.7, '已完结', 'male', 0.3, 0, 0, 0, 0, 0, 0.43499999999999994);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2010008', '高武校长，我的实力是全校总和！', '邯郸财阀', '大热', '都市', '2025-10-01', 122.9, 5.7, 9.3, '连载中', 'male', 5.7, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2012529', '极品女神赖上我', '陈行者', '大热', '都市', '2025-10-01', 173.7, 23.3, 9, '连载中', 'male', 23.3, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2014122', '于他怀中轻颤', '苏晚舟', '大热', '现代言情', '2025-10-01', 0.7, 8.7, 9.6, '连载中', 'women', 8.7, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2014393', '掌门怀孕，关我一个杂役什么事', '雨夜终曲', '大热', '玄幻奇幻', '2025-10-01', 253.9, 30.9, 9, '连载中', 'male', 30.9, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2015371', '再近点，就失控了', '雪泥', '大热', '现代言情', '2025-10-01', 274.3, 11.3, 9.9, '连载中', 'women', 11.3, 0, 0, 0, 0, 0, 0.495);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2018535', '洪荒：我屡出毒计，十二祖巫劝我冷静！', '橘黄的橙子', '完结', '武侠仙侠', '2025-10-01', 47.3, 1.9, 8.9, '已完结', 'male', 1.9, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2019227', '随母改嫁旺新家，重生嫡女嘎嘎乱杀', '三十嘉', '大热', '古代言情', '2025-10-01', 1.2, 14.6, 9.6, '连载中', 'women', 14.6, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2020570', '重生70：让你守门，你整了个蘑菇云？', '历史小尘埃', '完结', '都市', '2025-10-01', 20.7, 1.1, 9.1, '已完结', 'male', 1.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2020674', '从市委大秘到权力之巅', '洗礼先生', '大热', '都市', '2025-10-01', 34.7, 5.5, 9.1, '连载中', 'male', 5.5, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2021927', '西游：取经？关我混沌魔猿什么事！', '南木北树', '完结', '武侠仙侠', '2025-10-01', 69.7, 2.4, 9, '已完结', 'male', 2.4, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2021943', '诱哄，假千金被禁欲商总拉去领证了', '雾里重逢', '完结', '现代言情', '2025-10-01', 0.4, 3.3, 9.7, '已完结', 'women', 3.3, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('202630', '道门诡谈', '李十一', '完结', '奇闻异事', '2025-10-01', 155.7, 1.4, 9.2, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2027063', '敲骨吸髓？重生另选家人宠我如宝', '清砚', '大热', '古代言情', '2025-10-01', 138.2, 37.7, 9.5, '连载中', 'women', 37.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2028957', '桃花劫', '推窗望岳', '大热', '都市', '2025-10-01', 224.8, 40.4, 9.2, '连载中', 'male', 40.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2029607', '我的道侣是诸天第一女帝', '虎眸', '新书', '玄幻奇幻', '2025-10-01', 4.2, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2029739', '穿成恶毒继母，手握空间灵泉养崽崽', 'YJ紫霞仙子', '新书', '古代言情', '2025-10-01', 3, 0.1, 8.4, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2032899', '让你当书童，你成大夏文圣', '炫迈', '大热', '历史', '2025-10-01', 61.9, 3.6, 9, '连载中', 'male', 3.6, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2038328', '重生不嫁高门后，高冷权臣追疯了！', '溪午闻钟', '新书', '古代言情', '2025-10-01', 2.9, 0.1, 8.4, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2038351', '公府上下宠我如宝，养兄一家后悔了', '钱多多君', '新书', '古代言情', '2025-10-01', 2.8, 0.1, 8.4, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2038385', 'SSSSSSSSSSSSS级镇狱狂龙', '封情老衲', '大热', '都市', '2025-10-01', 101.9, 51.5, 9.1, '连载中', 'male', 51.5, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2040657', '末世抢机缘：我的我的都是我的！', '文鳐', '新书', '幻想言情', '2025-10-01', 4.1, 0.3, 9.5, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2044077', '妾本丝萝，只图钱帛', '锅包又又又', '新书', '古代言情', '2025-10-01', 23.4, 1.4, 9.6, '连载中', 'women', 1.4, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2046282', '人生赢家', '烟云客横渡积水潭', '新书', '都市', '2025-10-01', 4.5, 0.5, 8.9, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2046772', '纵情人生', '一缕微光', '大热', '都市', '2025-10-01', 38.4, 4.5, 9, '连载中', 'male', 4.5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2048050', '抢我婚约嫁太子？我携孕肚嫁皇帝', '缓缓归', '大热', '古代言情', '2025-10-01', 50.9, 17.8, 9.6, '连载中', 'women', 17.8, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2048060', '从酒肆杂役开始武道化圣', '为你傲视蒼穹', '新书', '玄幻奇幻', '2025-10-01', 6.8, 0.6, 9.1, '连载中', 'male', 0.6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2052699', '主播甜又野，六个顶级大佬缠着宠', '墨如金', '新书', '现代言情', '2025-10-01', 0.5, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2053703', '三年同房两次，要离婚他跪求复合', '一只小甜饼', '大热', '现代言情', '2025-10-01', 37.8, 6.5, 9.3, '连载中', 'women', 6.5, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2053895', '带崽搬空婆家，易孕娇女随军被亲哭', '金岁岁', '新书', '现代言情', '2025-10-01', 22.6, 4, 9.4, '连载中', 'women', 4, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2053898', '他的小撩精', '街灯读我', '大热', '现代言情', '2025-10-01', 0.6, 18.5, 9.7, '连载中', 'women', 18.5, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2054267', '三年婚姻喂了狗，二嫁律师宠疯了', '炎热的夏天', '新书', '现代言情', '2025-10-01', 1.7, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2054313', '阴阳塔', '水管开花', '新书', '玄幻奇幻', '2025-10-01', 11.2, 1.7, 9, '连载中', 'male', 1.7, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2055375', '姜医生，贺总约你去民政局', '江月何年', '新书', '现代言情', '2025-10-01', 6.4, 0.3, 8.8, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2056878', '大小姐重生选夫，小小硬汉拿捏拿捏', '暖宝宝爱吃饭', '新书', '现代言情', '2025-10-01', 9.2, 3.3, 9.3, '连载中', 'women', 3.3, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2057124', '靠私房菜名震京城，凤印上门了！', '宋九九', '新书', '古代言情', '2025-10-01', 6.9, 2.2, 9.8, '连载中', 'women', 2.2, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2057468', '权力巅峰：从县委大院开始', '今晚吃鸡', '新书', '都市', '2025-10-01', 9, 1.3, 9.1, '连载中', 'male', 1.3, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2057573', '窃医术，夺至亲？神医嫡女杀疯了！', '九汐公子', '新书', '古代言情', '2025-10-01', 1, 4.1, 9.4, '连载中', 'women', 4.1, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2059138', '救命！求生综里看风水，爆火全网', '桑桑籽', '新书', '现代言情', '2025-10-01', 2.3, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2059139', '听懂兽语后，被皇家全员团宠了', '桃酥', '新书', '古代言情', '2025-10-01', 4.3, 0.6, 9.4, '连载中', 'women', 0.6, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2059140', '戍边斥候：从奉旨传宗接代开始！', '般若菠萝', '新书', '历史', '2025-10-01', 5, 0.3, 8.8, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2060174', '转职：我死亡天灾，站起来为了你的君主', '懒惰的帅比', '新书', '都市', '2025-10-01', 3, 0.2, 8.4, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2060180', '科举：开局官府发妻，卷成状元', '明月天衣', '新书', '历史', '2025-10-01', 3.1, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2060824', '让你当狱长，没让你把神魔改造成卷王', '最怕取名字', '新书', '玄幻奇幻', '2025-10-01', 1.1, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061260', '七零读心，掏空家产带福宝寻夫随军', '沫沫无闻', '新书', '现代言情', '2025-10-01', 5.1, 0.3, 9, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061262', '哑巴小向导，被七个顶级哨兵缠上了', '疯麦', '新书', '幻想言情', '2025-10-01', 0.4, 0.1, 8.8, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061266', '边荒小吏', '东门吹牛', '新书', '历史', '2025-10-01', 2.7, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061267', '边军枭卒：从领媳妇开始皇图霸业', '凉小城', '新书', '历史', '2025-10-01', 1.9, 0.2, 8.8, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061269', '七零美人二嫁后，随军西北撩硬汉', '一然', '新书', '现代言情', '2025-10-01', 0.4, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061794', '开局送老婆，我成了众仙之父！', '西地那非', '新书', '玄幻奇幻', '2025-10-01', 4, 0.5, 9.2, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061800', '重生1985，我靠万物标签赶海发家', '吃不完的荔枝', '新书', '都市', '2025-10-01', 1.4, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061849', '官府发男人，绝色罪女抬我回家', '凶名赫赫', '新书', '历史', '2025-10-01', 5.2, 0.4, 8.8, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2061854', '恐怖时代：从斩诡开始永生不死', '戒律', '新书', '都市', '2025-10-01', 2.1, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062320', '随母改嫁换新爹，拖油瓶成了团宠', '萝兹萝丝', '新书', '现代言情', '2025-10-01', 4.3, 1.2, 9.5, '连载中', 'women', 1.2, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062787', '镇世龙王，你说他是废物赘婿？', '小只气球', '新书', '都市', '2025-10-01', 1.5, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062788', '穿越大唐：从驿站小卒到帝国巨擘', '亲爱的葡萄', '新书', '历史', '2025-10-01', 1.7, 0.1, 9.2, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062836', '重回七零：跟着小白脸爸进城吃软饭', '巫颜', '新书', '现代言情', '2025-10-01', 4.2, 0.6, 9.6, '连载中', 'women', 0.6, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063237', '怀孕生女他不管，提离婚他崩溃了', '凌淮', '新书', '现代言情', '2025-10-01', 0.6, 0.6, 8.8, '连载中', 'women', 0.6, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063605', '九阴九阳', '仗剑修真', '新书', '玄幻奇幻', '2025-10-01', 28, 17.7, 9.1, '连载中', 'male', 17.7, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063611', '小蘑菇今天也在吃软饭', '垂耳兔', '新书', '古代言情', '2025-10-01', 4.3, 1.3, 9.8, '连载中', 'women', 1.3, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063933', '网游：进化万物，我成唯一至高神！', '苍月翔', '新书', '游戏', '2025-10-01', 3.2, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064055', '挺孕肚离婚二嫁财阀，渣前夫悔疯了', '一颗胖梨', '新书', '现代言情', '2025-10-01', 19.5, 8.5, 9.4, '连载中', 'women', 8.5, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065349', '每日情报：乱世边军一小兵', '推拿医生', '新书', '历史', '2025-10-01', 1.4, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065792', '边军老卒，从娶媳妇开始横扫六国！', '齐天小圣', '新书', '历史', '2025-10-01', 3.1, 0.2, 8.7, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.43499999999999994);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065877', '医路情劫', '微微狂笑', '新书', '都市', '2025-10-01', 4.8, 0.8, 8.8, '连载中', 'male', 0.8, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065893', '太监无双', '水山', '新书', '历史', '2025-10-01', 3.4, 0.6, 9.1, '连载中', 'male', 0.6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066872', '离婚后，从幼儿园会演开始爆火全网', '烂番薯', '新书', '都市', '2025-10-01', 4.1, 0.2, 9.2, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2066875', '种田修仙：从随机刷新词条开始', '浪兰飞山', '新书', '玄幻奇幻', '2025-10-01', 1.7, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067201', '掏空仇家空间流放，亲爹一家悔哭', '景惠', '新书', '古代言情', '2025-10-01', 15, 5.8, 9.5, '连载中', 'women', 5.8, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067310', '问鼎：从选调警员到权力巅峰', '叶少华', '新书', '都市', '2025-10-01', 2.8, 0.5, 9.2, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067312', '网游：开局一条龙服务', '黑白相间', '新书', '游戏', '2025-10-01', 5.1, 0.9, 9.3, '连载中', 'male', 0.9, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067421', '你爱绿茶我让位，再嫁大佬你别跪', '落雪颂梅', '新书', '现代言情', '2025-10-01', 2.2, 0.3, 8.4, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2070054', '穿成恶女向导，七个顶级哨兵疯抢！', '贰一陆', '新书', '幻想言情', '2025-10-01', 2.6, 0.4, 9.2, '连载中', 'women', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2071753', '全球异能觉醒，我修肉身横推万古', '笔下再生', '新书', '都市', '2025-10-01', 3.3, 0.4, 9.2, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2072940', '第五年重逢，驰先生再度失控', '锦锦不是妖', '新书', '现代言情', '2025-10-01', 0.5, 3.7, 9.9, '连载中', 'women', 3.7, 0, 0, 0, 0, 0, 0.495);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2073165', '被他吻时心动', '玛丽苏狗蛋', '新书', '现代言情', '2025-10-01', 3.5, 0.4, 9.2, '连载中', 'women', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2073577', '人在废丹房，我以丹药证道成仙！', '伽蓝之梦', '新书', '玄幻奇幻', '2025-10-01', 35.5, 16.4, 9.3, '连载中', 'male', 16.4, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2073626', '万倍返还！我靠荒野求生养活龙国', '年年有玉', '新书', '玄幻奇幻', '2025-10-01', 1.3, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074077', '开局一辆垃圾车，假千金杀穿末世', '温念君', '新书', '幻想言情', '2025-10-01', 0.6, 0.1, 9.2, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074179', '混沌吞天诀', '凭虚御风', '新书', '玄幻奇幻', '2025-10-01', 2.1, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074326', '萌兽驾到，京圈大佬集体翘班洗奶瓶', '听听不听', '新书', '现代言情', '2025-10-01', 0.7, 0.2, 9.2, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074363', '被逼自刎，嫡女重生撕婚书覆皇朝', '柠檬小丸子', '新书', '古代言情', '2025-10-01', 3.1, 0.8, 9.2, '连载中', 'women', 0.8, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074393', '乱世荒年：从打猎开始无限抽奖', '可破', '新书', '历史', '2025-10-01', 2.2, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074395', '断绝关系？我转身科举成状元！', '天霸', '新书', '历史', '2025-10-01', 2, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074408', '全星际都想rua元帅的小奶崽', '未礼', '新书', '幻想言情', '2025-10-01', 2.6, 0.2, 8.4, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074459', '重生2006，从被白富美包车开始', '隔壁小王本尊', '新书', '都市', '2025-10-01', 2.1, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074462', '七零孕妻进军营，野痞兵王缠吻不休', '玖甜妹子', '新书', '现代言情', '2025-10-01', 4.6, 0.9, 9.2, '连载中', 'women', 0.9, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074544', '年代军工：让你当厂长，你整出了蘑菇蛋', '三鹿天下', '新书', '都市', '2025-10-01', 2.6, 0.4, 9.2, '连载中', 'male', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074547', '请神弼马温，被嘲猴子D级神官？', '黑鱼鱼鱼鱼', '新书', '都市', '2025-10-01', 2.2, 0.1, 9.2, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2075172', '穿成掌勺丫鬟，我把病秧子喂活了', '水中有鱼', '新书', '古代言情', '2025-10-01', 0.8, 0.5, 9.2, '连载中', 'women', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076380', '女子监狱出真龙，出狱后全球震动', '我非良人', '新书', '都市', '2025-10-01', 3.9, 1, 9.6, '连载中', 'male', 1, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076400', '镇荒印', '李中有梦', '新书', '玄幻奇幻', '2025-10-01', 2.1, 0.2, 9.2, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076478', '狂野都市', '大丙', '新书', '都市', '2025-10-01', 1.6, 0.2, 8.4, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076479', '净身出户后，大佬全部身家求复合', '夜微雨', '新书', '现代言情', '2025-10-01', 0.9, 0.1, 8.4, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076498', '一觉醒来三年后，七零长姐凶又甜', '叫我富贵叭', '新书', '现代言情', '2025-10-01', 2.4, 0.4, 9.2, '连载中', 'women', 0.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076502', '斗罗V：人面魔蛛，多子多福', '龙小君', '新书', 'N次元', '2025-10-01', 4.5, 0.5, 8.8, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2076515', '乾元混沌塔', '织花明路', '新书', '玄幻奇幻', '2025-10-01', 1.9, 0.2, 8.6, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2077477', '上界帝子你敢甩，我娶女帝你哭什么？', '墨白', '新书', '玄幻奇幻', '2025-10-01', 2.4, 0.2, 9.2, '连载中', 'male', 0.2, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2078333', '边境反贼：从解救女囚开始', '女帝', '新书', '历史', '2025-10-01', 3.2, 0.6, 9.2, '连载中', 'male', 0.6, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2078905', '夺我灵泉空间？掏空资产嫁京少爽翻天', '桃乐漫', '新书', '现代言情', '2025-10-01', 1.1, 1.3, 9.2, '连载中', 'women', 1.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2079417', '经常杀人的朋友', '魂燚', '新书', '都市', '2025-10-01', 3.6, 0.7, 9.2, '连载中', 'male', 0.7, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('208897', '极品天师', '月下冰河', '完结', '都市', '2025-10-01', 34.7, 1.4, 9.2, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('210772', '都市之最强仙医', '夫子', '完结', '都市', '2025-10-01', 534.5, 1.5, 9, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213108', '都市全能医圣', '玖月天', '完结', '都市', '2025-10-01', 181.7, 1.4, 9.1, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213189', '混沌剑帝', '运也', '大热', '玄幻奇幻', '2025-10-01', 905.8, 6, 9.1, '已完结', 'male', 6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213189', '混沌剑帝', '运也', '完结', '玄幻奇幻', '2023-11-01', 905.8, 6, 9.1, '已完结', 'male', 6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213502', '小皇叔腹黑又难缠', '一碧榶榶', '完结', '古代言情', '2025-10-01', 0.6, 2, 9.6, '已完结', 'women', 2, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213692', '武帝归来', '修果', '完结', '都市', '2025-10-01', 948, 1.8, 9.1, '已完结', 'male', 1.8, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('213853', '极品小相师', '大丙', '完结', '都市', '2025-10-01', 185, 1.8, 9.3, '已完结', 'male', 1.8, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('214147', '阴阳诡匠', '洛小阳', '完结', '奇闻异事', '2025-10-01', 259.2, 1.9, 9.6, '已完结', 'male', 1.9, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('214514', '活人阴差', '末日诗人', '完结', '奇闻异事', '2025-10-01', 546.1, 2.1, 9.1, '已完结', 'male', 2.1, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215264', '都市战狼', '荆南', '完结', '都市', '2025-10-01', 415.2, 1.8, 9.2, '已完结', 'male', 1.8, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215476', '学霸女王马甲多', '灰夫人', '完结', '现代言情', '2025-10-01', 0.8, 2.2, 9.8, '已完结', 'women', 2.2, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('215874', '吞天造化经', '鬼疯子', '完结', '玄幻奇幻', '2025-10-01', 757.7, 2.6, 9.1, '已完结', 'male', 2.6, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('216054', '极品小道长', '任公独钓', '完结', '奇闻异事', '2025-10-01', 124.4, 0.8, 9.3, '已完结', 'male', 0.8, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('217267', '民间诡闻实录之阴阳先生', '罗樵森', '完结', '奇闻异事', '2025-10-01', 428.5, 1.3, 9.5, '已完结', 'male', 1.3, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('217770', '全师门就我一个废柴', '白木木', '大热', '幻想言情', '2025-10-01', 1, 7.9, 9.8, '已完结', 'women', 7.9, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('219040', '极道剑尊', '二十七杯酒', '大热', '玄幻奇幻', '2025-10-01', 872.4, 16, 9.2, '连载中', 'male', 16, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('219310', '全世界都玩异能只有我修仙', '缘起云涌', '完结', 'N次元', '2025-10-01', 126.1, 1.4, 9.2, '已完结', 'male', 1.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('219498', '君夫人的马甲层出不穷', '荷衣', '大热', '现代言情', '2025-10-01', 1.2, 5.1, 9.7, '已完结', 'women', 5.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('221137', '网游之全服公敌', '黑白相间', '完结', '游戏', '2025-10-01', 715.9, 1.8, 9.3, '已完结', 'male', 1.8, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1655967', '吞噬九重天', '屠刀成佛', '大热', '玄幻奇幻', '2025-10-01', 360.3, 20.8, 9.1, '连载中', 'male', 20.8, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1658048', '六年后，我携四个幼崽炸翻前夫家', '相思一顾', '大热', '现代言情', '2025-10-01', 34.7, 30.1, 9.6, '连载中', 'women', 30.1, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1669371', '吞天神帝', '小三叔', '完结', '玄幻奇幻', '2025-10-01', 106.5, 1.5, 9, '已完结', 'male', 1.5, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1694124', '女总裁的贴身龙帅', '枯木封雨', '完结', '都市', '2025-10-01', 50.1, 1, 9, '已完结', 'male', 1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1710753', '舔狗反派只想苟，女主不按套路走！', '我是愤怒', '大热', '都市', '2025-10-01', 34.7, 32.9, 9.5, '连载中', 'male', 32.9, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1780393', '蛇骨阴香', '北派无尽夏', '完结', '现代言情', '2025-10-01', 0.3, 1.7, 9.6, '已完结', 'women', 1.7, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1807804', '重启2008：从拯救绝色女老师开始逆袭', '封尘往昔', '完结', '都市', '2025-10-01', 384.9, 1, 9, '已完结', 'male', 1, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1836527', '凰宫梦', '蓝九九', '大热', '古代言情', '2025-10-01', 938.4, 38.2, 9.7, '连载中', 'women', 38.2, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1837399', '圣手大医仙', '带刺的毛球', '完结', '都市', '2025-10-01', 30.7, 1.1, 8.9, '已完结', 'male', 1.1, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1839533', '锦帐春深', '温流', '大热', '古代言情', '2025-10-01', 494.9, 5.9, 9.7, '已完结', 'women', 5.9, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1850580', '我非池中物', '夜泊秦淮', '大热', '都市', '2025-10-01', 115, 8.4, 9.1, '连载中', 'male', 8.4, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1851542', '麒麟出世，师父让我下山去结婚', '御龙', '完结', '都市', '2025-10-01', 85, 3.4, 9, '已完结', 'male', 3.4, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1864909', '将军活不过仨月，换亲后我旺他百年', '不知绿', '大热', '古代言情', '2025-10-01', 138.1, 4.9, 9.6, '已完结', 'women', 4.9, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1868453', '噬神鼎', '三千晴空', '大热', '玄幻奇幻', '2025-10-01', 235.5, 4.8, 8.9, '连载中', 'male', 4.8, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1873716', '换嫁给绝嗣太子后我连生三胎', '昔也', '完结', '古代言情', '2025-10-01', 0.6, 2.5, 9.5, '已完结', 'women', 2.5, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1873810', '换婚病危世子，她一胎三宝赢麻了', '雨过阳光', '完结', '古代言情', '2025-10-01', 0.6, 2.5, 9.6, '已完结', 'women', 2.5, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1880008', '吞天神体：从仙女奉献开始无敌', '南云月', '大热', '玄幻奇幻', '2025-10-01', 70.8, 15.8, 9.2, '连载中', 'male', 15.8, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1887846', '七零美人到西北，硬汉红温了', '棠元', '大热', '现代言情', '2025-10-01', 236, 5.1, 9.7, '已完结', 'women', 5.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1924828', '还不起人情债，我只好当她男朋友了', '无色', '大热', '都市', '2025-10-01', 145.7, 4.6, 9, '连载中', 'male', 4.6, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1927415', '离婚三天：我冷淡至极，他索吻成瘾', '风羽轻轻', '大热', '现代言情', '2025-10-01', 224.5, 13.5, 9.5, '连载中', 'women', 13.5, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1946720', '1977，开局女知青以身相许', '家有十猫', '大热', '都市', '2025-10-01', 185.2, 13.9, 9, '连载中', 'male', 13.9, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1948430', '重生60：从深山打猎开始致富', 'KITTT', '大热', '都市', '2025-10-01', 80.9, 4.2, 9.3, '连载中', 'male', 4.2, 0, 0, 0, 0, 0, 0.465);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1956587', '五岁萌妃炸京城，我阿娘是侯府真千金', '幻想鱼', '完结', '古代言情', '2025-10-01', 0.9, 2, 9.6, '已完结', 'women', 2, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1965109', '守寡重生，送断袖夫君下黄泉', '指尖上的行走', '完结', '古代言情', '2025-10-01', 0.7, 4.1, 9.7, '已完结', 'women', 4.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('197091', '民间诡闻实录', '罗樵森', '大热', '奇闻异事', '2025-10-01', 34.7, 8.4, 9.6, '已完结', 'male', 8.4, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('197091', '民间诡闻实录', '罗樵森', '完结', '奇闻异事', '2023-11-01', 34.7, 8.4, 9.6, '已完结', 'male', 8.4, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1977771', '傅总，夫人不想当首富太太了', '蓝尧', '大热', '现代言情', '2025-10-01', 187.6, 15.7, 9.4, '连载中', 'women', 15.7, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1978758', '小姑奶奶下山了，在桥洞底下摆摊算命', '骑着猫的小鱼干', '大热', '现代言情', '2025-10-01', 1.1, 11.4, 9.7, '连载中', 'women', 11.4, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1981956', '柔弱医修今天也在背地里暴打魔尊', '白木木', '大热', '幻想言情', '2025-10-01', 263.9, 16.9, 9.8, '连载中', 'women', 16.9, 0, 0, 0, 0, 0, 0.49000000000000005);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982356', '渣夫别跪了，夫人嫁顶级大佬啦', '乐恩', '大热', '现代言情', '2025-10-01', 704.5, 47.5, 9.2, '连载中', 'women', 47.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1982967', '厉总，太太在外面有两个私生子', '十里山河', '大热', '现代言情', '2025-10-01', 94.7, 2.4, 9.1, '已完结', 'women', 2.4, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1994507', '权力争锋', '东流无歇', '大热', '都市', '2025-10-01', 37, 5, 9.1, '连载中', 'male', 5, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('1995023', '边关兵王', '青岳', '大热', '历史', '2025-10-01', 347.1, 41.6, 9.4, '连载中', 'male', 41.6, 0, 0, 0, 0, 0, 0.47000000000000003);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2011930', '末世别人砍丧尸，我在房车炫美食', '槿花篱', '大热', '幻想言情', '2025-10-01', 41.7, 3.1, 9.7, '连载中', 'women', 3.1, 0, 0, 0, 0, 0, 0.485);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2016384', '冷婚五年，离婚夜他却失控了', '温见鹿', '新书', '现代言情', '2025-10-01', 0.9, 1.2, 9, '连载中', 'women', 1.2, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2024797', '七零资本娇小姐，下放后硬汉宠上天', '梅才华', '新书', '现代言情', '2025-10-01', 7.8, 0.3, 8.8, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2027484', '领证爽约？我转嫁你哥哭什么', '欧橙', '大热', '现代言情', '2025-10-01', 126.2, 10.4, 9.2, '连载中', 'women', 10.4, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2028796', '陛下管管吧，六皇子又发疯了！', '追风boy', '完结', '历史', '2025-10-01', 14.2, 0.8, 9, '已完结', 'male', 0.8, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2029029', '离婚后，我权势滔天，你哭什么', '水门绅士', '大热', '都市', '2025-10-01', 181.6, 18.2, 8.9, '连载中', 'male', 18.2, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2047215', '皇后谁爱当谁当，我嫁权臣横着走', '素手摘星', '新书', '古代言情', '2025-10-01', 8.1, 3.4, 9.5, '连载中', 'women', 3.4, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2052831', '长生从助仙子修行开始', '勿问', '新书', '玄幻奇幻', '2025-10-01', 3, 0.3, 8.6, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2053789', '权力沉浮', '空中鹰', '新书', '都市', '2025-10-01', 6.1, 1, 8.8, '连载中', 'male', 1, 0, 0, 0, 0, 0, 0.44000000000000006);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2055000', '快穿好孕美人，绝嗣反派黑化了', '虞忧', '新书', '幻想言情', '2025-10-01', 3.4, 0.2, 8.4, '连载中', 'women', 0.2, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2055374', '七零美人要离婚，冷面军少他急了', '钱小二', '新书', '现代言情', '2025-10-01', 0.8, 10.7, 9.5, '连载中', 'women', 10.7, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2057569', '领主：我招募的士兵怎么都是玩家', '禅心道骨', '新书', '玄幻奇幻', '2025-10-01', 9.7, 2.9, 9.5, '连载中', 'male', 2.9, 0, 0, 0, 0, 0, 0.475);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2057884', '神级捡漏王：无良校花逼我去扯证', '李卯卯', '新书', '都市', '2025-10-01', 5.3, 0.7, 8.9, '连载中', 'male', 0.7, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2062363', '离婚后，我转嫁大佬你哭什么？', '舒子曦', '新书', '现代言情', '2025-10-01', 0.5, 0.1, 8.6, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063290', '让我做外室？我另嫁你哭什么', '皎皎朗月', '新书', '古代言情', '2025-10-01', 2.4, 0.3, 9.2, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2063306', '重返二十岁心动，他才是白月光', '浮景', '新书', '现代言情', '2025-10-01', 1.1, 0.1, 9.2, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064747', '都市狠人', '北冥鱼', '新书', '都市', '2025-10-01', 5.6, 1.9, 9.1, '连载中', 'male', 1.9, 0, 0, 0, 0, 0, 0.45499999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2064966', '成全他和青梅后，我却成了白月光', '墨墨卿卿', '新书', '现代言情', '2025-10-01', 36.1, 17.2, 9.6, '连载中', 'women', 17.2, 0, 0, 0, 0, 0, 0.48);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065274', '英雄本色', '疯十八', '新书', '都市', '2025-10-01', 1.4, 0.1, 8.6, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.43);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065353', '只剩七天寿命？先休渣夫再杀全家', '南山野', '新书', '古代言情', '2025-10-01', 0.8, 0.3, 9.2, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065807', '重生下乡：我才不当冤大头！', '清蒸大白蛆', '新书', '都市', '2025-10-01', 13.2, 2.7, 8.9, '连载中', 'male', 2.7, 0, 0, 0, 0, 0, 0.445);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065879', '一天暴涨一年修为，你说你后悔了？', '小陈little', '新书', '都市', '2025-10-01', 4.2, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2065896', '重生孕肚藏福宝，灾年养崽掀族祠', '瑞侈', '新书', '古代言情', '2025-10-01', 3.5, 0.5, 9.2, '连载中', 'women', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067244', '开局杀敌爆属性，我功力滔天', '潇湘烨雨', '新书', '玄幻奇幻', '2025-10-01', 2.7, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067317', '夫人拒不原谅，高冷渣夫失控了', '严以妃', '新书', '现代言情', '2025-10-01', 2.3, 0.5, 9.2, '连载中', 'women', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2067319', '闪婚后，老公竟是我大学教授', '多多美', '新书', '现代言情', '2025-10-01', 1, 0.3, 8.4, '连载中', 'women', 0.3, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074368', '职路扶摇', '桑迪', '新书', '都市', '2025-10-01', 1.3, 0.1, 8.4, '连载中', 'male', 0.1, 0, 0, 0, 0, 0, 0.42000000000000004);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2074390', '错虐白月光，祁总跪地求复合', '鹿景景', '新书', '现代言情', '2025-10-01', 1.7, 0.1, 9.2, '连载中', 'women', 0.1, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2075201', '魔道神豪携亿万魔晶，在两界杀疯了', '风九元', '新书', '玄幻奇幻', '2025-10-01', 1.7, 0.3, 9.2, '连载中', 'male', 0.3, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('2077743', '灾荒年捡回姐妹花，我粮肉满仓！', '小小月月落落', '新书', '历史', '2025-10-01', 3.1, 0.5, 9.2, '连载中', 'male', 0.5, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '大热', '科幻', '2025-10-01', 34.7, 9, 9, '已完结', 'male', 9, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '完结', '科幻', '2023-11-01', 34.7, 9, 9, '已完结', 'male', 9, 0, 0, 0, 0, 0, 0.45);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('222157', '我有神级收益系统', '不是蚊子', '完结', '都市', '2025-10-01', 921.2, 2.8, 9.2, '已完结', 'male', 2.8, 0, 0, 0, 0, 0, 0.45999999999999996);
+INSERT INTO `ads_platform_ranking_trend` VALUES ('222767', '离婚后她惊艳了世界', '明婳', '大热', '现代言情', '2025-10-01', 34.7, 100, 9.6, '连载中', 'women', 100, 0, 0, 0, 0, 0, 0.48);
+
+-- ----------------------------
+-- Table structure for ads_user_avoid_pitfalls
+-- ----------------------------
+DROP TABLE IF EXISTS `ads_user_avoid_pitfalls`;
+CREATE TABLE `ads_user_avoid_pitfalls`  (
+  `book_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `author` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category2_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `rank_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `gender_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `numeric_popularity` double NULL DEFAULT NULL,
+  `numeric_score` double NULL DEFAULT NULL,
+  `numeric_read_count` double NULL DEFAULT NULL,
+  `rank_date` date NULL DEFAULT NULL,
+  `heat_score_ratio` double NULL DEFAULT NULL,
+  `is_high_heat_low_score` int NULL DEFAULT NULL,
+  `is_suspicious_boost` int NULL DEFAULT NULL,
+  `read_conversion` double NULL DEFAULT NULL,
+  `is_low_conversion` int NULL DEFAULT NULL,
+  `risk_level` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `recommendation_weight` double NULL DEFAULT NULL,
+  `avoidance_advice` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ads_user_avoid_pitfalls
+-- ----------------------------
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('149769', '九阳武神', '我吃面包', '玄幻奇幻', '东方玄幻', '大热', 'male', 34.7, 9.1, 16.2, '2025-10-01', 0.00003813186813186814, 0, 0, 46.685878962536016, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('152973', '最强学霸系统', '佛系和尚', '都市', '热血校园', '完结', 'male', 34.7, 9.5, 1.7, '2025-10-01', 0.00003652631578947369, 0, 0, 4.899135446685878, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1651341', '盖世圣医', '林阳', '都市', '都市高手', '完结', 'male', 268.4, 9.1, 0.9, '2025-10-01', 0.0002949450549450549, 0, 0, 0.3353204172876304, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1654596', '退婚后被权爷宠上天', '一川风月', '现代言情', '总裁豪门', '大热', 'women', 379.2, 9.7, 5.4, '2025-10-01', 0.0003909278350515464, 0, 0, 1.4240506329113924, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1658839', '穿成孩子妈，奋斗成赢家', '冉阿冉', '现代言情', '总裁豪门', '完结', 'women', 1.1, 9.5, 1.4, '2025-10-01', 0.0000011578947368421055, 0, 0, 127.27272727272725, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1669963', '大景巡夜人', '藕池猫咪', '古代言情', '古代情缘', '完结', 'women', 1.2, 9.8, 1.8, '2025-10-01', 0.0000012244897959183671, 0, 0, 150, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1675640', '镇天神医', '五杯咖啡', '都市', '都市高手', '大热', 'male', 355.8, 9.2, 12.3, '2025-10-01', 0.00038673913043478264, 0, 0, 3.4569983136593594, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1678025', '九皇叔的神医毒妃', '柠檬小丸子', '古代言情', '宫闱宅斗', '完结', 'women', 1, 9.5, 3.4, '2025-10-01', 0.0000010526315789473683, 0, 0, 340, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1683831', '重生八零嫁给全军第一硬汉', '九羊猪猪', '现代言情', '年代重生', '大热', 'women', 374, 9.5, 5.6, '2025-10-01', 0.00039368421052631583, 0, 0, 1.4973262032085561, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1684297', '规则怪谈，欢迎来到甜蜜的家', '弦泠兮', '幻想言情', '无限快穿', '完结', 'women', 0.7, 9.8, 2.9, '2025-10-01', 0.0000007142857142857142, 0, 0, 414.28571428571433, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1697498', '末世天灾，抢艘航母当基地', '封卷残云', '科幻', '末世危机', '完结', 'male', 460.3, 8.8, 1.2, '2025-10-01', 0.0005230681818181818, 0, 0, 0.2606995437757984, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1697715', '被关女子监狱三年，我修炼成仙了', '一只狸猫', '都市', '都市高手', '大热', 'male', 183.1, 9, 7.9, '2025-10-01', 0.00020344444444444446, 0, 0, 4.314582195521574, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1699328', '大佬归来，假千金她不装了', '骑着猫的小鱼干', '现代言情', '总裁豪门', '大热', 'women', 34.7, 9.7, 52.7, '2025-10-01', 0.000035773195876288664, 0, 0, 151.87319884726224, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1709320', '徒儿，饶了五位绝美师父吧', '不渊', '都市', '都市高手', '完结', 'male', 207.1, 9.1, 2.1, '2025-10-01', 0.00022758241758241758, 0, 0, 1.0140028971511348, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1711646', '阎王下山', '苍月夜', '都市', '都市高手', '大热', 'male', 34.7, 8.9, 24, '2025-10-01', 0.00003898876404494382, 0, 0, 69.16426512968299, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1719564', '重生七零再高嫁', '星月相随', '现代言情', '年代重生', '大热', 'women', 935.9, 9.7, 8.5, '2025-10-01', 0.0009648453608247424, 0, 0, 0.9082166898172882, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1723049', '天门神医', '小楼听雨本尊', '都市', '都市高手', '大热', 'male', 274.4, 9.2, 5.9, '2025-10-01', 0.00029826086956521737, 0, 0, 2.150145772594753, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1723450', '被王爷赐死，医妃潇洒转身嫁皇叔', '金银满屋', '古代言情', '宫闱宅斗', '完结', 'women', 0.6, 9.5, 3.8, '2025-10-01', 0.0000006315789473684211, 0, 0, 633.3333333333333, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1724453', '妙手大仙医', '金佛', '都市', '都市高手', '大热', 'male', 686.1, 9.2, 18, '2025-10-01', 0.0007457608695652175, 0, 0, 2.623524267599475, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1725180', '我废柴真千金，会亿点玄学怎么了', '甜幽幽', '现代言情', '总裁豪门', '完结', 'women', 0.8, 9.7, 2.4, '2025-10-01', 0.0000008247422680412372, 0, 0, 299.99999999999994, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1726987', '大佬十代单传，我为他一胎生四宝', '白生米', '现代言情', '总裁豪门', '大热', 'women', 637.9, 9.4, 41.2, '2025-10-01', 0.0006786170212765957, 0, 0, 6.458692585044679, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1729484', '凡尘飞仙', '齐甲', '玄幻奇幻', '东方玄幻', '大热', 'male', 345.1, 9.3, 11.4, '2025-10-01', 0.00037107526881720434, 0, 0, 3.3033903216458995, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1730259', '踏神界逆九州：废物七小姐权倾天下', '苏音', '幻想言情', '玄幻仙侠', '完结', 'women', 0.3, 9.7, 2.1, '2025-10-01', 0.00000030927835051546394, 0, 0, 700.0000000000001, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1737869', '重生七零，搬空敌人仓库去下乡', '六月无花', '现代言情', '年代重生', '完结', 'women', 1, 9.6, 1.7, '2025-10-01', 0.0000010416666666666667, 0, 0, 170, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1738575', '直播算命太准，全网蹲守吃瓜', '荷衣', '现代言情', '都市奇幻', '大热', 'women', 551.1, 9.7, 5.9, '2025-10-01', 0.0005681443298969073, 0, 0, 1.0705861005262203, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1741639', '九零军媳：兵王老公不见面', '香辣小螃蟹', '现代言情', '年代重生', '完结', 'women', 0.4, 9.7, 1.8, '2025-10-01', 0.0000004123711340206186, 0, 0, 450, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1747899', '无敌六皇子', '梁山老鬼', '历史', '架空历史', '大热', 'male', 34.7, 9.3, 39.3, '2025-10-01', 0.000037311827956989247, 0, 0, 113.2564841498559, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1754203', '玲珑塔', '一丝凉意', '玄幻奇幻', '东方玄幻', '大热', 'male', 268.4, 9.3, 8.9, '2025-10-01', 0.0002886021505376344, 0, 0, 3.315946348733234, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1758119', '重生八零，闪婚柔情铁血硬汉', '风四爷', '现代言情', '年代重生', '完结', 'women', 1.1, 9.7, 1.2, '2025-10-01', 0.000001134020618556701, 0, 0, 109.09090909090908, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1758273', '重生2000：从追求青涩校花同桌开始', '痞子老妖', '都市', '热血校园', '大热', 'male', 34.7, 9.3, 19.4, '2025-10-01', 0.000037311827956989247, 0, 0, 55.90778097982708, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1759358', '出狱后，我闪婚了植物人大佬', '柠七七', '现代言情', '总裁豪门', '大热', 'women', 293.6, 9.4, 7.9, '2025-10-01', 0.0003123404255319149, 0, 0, 2.690735694822888, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1759390', '分手后，捡到一只吸血鬼美少女', '黄泉隼', 'N次元', '原生幻想', '完结', 'male', 318.8, 9.5, 1.5, '2025-10-01', 0.0003355789473684211, 0, 0, 0.4705144291091593, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1761352', '易孕体质，七零长嫂凶又甜', '方赢', '现代言情', '年代重生', '完结', 'women', 0.4, 9.7, 2.1, '2025-10-01', 0.0000004123711340206186, 0, 0, 525, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1766962', '苟到炼气10000层，飞升回地球', '拂衣惊雪', '都市', '都市高武', '完结', 'male', 219.7, 8.5, 1.1, '2025-10-01', 0.0002584705882352941, 0, 0, 0.5006827492034593, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1767349', '父皇偷听我心声杀疯了，我负责吃奶', '安已然', '古代言情', '宫闱宅斗', '完结', 'women', 1, 9.6, 2.7, '2025-10-01', 0.0000010416666666666667, 0, 0, 270, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1767940', '混沌塔', '惊蛰落月', '玄幻奇幻', '东方玄幻', '大热', 'male', 582.4, 9.2, 32.2, '2025-10-01', 0.0006330434782608696, 0, 0, 5.528846153846154, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1771379', '大佬绝嗣！我一夜怀上他两个崽', '相思一顾', '现代言情', '总裁豪门', '大热', 'women', 295.1, 9.5, 4.6, '2025-10-01', 0.0003106315789473684, 0, 0, 1.5587936292782105, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1772694', '神尊强宠，废物小姐竟是绝世女帝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', '完结', 'women', 0.5, 9.6, 3.1, '2025-10-01', 0.0000005208333333333334, 0, 0, 620, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1777995', '将军她是引渡人', '指尖上的行走', '古代言情', '古代情缘', '完结', 'women', 1, 9.8, 2.2, '2025-10-01', 0.000001020408163265306, 0, 0, 220.00000000000003, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1780785', '吞天混沌经：开局先吞圣女修为', '一阵乱写', '玄幻奇幻', '东方玄幻', '大热', 'male', 255.6, 9.1, 6.9, '2025-10-01', 0.0002808791208791209, 0, 0, 2.699530516431925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1781303', '穿书反派：开局挖掉女主至尊骨', '晚风起', '玄幻奇幻', '东方玄幻', '完结', 'male', 144.4, 8.7, 2, '2025-10-01', 0.0001659770114942529, 0, 0, 1.3850415512465373, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1781450', '无限流：在惊悚世界当万人迷', '白日宴火', '幻想言情', '无限快穿', '完结', 'women', 0.4, 9.9, 3.3, '2025-10-01', 0.0000004040404040404041, 0, 0, 824.9999999999998, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1802708', '神算真千金，全豪门跪下喊祖宗', '一只肉九', '现代言情', '总裁豪门', '完结', 'women', 0.5, 9.5, 2.4, '2025-10-01', 0.0000005263157894736842, 0, 0, 480, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1805751', '开局被女土匪看中，我占山为王', '键盘起灰', '历史', '架空历史', '完结', 'male', 166.1, 9.3, 1.7, '2025-10-01', 0.0001786021505376344, 0, 0, 1.0234798314268514, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1806041', '巅峰青云路', '登封造极', '都市', '官场', '大热', 'male', 180.3, 9.2, 31, '2025-10-01', 0.00019597826086956523, 0, 0, 17.193566278424846, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1807740', '末世前中彩票，我囤上亿物资躺赢', '诺禾', '幻想言情', '末世求生', '完结', 'women', 1, 9.6, 1.7, '2025-10-01', 0.0000010416666666666667, 0, 0, 170, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1810234', '从女子监狱走出的修仙者', '河图大妖', '都市', '都市高武', '大热', 'male', 188, 9, 5.2, '2025-10-01', 0.00020888888888888888, 0, 0, 2.765957446808511, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1810593', '嫁权臣', '有香如故', '古代言情', '宫闱宅斗', '完结', 'women', 0.3, 9.7, 2.2, '2025-10-01', 0.00000030927835051546394, 0, 0, 733.3333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1812053', '警报！龙国出现SSS级修仙者！', '紫枫', '都市', '都市高武', '大热', 'male', 365.4, 9.2, 6.7, '2025-10-01', 0.0003971739130434783, 0, 0, 1.8336070060207994, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1817221', '史上最强师父', '炒方便面', '玄幻奇幻', '东方玄幻', '大热', 'male', 976.5, 9.2, 25.7, '2025-10-01', 0.001061413043478261, 0, 0, 2.631848438300051, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1824987', '凤归', '扶苏公子', '古代言情', '权谋天下', '完结', 'women', 0.7, 9.4, 1.8, '2025-10-01', 0.0000007446808510638298, 0, 0, 257.14285714285717, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1828483', '乾坤塔', '新闻工作者', '玄幻奇幻', '东方玄幻', '完结', 'male', 306.5, 8.9, 4.2, '2025-10-01', 0.0003443820224719101, 0, 0, 1.370309951060359, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1834789', '警报！真龙出狱！', '红透半边天', '都市', '都市高手', '大热', 'male', 819.6, 9.2, 71.1, '2025-10-01', 0.0008908695652173914, 0, 0, 8.674963396778915, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1846315', '小雌性是万人迷，养了一窝毛绒绒', '一个刚正不阿的女人', '幻想言情', '未来科幻', '完结', 'women', 0.9, 9.8, 3.2, '2025-10-01', 0.0000009183673469387754, 0, 0, 355.5555555555556, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1851521', '魔女校花从无绯闻，直到遇上了我', '铲子王', '都市', '热血校园', '完结', 'male', 175.8, 9.3, 1.6, '2025-10-01', 0.00018903225806451613, 0, 0, 0.9101251422070534, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1860026', '世子无双', '宁峥', '历史', '架空历史', '大热', 'male', 909.8, 9.2, 16, '2025-10-01', 0.0009889130434782608, 0, 0, 1.7586282699494395, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1861632', '我有一家纸扎铺', '花萝吱吱', '现代言情', '现代悬疑', '完结', 'women', 0.4, 9.7, 2.9, '2025-10-01', 0.0000004123711340206186, 0, 0, 724.9999999999999, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1863508', '重生1994，逃婚海钓赢麻了！', '林溪', '现代言情', '年代重生', '大热', 'women', 99.5, 9.7, 7.5, '2025-10-01', 0.00010257731958762888, 0, 0, 7.537688442211055, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1867208', '真福宝挥手粮满仓，全家悔断肠', '朵瑞米发娑', '古代言情', '种田经商', '完结', 'women', 1, 9.3, 1.2, '2025-10-01', 0.000001075268817204301, 0, 0, 120, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1870433', '冻死风雪夜，重生真嫡女虐翻全家', '一颗胖梨', '古代言情', '宫闱宅斗', '大热', 'women', 588.1, 9.5, 15.7, '2025-10-01', 0.0006190526315789474, 0, 0, 2.669614011222581, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1870439', '空间通末世：我囤亿万物资养兵王', '小桃花', '幻想言情', '末世求生', '完结', 'women', 0.3, 9.6, 1.6, '2025-10-01', 0.0000003125, 0, 0, 533.3333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1871052', '为奴十年', '探花大人', '古代言情', '古代情缘', '大热', 'women', 92.6, 9.7, 2.5, '2025-10-01', 0.00009546391752577319, 0, 0, 2.699784017278618, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1871612', '爹爹开门，系窝呀！', '垂耳兔', '古代言情', '古代情缘', '大热', 'women', 236.2, 9.8, 5.3, '2025-10-01', 0.00024102040816326528, 0, 0, 2.243861134631668, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1872576', '我来自上界帝族，成婚当天媳妇跟人跑', '社恐啊社恐', '玄幻奇幻', '东方玄幻', '完结', 'male', 236.5, 8.8, 1.2, '2025-10-01', 0.00026874999999999995, 0, 0, 0.507399577167019, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1879266', '封总，太太想跟你离婚很久了', '云中觅', '现代言情', '总裁豪门', '大热', 'women', 34.7, 9.2, 154.6, '2025-10-01', 0.00003771739130434783, 0, 0, 445.5331412103746, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1880127', '出生被活埋，萌宝回京杀疯了', '固夏', '古代言情', '古代情缘', '完结', 'women', 0.3, 9.6, 3.7, '2025-10-01', 0.0000003125, 0, 0, 1233.3333333333335, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1885468', '我医武双绝，体内还有一条龙', '月辰', '都市', '都市高手', '大热', 'male', 84.6, 9, 5, '2025-10-01', 0.00009399999999999998, 0, 0, 5.91016548463357, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1888573', '女富婆的超级神医', '狼性佛心', '都市', '都市高手', '完结', 'male', 64.7, 9.1, 2, '2025-10-01', 0.0000710989010989011, 0, 0, 3.091190108191654, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1888581', '葬仙棺', '执笔人', '玄幻奇幻', '东方玄幻', '大热', 'male', 321.4, 9.1, 15.4, '2025-10-01', 0.0003531868131868132, 0, 0, 4.79153702551338, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1889690', '暗恋她的第十一年', '有香如故', '现代言情', '总裁豪门', '大热', 'women', 748.6, 9.8, 12, '2025-10-01', 0.0007638775510204082, 0, 0, 1.6029922522041142, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1891461', '主播万人迷，榜一大哥争着宠', '熊就要有个熊样', '现代言情', '娱乐明星', '大热', 'women', 675.1, 9.9, 7.7, '2025-10-01', 0.0006819191919191919, 0, 0, 1.1405717671456082, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1916703', '宁嫁牌位不当妾，国公府我说了算', '林拾酒', '古代言情', '宫闱宅斗', '完结', 'women', 0.9, 9.5, 2.8, '2025-10-01', 0.0000009473684210526316, 0, 0, 311.1111111111111, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1924831', '有帝族背景还开挂，我无敌了！', '不太勇敢', '玄幻奇幻', '东方玄幻', '大热', 'male', 385.8, 9.1, 15.8, '2025-10-01', 0.000423956043956044, 0, 0, 4.095386210471747, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1941553', '我的峥嵘岁月', '牛不易', '都市', '都市生活', '大热', 'male', 80.7, 9.2, 5.5, '2025-10-01', 0.00008771739130434783, 0, 0, 6.81536555142503, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1945519', '马甲藏不住，假千金炸翻全京圈', '程不言', '现代言情', '青春校园', '大热', 'women', 462.4, 9.8, 6.7, '2025-10-01', 0.0004718367346938775, 0, 0, 1.4489619377162632, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1946350', '玄幻：长生神子，证道何须退婚挖骨！', '王二的刀', '玄幻奇幻', '诸天万界', '完结', 'male', 137.3, 9.2, 1.8, '2025-10-01', 0.00014923913043478264, 0, 0, 1.3109978150036414, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1948025', '夺妻', '将满', '现代言情', '总裁豪门', '大热', 'women', 321.2, 9.5, 3.7, '2025-10-01', 0.00033810526315789473, 0, 0, 1.1519302615193028, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1948198', '半熟', '槿郗', '现代言情', '总裁豪门', '大热', 'women', 88.9, 9.5, 8.5, '2025-10-01', 0.00009357894736842106, 0, 0, 9.561304836895387, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1950540', '傅律师，太太说她不回头了', '荣荣子铱', '现代言情', '总裁豪门', '大热', 'women', 118.5, 9.4, 6.3, '2025-10-01', 0.00012606382978723406, 0, 0, 5.3164556962025316, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1952077', '一胎又一胎，说好的禁欲指挥官呢？', '望南云慢', '现代言情', '年代重生', '大热', 'women', 457.9, 9.5, 34.7, '2025-10-01', 0.00048199999999999995, 0, 0, 7.578073815243504, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1954700', '媚君榻', '随山月', '古代言情', '古代情缘', '完结', 'women', 0.7, 9.7, 5.2, '2025-10-01', 0.0000007216494845360825, 0, 0, 742.857142857143, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1956592', '一天一造化，苟在仙武成道祖', '日落倾河', '玄幻奇幻', '东方玄幻', '完结', 'male', 52.6, 8.8, 0.9, '2025-10-01', 0.00005977272727272727, 0, 0, 1.7110266159695817, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1956833', '我就上山打个猎，你让我逐鹿中原？', '张正经', '历史', '架空历史', '大热', 'male', 173.8, 9.2, 4.2, '2025-10-01', 0.0001889130434782609, 0, 0, 2.4165707710011506, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('195958', '盖世神医', '狐颜乱语', '都市', '都市高武', '大热', 'male', 34.7, 9.3, 139.9, '2025-10-01', 0.000037311827956989247, 0, 0, 403.17002881844377, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1961152', '太阳神体：从为仙女解毒开始无敌！', '有木', '玄幻奇幻', '东方玄幻', '大热', 'male', 82, 9.1, 4, '2025-10-01', 0.0000901098901098901, 0, 0, 4.878048780487805, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1963728', '玄黄鼎', '不做梵高', '玄幻奇幻', '东方玄幻', '大热', 'male', 259.1, 9, 17.1, '2025-10-01', 0.0002878888888888889, 0, 0, 6.599768429177924, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1963904', '他说不爱，婚后却沦陷了', '如鱼', '现代言情', '总裁豪门', '大热', 'women', 319.5, 9.5, 34.8, '2025-10-01', 0.0003363157894736842, 0, 0, 10.892018779342722, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1964672', '顾总，你前妻在科研界杀疯了！', '席宝贝', '现代言情', '总裁豪门', '大热', 'women', 220.5, 9.5, 32.5, '2025-10-01', 0.00023210526315789473, 0, 0, 14.73922902494331, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1965987', '被贬边疆，成就最强藩王', '绯雨', '历史', '架空历史', '大热', 'male', 171.5, 9, 12.1, '2025-10-01', 0.00019055555555555557, 0, 0, 7.05539358600583, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1968456', '断绝关系后，觉醒SSS级天赋百分百爆率', '赛博说书人', '都市', '都市高武', '完结', 'male', 47.4, 9, 2, '2025-10-01', 0.00005266666666666667, 0, 0, 4.219409282700422, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '都市', '都市高武', '大热', 'male', 206.8, 9.2, 6.7, '2025-10-01', 0.00022478260869565218, 0, 0, 3.239845261121857, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1970603', '星际兽世：万人迷小人类深陷修罗场', '含冬小鱼', '幻想言情', '异世幻想', '新书', 'women', 0.3, 9.6, 0.5, '2025-10-01', 0.0000003125, 0, 0, 166.66666666666669, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1970645', '神级刺客，我有一支动物杀手队', '九把火', '玄幻奇幻', '东方玄幻', '大热', 'male', 107.8, 9.3, 3.5, '2025-10-01', 0.00011591397849462364, 0, 0, 3.246753246753247, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1975889', '懂兽语穿六零，家属院里我最行', '情丝入你心', '现代言情', '年代重生', '完结', 'women', 0.8, 9.7, 4.2, '2025-10-01', 0.0000008247422680412372, 0, 0, 525, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1976002', '续弦小夫人', '江摇舟', '古代言情', '宫闱宅斗', '大热', 'women', 421.4, 9.7, 19.5, '2025-10-01', 0.0004344329896907217, 0, 0, 4.627432368296156, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1978709', '惨死生子夜，重生嫡女屠尽侯府', '南酥青子', '古代言情', '宫闱宅斗', '大热', 'women', 1.1, 9.3, 7.6, '2025-10-01', 0.0000011827956989247313, 0, 0, 690.9090909090909, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1978748', '重生61，我带了一座军火库', '小白兔吃萝卜', '都市', '都市生活', '大热', 'male', 171, 9.1, 11.1, '2025-10-01', 0.00018791208791208791, 0, 0, 6.491228070175438, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1978753', '权臣兼祧两房？郡主重生不嫁了', '景惠', '古代言情', '宫闱宅斗', '完结', 'women', 1.1, 9.6, 1.5, '2025-10-01', 0.0000011458333333333335, 0, 0, 136.36363636363635, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1979319', '邢教练，别太野', '七个菜包', '现代言情', '职场情缘', '完结', 'women', 1.2, 9.7, 5.4, '2025-10-01', 0.0000012371134020618557, 0, 0, 450.0000000000001, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1979346', '去父留子后才知，前夫爱的人竟是我', '乐希', '现代言情', '总裁豪门', '大热', 'women', 144, 9.2, 20.8, '2025-10-01', 0.0001565217391304348, 0, 0, 14.444444444444446, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1979356', '阴当', '北派无尽夏', '现代言情', '都市奇幻', '大热', 'women', 205.6, 9.8, 21.3, '2025-10-01', 0.0002097959183673469, 0, 0, 10.359922178988327, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1980267', '陆总别作，太太她不要你了', '是空空呀', '现代言情', '总裁豪门', '大热', 'women', 0.3, 9.4, 8.9, '2025-10-01', 0.00000031914893617021275, 0, 0, 2966.666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982358', '天黑请点灯', '罗樵森', '奇闻异事', '奇门秘术', '大热', 'male', 157.9, 9.4, 7, '2025-10-01', 0.0001679787234042553, 0, 0, 4.433185560481316, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982360', '步步登阶', '江湖如梦', '都市', '都市生活', '大热', 'male', 377.3, 9.2, 47.2, '2025-10-01', 0.00041010869565217395, 0, 0, 12.509939040551284, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982723', '无敌逍遥侯', '沧海种树', '历史', '架空历史', '大热', 'male', 132.5, 9.1, 33.3, '2025-10-01', 0.0001456043956043956, 0, 0, 25.132075471698112, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1983530', '厂长收手吧！国家真的压不住了！', '正义反派', '都市', '都市生活', '大热', 'male', 102.3, 9.3, 9.3, '2025-10-01', 0.00010999999999999998, 0, 0, 9.090909090909092, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1984430', '网游：开局刮刮乐，觉醒唯一SSS天赋', '亦晨', '游戏', '虚拟网游', '大热', 'male', 183, 9, 9.6, '2025-10-01', 0.00020333333333333333, 0, 0, 5.245901639344262, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1984439', '炼仙鼎', '在下不求人', '玄幻奇幻', '东方玄幻', '大热', 'male', 58.7, 9.2, 7.3, '2025-10-01', 0.00006380434782608696, 0, 0, 12.436115843270867, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1985055', '摆摊开饭馆，她惊动全京城', '幸运团团', '古代言情', '古代情缘', '大热', 'women', 61.4, 9.8, 5.8, '2025-10-01', 0.00006265306122448979, 0, 0, 9.446254071661238, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1989239', '财戒', '嚣张农民', '都市', '都市高手', '大热', 'male', 238.5, 9.1, 12, '2025-10-01', 0.0002620879120879121, 0, 0, 5.031446540880504, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1989600', '掌天图', '四眼秀才', '玄幻奇幻', '东方玄幻', '大热', 'male', 325.8, 9.1, 27, '2025-10-01', 0.00035802197802197805, 0, 0, 8.287292817679557, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1989835', '刚入截教，听到截教气运在抱怨', '超爱吃甜粽子', '武侠仙侠', '上古洪荒', '完结', 'male', 74.9, 9.2, 1.3, '2025-10-01', 0.00008141304347826088, 0, 0, 1.7356475300400533, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1992339', '重回七零，搬空养父母家库房下乡了', '暖以沐', '现代言情', '年代重生', '大热', 'women', 93.8, 9.5, 5.6, '2025-10-01', 0.00009873684210526315, 0, 0, 5.970149253731343, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1992776', '我叫二狗，一条会咬人的狗！', '半解不解', '都市', '都市生活', '完结', 'male', 32.9, 9.1, 1.3, '2025-10-01', 0.00003615384615384615, 0, 0, 3.9513677811550156, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1994117', '婚后上瘾', '卢平凡', '现代言情', '总裁豪门', '大热', 'women', 715.2, 9.6, 65.4, '2025-10-01', 0.0007450000000000001, 0, 0, 9.144295302013424, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1996523', '全队笑我是傻子，我反手娶了俏知青！', '红色小晶体', '都市', '乡村生活', '完结', 'male', 44.4, 8.8, 0.8, '2025-10-01', 0.00005045454545454545, 0, 0, 1.8018018018018018, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1996931', '不务正夜', '谈栖', '现代言情', '总裁豪门', '大热', 'women', 114.8, 9.3, 7.6, '2025-10-01', 0.00012344086021505375, 0, 0, 6.620209059233449, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1996973', '赌石，我的龙瞳能鉴定一切！', '一梅独秀', '都市', '都市高武', '完结', 'male', 32.5, 9, 3, '2025-10-01', 0.00003611111111111111, 0, 0, 9.230769230769232, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2002910', '嫁太监？踏破鬼门女帝凤临天下', '狐狸九', '古代言情', '宫闱宅斗', '大热', 'women', 118.8, 9.6, 26, '2025-10-01', 0.00012375, 0, 0, 21.885521885521886, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2004005', '傅总，太太瞒着你生了个童模', '七桉', '现代言情', '总裁豪门', '大热', 'women', 55.2, 9.4, 3.8, '2025-10-01', 0.00005872340425531915, 0, 0, 6.884057971014491, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2014120', '雨夜你陪白月光，我让位后你哭啥', '露将熹', '现代言情', '总裁豪门', '完结', 'women', 0.7, 9.1, 1, '2025-10-01', 0.0000007692307692307693, 0, 0, 142.85714285714286, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2014975', '重生84：九个赔钱货？我把女儿宠上天', '一只大香蕉', '都市', '乡村生活', '大热', 'male', 88.3, 9.2, 5.6, '2025-10-01', 0.00009597826086956522, 0, 0, 6.342015855039637, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2015177', '喜报！资本家小姐来海岛随军了', '十肆1', '现代言情', '年代重生', '完结', 'women', 0.8, 9.6, 5.1, '2025-10-01', 0.0000008333333333333334, 0, 0, 637.4999999999999, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2016334', '深情失控，他服软低哄别离婚', '林深深', '现代言情', '总裁豪门', '大热', 'women', 0.9, 9.4, 8.7, '2025-10-01', 0.0000009574468085106384, 0, 0, 966.6666666666666, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2022495', '情劫', '花小刺', '都市', '都市生活', '大热', 'male', 82, 9.1, 6.6, '2025-10-01', 0.0000901098901098901, 0, 0, 8.048780487804878, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2023697', '男人野性', '月下冰河', '都市', '商战职场', '大热', 'male', 262.1, 9.1, 51, '2025-10-01', 0.0002880219780219781, 0, 0, 19.458222052651656, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2024150', '玄幻：从炼制合情丹开始长生！', '柿饼吃个糖', '玄幻奇幻', '东方玄幻', '完结', 'male', 70.5, 9, 1.1, '2025-10-01', 0.00007833333333333333, 0, 0, 1.5602836879432627, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2024793', '五年冷婚，我跑路了你发什么疯', '一尾小锦鲤', '现代言情', '总裁豪门', '大热', 'women', 118.2, 9.1, 32.7, '2025-10-01', 0.0001298901098901099, 0, 0, 27.66497461928934, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2024794', '武圣看门武王扫地，你嫌我武馆太垃圾？', '白鹫', '都市', '都市高武', '完结', 'male', 10.9, 9, 0.4, '2025-10-01', 0.000012111111111111112, 0, 0, 3.669724770642202, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('202636', '九转星辰诀', '晨弈', '玄幻奇幻', '东方玄幻', '完结', 'male', 760.8, 9.2, 4.3, '2025-10-01', 0.0008269565217391304, 0, 0, 0.5651945320715037, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2027735', '三国：我，赤壁周瑜，揽二乔脱离江东', '老骥伏枥', '历史', '穿越历史', '完结', 'male', 29.4, 9, 1.5, '2025-10-01', 0.00003266666666666666, 0, 0, 5.1020408163265305, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2027737', '向上登攀', '老虎本尊', '都市', '商战职场', '大热', 'male', 29.4, 9.1, 5.8, '2025-10-01', 0.00003230769230769231, 0, 0, 19.727891156462583, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2027742', 'SSSSSSSSSS级狂龙出狱', '成书', '都市', '都市高手', '大热', 'male', 73.1, 9, 4.8, '2025-10-01', 0.00008122222222222222, 0, 0, 6.566347469220246, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2027749', '刚抽中SSS级天赋，你跟我说游戏停服', '吃猫的鱼仔', '玄幻奇幻', '异世大陆', '大热', 'male', 74.5, 9.2, 4.2, '2025-10-01', 0.00008097826086956522, 0, 0, 5.6375838926174495, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2032046', '守活寡两年去随军，改嫁绝嗣大佬', '糖煵五加', '现代言情', '年代重生', '大热', 'women', 48.1, 9.5, 4.3, '2025-10-01', 0.00005063157894736842, 0, 0, 8.93970893970894, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2033005', 'SSSSSSSSSSSSSS满级神医', '星空野狼', '都市', '都市高手', '大热', 'male', 174.7, 9, 20.7, '2025-10-01', 0.0001941111111111111, 0, 0, 11.848883800801374, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2033943', '再亲一下，高冷校草诱哄小娇娇', '逸捅天下', '现代言情', '青春校园', '新书', 'women', 16.5, 9.6, 2, '2025-10-01', 0.0000171875, 0, 0, 12.121212121212121, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2034828', '唯一真神', '北冥', '都市', '都市高武', '完结', 'male', 65.6, 9.1, 2.2, '2025-10-01', 0.00007208791208791208, 0, 0, 3.3536585365853666, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2036574', '被贬北凉，我打造了无敌大雪龙骑！', '画虫的小龙', '历史', '架空历史', '完结', 'male', 24.5, 8.9, 1.1, '2025-10-01', 0.000027528089887640447, 0, 0, 4.4897959183673475, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2036642', '暗恋十年，庄先生他藏不住了', '雯锦', '现代言情', '总裁豪门', '大热', 'women', 72.6, 9.5, 4.3, '2025-10-01', 0.00007642105263157895, 0, 0, 5.922865013774105, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2037407', '炼妖塔', '霸业', '玄幻奇幻', '东方玄幻', '新书', 'male', 2.4, 8.6, 0.1, '2025-10-01', 0.0000027906976744186046, 0, 0, 4.166666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2038910', '你惹她干什么？她修的是杀道啊', '璃焰', '幻想言情', '玄幻仙侠', '大热', 'women', 57, 9.6, 6.3, '2025-10-01', 0.000059375, 0, 0, 11.052631578947368, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2040906', '边军悍卒：从鸡蛋换老婆开始！', '黑夜残影', '历史', '架空历史', '完结', 'male', 23.5, 9.2, 2.5, '2025-10-01', 0.000025543478260869566, 0, 0, 10.638297872340425, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2041071', '捡个混球当奶爸，炸翻京圈做团宠！', '夜风微微', '现代言情', '总裁豪门', '新书', 'women', 3.7, 9.5, 0.7, '2025-10-01', 0.000003894736842105264, 0, 0, 18.918918918918916, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2041092', '无双公子', '小陈叔叔', '历史', '架空历史', '新书', 'male', 1.6, 9.2, 0.2, '2025-10-01', 0.000001739130434782609, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2046394', '直播审判罪女！结果全国为她痛哭', '财神爷独生女', '现代言情', '总裁豪门', '新书', 'women', 2.1, 9.2, 0.1, '2025-10-01', 0.000002282608695652174, 0, 0, 4.761904761904762, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2046408', '逆子，开门！你娘回来整顿家风了', '黑葡萄', '古代言情', '宫闱宅斗', '新书', 'women', 5.1, 9.2, 0.4, '2025-10-01', 0.000005543478260869566, 0, 0, 7.843137254901962, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2047644', '我的钱全捐了，老婆竟是天后', '伤心小呆', '都市', '明星娱乐', '新书', 'male', 6.7, 8.8, 0.2, '2025-10-01', 0.000007613636363636363, 0, 0, 2.9850746268656714, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2048046', '重生70当猎王', '吴家三少', '都市', '乡村生活', '新书', 'male', 1.8, 8, 0.1, '2025-10-01', 0.00000225, 0, 0, 5.555555555555556, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2050780', '渣夫骗我领假证，转身携千亿资产嫁权少', '唐小糖', '现代言情', '总裁豪门', '大热', 'women', 133.9, 9.5, 30.1, '2025-10-01', 0.00014094736842105264, 0, 0, 22.47946228528753, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2051697', '末世，从吞尸体开始进化', '只是小脑虎', '科幻', '末世危机', '大热', 'male', 42.4, 9.2, 5.9, '2025-10-01', 0.00004608695652173913, 0, 0, 13.915094339622645, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2052700', '小司机的美女总裁老婆', '最爱老板娘', '都市', '都市高手', '大热', 'male', 91.8, 9.1, 23.9, '2025-10-01', 0.00010087912087912088, 0, 0, 26.034858387799563, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2052703', '双生兄弟要换亲？我稳做侯门主母', '林拾酒', '古代言情', '宫闱宅斗', '大热', 'women', 75.1, 9.5, 8.8, '2025-10-01', 0.00007905263157894736, 0, 0, 11.717709720372838, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2052832', '北地悍枭', '狼太孤', '历史', '架空历史', '大热', 'male', 30.3, 9.2, 3.6, '2025-10-01', 0.000032934782608695656, 0, 0, 11.881188118811881, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2052834', '魂穿吕布：貂蝉离间弑父？那是我亲爹！', '八方来才', '历史', '穿越历史', '新书', 'male', 8.8, 9.2, 0.7, '2025-10-01', 0.000009565217391304349, 0, 0, 7.954545454545453, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2053254', '混沌神鼎：从为女帝解毒开始无敌', '战神宇哥', '玄幻奇幻', '东方玄幻', '新书', 'male', 3.3, 8.9, 0.4, '2025-10-01', 0.0000037078651685393253, 0, 0, 12.121212121212123, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2053900', '下山后，漂亮姐姐蠢蠢欲动', '神笔马丁爷', '都市', '都市高手', '新书', 'male', 3, 8.4, 0.3, '2025-10-01', 0.0000035714285714285714, 0, 0, 10, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2054284', '快穿：我要当绝嗣大佬独生女', '挽书', '幻想言情', '无限快穿', '新书', 'women', 0.7, 9.4, 1.8, '2025-10-01', 0.0000007446808510638298, 0, 0, 257.14285714285717, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2054306', '无敌皇子：从边关开始制霸天下！', '大内低手', '历史', '穿越历史', '新书', 'male', 3, 8.4, 0.2, '2025-10-01', 0.0000035714285714285714, 0, 0, 6.666666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2055377', '你偏心，我改嫁！赶紧喊我小婶婶', '江梧蘅', '现代言情', '总裁豪门', '新书', 'women', 4.3, 9.3, 0.7, '2025-10-01', 0.000004623655913978494, 0, 0, 16.279069767441857, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2055380', '哑奴带崽改嫁，清冷权臣悔疯了', '桐原雪穗穗穗穗', '古代言情', '宫闱宅斗', '新书', 'women', 2, 8.6, 0.3, '2025-10-01', 0.000002325581395348837, 0, 0, 15, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2055904', '被沈家抛弃后，真千金她马甲炸翻全球', '鹿笙', '现代言情', '总裁豪门', '新书', 'women', 3, 8.4, 0.2, '2025-10-01', 0.0000035714285714285714, 0, 0, 6.666666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2057069', '穿书八零，养崽训夫我手拿把掐', '菠萝小微', '现代言情', '年代重生', '新书', 'women', 1.6, 8.6, 0.1, '2025-10-01', 0.00000186046511627907, 0, 0, 6.25, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2057851', '从把傲娇室友捧成娱乐天后开始', '罗宝爱花卷', '都市', '明星娱乐', '新书', 'male', 1.9, 9.2, 0.1, '2025-10-01', 0.0000020652173913043476, 0, 0, 5.2631578947368425, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2058468', '快穿：小狐狸她漂亮但能打', '十一肆', '幻想言情', '无限快穿', '新书', 'women', 3.3, 8.8, 0.2, '2025-10-01', 0.0000037499999999999992, 0, 0, 6.060606060606061, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2059102', '让你求生，你竟在疯狂摸尸？', '半山闲客', '都市', '都市高武', '新书', 'male', 5.9, 8.9, 1, '2025-10-01', 0.000006629213483146068, 0, 0, 16.94915254237288, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2059742', '带球上门后，我成陆少心尖宠', '幸夷', '现代言情', '年代重生', '新书', 'women', 6.4, 9.5, 0.9, '2025-10-01', 0.000006736842105263158, 0, 0, 14.0625, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2060184', '开局娶女囚，我成就最强悍卒', '青衫酌酒', '历史', '架空历史', '新书', 'male', 6.4, 9.2, 0.5, '2025-10-01', 0.000006956521739130436, 0, 0, 7.8125, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2060462', '七零闪婚不见面，带娃炸翻家属院', '桃桃宝宝', '现代言情', '年代重生', '新书', 'women', 38.3, 9.4, 26.2, '2025-10-01', 0.00004074468085106383, 0, 0, 68.40731070496085, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2060801', '穿成反派，开局迎娶主角未婚妻', '毛毛超爱吃', '玄幻奇幻', '东方玄幻', '新书', 'male', 1.1, 8.4, 0.1, '2025-10-01', 0.0000013095238095238096, 0, 0, 9.090909090909092, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2060816', '重生78：我靠岛赶海，带全家暴富！', '夕墨沉烟', '都市', '乡村生活', '新书', 'male', 2.7, 8.8, 0.2, '2025-10-01', 0.000003068181818181818, 0, 0, 7.4074074074074066, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061257', '重生七零：我家老祖宗能通古今', '烟花璀璨', '现代言情', '年代重生', '新书', 'women', 1.9, 8.4, 0.1, '2025-10-01', 0.0000022619047619047617, 0, 0, 5.2631578947368425, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061268', '结婚三年不同房，离婚后她显怀了', '墨堑', '现代言情', '总裁豪门', '新书', 'women', 5.2, 8.4, 0.9, '2025-10-01', 0.000006190476190476191, 0, 0, 17.307692307692307, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061856', '王府里来了个捡破烂的崽崽', '三颗小石头', '古代言情', '宫闱宅斗', '大热', 'women', 140.5, 9.6, 39.8, '2025-10-01', 0.00014635416666666668, 0, 0, 28.327402135231317, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061931', '八零：渣夫骗婚娶大嫂，我转身嫁首长', '锦禾', '现代言情', '年代重生', '新书', 'women', 18.5, 9.3, 3.6, '2025-10-01', 0.000019892473118279568, 0, 0, 19.45945945945946, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061932', '九零带崽寻亲，被绝嗣大佬宠疯了', '树梢上', '现代言情', '年代重生', '新书', 'women', 10.8, 9.4, 1.2, '2025-10-01', 0.00001148936170212766, 0, 0, 11.11111111111111, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062265', '换父兄后流放？真千金成了边疆团宠', '君染染', '古代言情', '种田经商', '新书', 'women', 5.2, 8.8, 0.8, '2025-10-01', 0.0000059090909090909085, 0, 0, 15.384615384615385, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062279', '考中状元又怎样，我娘是长公主', '汐家锦锂', '古代言情', '宫闱宅斗', '新书', 'women', 0.5, 9.5, 3.6, '2025-10-01', 0.0000005263157894736842, 0, 0, 720, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062370', '边疆发男人，从被罪女买走开始！', '陈火火', '历史', '架空历史', '新书', 'male', 3, 8.8, 0.4, '2025-10-01', 0.0000034090909090909087, 0, 0, 13.333333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062422', '惨死认亲日，嫡女夺回凤命杀疯了', '雪落听风', '古代言情', '宫闱宅斗', '新书', 'women', 14.1, 9.5, 2.8, '2025-10-01', 0.000014842105263157894, 0, 0, 19.858156028368793, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062428', '99次逃婚后，她攀上了京圈权贵', '栗子甜豆糕', '现代言情', '总裁豪门', '新书', 'women', 1.6, 9.2, 0.1, '2025-10-01', 0.000001739130434782609, 0, 0, 6.25, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062825', '捡漏！', '外八字', '都市', '都市高手', '新书', 'male', 1.4, 8.6, 0.1, '2025-10-01', 0.0000016279069767441858, 0, 0, 7.142857142857144, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062835', '小貔貅掉七零军区大院，被全军抢着宠', '加菲不是猫', '现代言情', '年代重生', '新书', 'women', 2.6, 8.4, 0.1, '2025-10-01', 0.0000030952380952380953, 0, 0, 3.8461538461538463, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063300', '五个大佬命里缺我，我只管吃奶', '舒展v', '现代言情', '总裁豪门', '新书', 'women', 1.6, 9.2, 0.1, '2025-10-01', 0.000001739130434782609, 0, 0, 6.25, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('206343', '恐怖复苏之全球武装怪胎', '老郭在此', '科幻', '末世危机', '完结', 'male', 602.2, 9.4, 0.9, '2025-10-01', 0.0006406382978723404, 0, 0, 0.14945200929923613, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063608', '边疆老卒，御赐老婆后我越活越勇', '月光大妖怪', '历史', '架空历史', '新书', 'male', 10.9, 9, 3.1, '2025-10-01', 0.000012111111111111112, 0, 0, 28.440366972477065, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063976', '都市情劫', '御龙', '都市', '都市生活', '新书', 'male', 3, 8.8, 1, '2025-10-01', 0.0000034090909090909087, 0, 0, 33.33333333333333, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064308', '妖魔乱世逢灾年，我每日一卦粮肉满仓', '灶食', '玄幻奇幻', '东方玄幻', '新书', 'male', 1.8, 8.4, 0.1, '2025-10-01', 0.0000021428571428571427, 0, 0, 5.555555555555556, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064344', '都市绝品神医', '就爱吃牛肉', '都市', '都市高手', '新书', 'male', 3.9, 8.8, 0.2, '2025-10-01', 0.000004431818181818182, 0, 0, 5.128205128205129, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064353', '八零随军：退婚神医被绝嗣大佬宠上天', '煎bingo子', '现代言情', '年代重生', '新书', 'women', 5.5, 9.3, 2.5, '2025-10-01', 0.000005913978494623655, 0, 0, 45.45454545454545, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064964', '规则怪谈：我的超能力给诡异整破防了', 'fishlike', '幻想言情', '无限快穿', '新书', 'women', 0.7, 8.6, 0.1, '2025-10-01', 0.0000008139534883720929, 0, 0, 14.285714285714288, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064972', '当我捡漏古董后，前女友后悔了', '大金拿', '都市', '都市高手', '新书', 'male', 1.5, 8.4, 0.1, '2025-10-01', 0.0000017857142857142857, 0, 0, 6.666666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064995', '重回六十年代，从挖何首乌开始', '巍巍青山', '都市', '乡村生活', '新书', 'male', 3.1, 9.2, 0.1, '2025-10-01', 0.000003369565217391305, 0, 0, 3.225806451612903, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064998', '开局抄家，姐姐抢着去流放', '一个豆包', '古代言情', '宫闱宅斗', '新书', 'women', 4.7, 9.2, 0.6, '2025-10-01', 0.0000051086956521739134, 0, 0, 12.76595744680851, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065348', '父兄拿我当草，随母改嫁断亲当皇后', '饱福福', '古代言情', '宫闱宅斗', '新书', 'women', 2, 8.4, 0.1, '2025-10-01', 0.0000023809523809523808, 0, 0, 5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065813', '开局捉奸，傍上权臣好孕来', '雨过阳光', '古代言情', '宫闱宅斗', '新书', 'women', 3.3, 9.2, 0.7, '2025-10-01', 0.00000358695652173913, 0, 0, 21.21212121212121, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065885', '重生85：带猫咪去赶海，狂宠九个女儿', '咸鱼咸鱼', '都市', '都市生活', '新书', 'male', 4.1, 9.2, 0.8, '2025-10-01', 0.000004456521739130434, 0, 0, 19.512195121951223, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065888', '解春衫', '随山月', '古代言情', '宫闱宅斗', '新书', 'women', 122, 9.7, 61, '2025-10-01', 0.00012577319587628866, 0, 0, 50, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065894', '神医下山：美女总裁非我不嫁', '月下无人', '都市', '都市高手', '新书', 'male', 5, 8.8, 0.8, '2025-10-01', 0.0000056818181818181815, 0, 0, 16, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065959', '让我进京当质子，我开局带兵强掳花魁', '有点刺挠', '历史', '架空历史', '新书', 'male', 5.5, 9.2, 0.5, '2025-10-01', 0.0000059782608695652186, 0, 0, 9.090909090909092, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066484', '四合院：从技术员到人生赢家', '辰语', 'N次元', '衍生同人', '新书', 'male', 2.5, 8.4, 0.1, '2025-10-01', 0.0000029761904761904763, 0, 0, 4, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066492', '空间系统穿七零，肥妻暴瘦暴富样样行', '慕荣华', '现代言情', '年代重生', '新书', 'women', 3.2, 8.8, 0.5, '2025-10-01', 0.0000036363636363636366, 0, 0, 15.625, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066494', '换嫁绝嗣大佬，我胎胎多宝赢麻了', '猫猫鱼吃果果', '现代言情', '年代重生', '新书', 'women', 3, 9.2, 0.4, '2025-10-01', 0.0000032608695652173914, 0, 0, 13.333333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066505', '侯府捡的小福星，全城大佬争着宠', '鱼芽', '古代言情', '宫闱宅斗', '新书', 'women', 6.4, 9.5, 2.7, '2025-10-01', 0.000006736842105263158, 0, 0, 42.1875, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066841', '混元书', '枫如江画', '玄幻奇幻', '东方玄幻', '新书', 'male', 2.3, 9.2, 0.5, '2025-10-01', 0.0000025, 0, 0, 21.73913043478261, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066874', '七五：虎妞为伴，再收个落难大小姐', '任性的狮子', '都市', '乡村生活', '新书', 'male', 4.1, 9.1, 0.4, '2025-10-01', 0.000004505494505494505, 0, 0, 9.756097560975611, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067420', '年代：开局一把小猎枪，娇妻貌美肉满仓', '钓鱼捞', '都市', '乡村生活', '新书', 'male', 6, 8.9, 0.7, '2025-10-01', 0.000006741573033707865, 0, 0, 11.666666666666666, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067715', '嫌我劳改犯？我神医身份曝光了', '瓜神驾到', '都市', '都市高武', '新书', 'male', 2.2, 8.4, 0.1, '2025-10-01', 0.0000026190476190476192, 0, 0, 4.545454545454546, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067718', '四合院：开局猎户，邻居喝风我吃肉！', '刚烈的汉子', 'N次元', '衍生同人', '新书', 'male', 5.2, 8.9, 0.4, '2025-10-01', 0.000005842696629213483, 0, 0, 7.6923076923076925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('207105', '傲世潜龙', '西装暴徒', '都市', '都市高手', '大热', 'male', 34.7, 9.1, 30.6, '2025-10-01', 0.00003813186813186814, 0, 0, 88.18443804034581, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2071506', '开局玉女宗，被仙子挑走当人丹', '三明治', '玄幻奇幻', '东方玄幻', '新书', 'male', 2, 8.4, 0.4, '2025-10-01', 0.0000023809523809523808, 0, 0, 20, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2072331', '假嫡女重生想抢婚？再嫁你也得下跪', '木怜青', '古代言情', '宫闱宅斗', '新书', 'women', 1.9, 8.6, 0.1, '2025-10-01', 0.0000022093023255813954, 0, 0, 5.2631578947368425, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2072337', '开局撞破皇帝女儿身', '拉满弓月', '历史', '架空历史', '新书', 'male', 1.4, 8.6, 0.2, '2025-10-01', 0.0000016279069767441858, 0, 0, 14.285714285714288, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2072619', '长生：从寿元零点一年开始', '馀杯', '玄幻奇幻', '东方玄幻', '新书', 'male', 8, 9.1, 3.1, '2025-10-01', 0.00000879120879120879, 0, 0, 38.75, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2073050', '权力巅峰：SSSS级村书记！', '荒苑爆红', '都市', '官场', '新书', 'male', 3.9, 9.3, 1.4, '2025-10-01', 0.0000041935483870967736, 0, 0, 35.8974358974359, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2073625', '我都人间武圣了，你让我当傀儡皇帝？', '小呀小馒头', '玄幻奇幻', '王朝争霸', '新书', 'male', 0.8, 9.2, 0.1, '2025-10-01', 0.0000008695652173913045, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074086', '偏护寡嫂不成婚？扇完巴掌嫁权臣', '喵大仙儿', '古代言情', '宫闱宅斗', '新书', 'women', 0.6, 8.4, 0.5, '2025-10-01', 0.0000007142857142857142, 0, 0, 83.33333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074090', '挖我灵根？重生后新师门待我如宝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', '新书', 'women', 2.4, 9.2, 0.3, '2025-10-01', 0.000002608695652173913, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074181', '权力巅峰：从市委大秘开始', '鹏鹏君本尊', '都市', '官场', '新书', 'male', 4.8, 9, 1.1, '2025-10-01', 0.000005333333333333334, 0, 0, 22.916666666666668, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074192', '影帝高冷捂不热？那就离婚！', '兔子不爱吃胡萝卜', '现代言情', '娱乐明星', '新书', 'women', 2.4, 9.2, 0.3, '2025-10-01', 0.000002608695652173913, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074218', '贪恋她', '谢九笙', '现代言情', '总裁豪门', '新书', 'women', 0.7, 9.2, 0.5, '2025-10-01', 0.0000007608695652173913, 0, 0, 71.42857142857143, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074327', '御堂春事', '荞麦十二画', '古代言情', '古代情缘', '新书', 'women', 0.8, 8, 0.1, '2025-10-01', 0.000001, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074330', '穿成六零小炮灰，大小姐带物资养兵王', '娮小夕', '现代言情', '年代重生', '新书', 'women', 0.7, 9.2, 0.4, '2025-10-01', 0.0000007608695652173913, 0, 0, 57.14285714285715, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074333', '一掌退大帝，你说他是杂役弟子？', '百万单机王', '玄幻奇幻', '东方玄幻', '新书', 'male', 1.2, 8.6, 0.1, '2025-10-01', 0.0000013953488372093023, 0, 0, 8.333333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074412', '和初恋官宣后，装瘸前夫气得站起来了', '青时序', '现代言情', '总裁豪门', '新书', 'women', 0.7, 9.2, 0.2, '2025-10-01', 0.0000007608695652173913, 0, 0, 28.571428571428577, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2075109', '四合院：从火车列车员开始', '我家有母老虎', 'N次元', '衍生同人', '新书', 'male', 3.3, 8.8, 0.6, '2025-10-01', 0.0000037499999999999992, 0, 0, 18.181818181818183, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2075347', '被退婚五次，她嫁残王夫君却躺赢', '瓜田立夏', '古代言情', '宫闱宅斗', '新书', 'women', 2.5, 9.2, 0.2, '2025-10-01', 0.0000027173913043478267, 0, 0, 8, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2075352', '资本家假千金，搬空家产嫁糙汉', '韶光煮雪', '现代言情', '年代重生', '新书', 'women', 2.4, 9.2, 0.4, '2025-10-01', 0.000002608695652173913, 0, 0, 16.666666666666668, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2075975', 'SSSSSSS级医武至尊', '大盘鸡仙尊', '都市', '都市高手', '新书', 'male', 2.9, 8.4, 0.2, '2025-10-01', 0.0000034523809523809523, 0, 0, 6.896551724137931, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076487', '极品九千岁：我在后宫无法无天！', '莫不愁', '历史', '架空历史', '新书', 'male', 2.5, 9.2, 0.4, '2025-10-01', 0.0000027173913043478267, 0, 0, 16, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076863', '换宗门，当团宠，师妹她修生钱道', '金池', '幻想言情', '玄幻仙侠', '新书', 'women', 1.8, 9.2, 0.3, '2025-10-01', 0.000001956521739130435, 0, 0, 16.666666666666664, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076866', '竹马护资本家小姐，重生改嫁他急了！', '枝云梦', '现代言情', '年代重生', '新书', 'women', 2.8, 9.2, 0.6, '2025-10-01', 0.0000030434782608695654, 0, 0, 21.42857142857143, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2077580', '裴大人，表小姐她又跑了', '蓝莓爆珠', '古代言情', '古代情缘', '新书', 'women', 2.3, 9.2, 0.3, '2025-10-01', 0.0000025, 0, 0, 13.043478260869565, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2077779', '规则怪谈：我能找出错误的规则', '老猫写文', '奇闻异事', '恐怖灵异', '新书', 'male', 2.3, 9.2, 0.2, '2025-10-01', 0.0000025, 0, 0, 8.695652173913045, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2077960', '刚下山，全球大佬跪迎我回家', '霜叶红于二月花', '都市', '都市高手', '新书', 'male', 2.4, 9.2, 0.4, '2025-10-01', 0.000002608695652173913, 0, 0, 16.666666666666668, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2078304', '转生狗妖，我在万世轮回成仙！', '六尺七寸', '玄幻奇幻', '东方玄幻', '新书', 'male', 2, 9.2, 0.2, '2025-10-01', 0.000002173913043478261, 0, 0, 10, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2078351', '四合院：开局爆锤众禽', '沉鱼', 'N次元', '衍生同人', '新书', 'male', 2.2, 8.6, 0.3, '2025-10-01', 0.000002558139534883721, 0, 0, 13.636363636363635, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('208594', '吞天圣帝', '枫落忆痕', '玄幻奇幻', '东方玄幻', '大热', 'male', 483.6, 9.1, 8, '2025-10-01', 0.0005314285714285715, 0, 0, 1.6542597187758479, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('208898', '极品小侯爷', '梦入山河', '历史', '架空历史', '完结', 'male', 676.5, 9.2, 1.5, '2025-10-01', 0.0007353260869565219, 0, 0, 0.22172949002217296, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('209888', '重回1991', '南三石', '都市', '商战职场', '完结', 'male', 581.2, 9.3, 1.3, '2025-10-01', 0.0006249462365591397, 0, 0, 0.2236751548520303, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('209898', '我能采集万物', '存叶', '科幻', '末世危机', '完结', 'male', 34.7, 9.2, 1.5, '2025-10-01', 0.00003771739130434783, 0, 0, 4.322766570605187, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('210771', '万古龙帝', '拓跋流云', '玄幻奇幻', '东方玄幻', '完结', 'male', 34.7, 9.1, 2, '2025-10-01', 0.00003813186813186814, 0, 0, 5.763688760806916, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('211115', '都市逍遥天医', '星空野狼', '都市', '都市高手', '完结', 'male', 435.9, 9.3, 1.4, '2025-10-01', 0.0004687096774193548, 0, 0, 0.3211745813259922, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213092', '吞噬古帝', '黑白仙鹤', '玄幻奇幻', '东方玄幻', '大热', 'male', 34.7, 9.2, 13.3, '2025-10-01', 0.00003771739130434783, 0, 0, 38.328530259366, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213190', '阴阳鲁班咒', '一气三元', '奇闻异事', '恐怖灵异', '完结', 'male', 226.6, 9.4, 1.5, '2025-10-01', 0.00024106382978723403, 0, 0, 0.6619593998234775, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213697', '葬天神帝', '我爱弹棉花', '玄幻奇幻', '东方玄幻', '大热', 'male', 526.9, 9.1, 6.7, '2025-10-01', 0.000579010989010989, 0, 0, 1.271588536724236, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('214783', '山野诡闻笔记', '吴大胆', '奇闻异事', '奇门秘术', '完结', 'male', 414, 9.5, 3.4, '2025-10-01', 0.0004357894736842106, 0, 0, 0.8212560386473431, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '都市', '热血校园', '大热', 'male', 34.7, 9.7, 8.1, '2025-10-01', 0.000035773195876288664, 0, 0, 23.342939481268008, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('214890', '混沌天尊', '新闻工作者', '玄幻奇幻', '东方玄幻', '完结', 'male', 315.1, 9, 2.9, '2025-10-01', 0.00035011111111111115, 0, 0, 0.9203427483338621, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('215067', '九转修罗诀', '李中有梦', '玄幻奇幻', '东方玄幻', '完结', 'male', 309.7, 9, 2.1, '2025-10-01', 0.0003441111111111111, 0, 0, 0.6780755569906362, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('215169', '寒门枭士', '北川', '历史', '架空历史', '大热', 'male', 34.7, 9.3, 7.7, '2025-10-01', 0.000037311827956989247, 0, 0, 22.190201729106626, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('215243', '第一瞳术师', '喵喵大人', '幻想言情', '玄幻仙侠', '大热', 'women', 0.8, 9.8, 19.5, '2025-10-01', 0.0000008163265306122449, 0, 0, 2437.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('215780', '绝世强龙', '张龙虎', '都市', '都市高手', '完结', 'male', 34.7, 8.8, 3.2, '2025-10-01', 0.000039431818181818184, 0, 0, 9.221902017291066, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('216404', '荒古武神', '化十', '玄幻奇幻', '东方玄幻', '大热', 'male', 527.2, 9.1, 8.3, '2025-10-01', 0.0005793406593406595, 0, 0, 1.5743550834597875, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('217822', '天命成凰', '赵小球', '古代言情', '古代情缘', '完结', 'women', 1, 9.4, 3.2, '2025-10-01', 0.0000010638297872340427, 0, 0, 320, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('218179', '天命风水神相', '半盏清茶', '奇闻异事', '奇门秘术', '完结', 'male', 59.1, 9.2, 1.4, '2025-10-01', 0.00006423913043478261, 0, 0, 2.368866328257191, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('219660', '臭保镖，求你放过我们吧！', '流水不逝', '都市', '都市高手', '完结', 'male', 270.3, 9.2, 1.9, '2025-10-01', 0.000293804347826087, 0, 0, 0.7029226785053643, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('151584', '极品戒指', '淮阴小侯', '都市', '都市高武', '完结', 'male', 34.7, 9.1, 1.4, '2025-10-01', 0.00003813186813186814, 0, 0, 4.034582132564841, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1647094', '九转吞天诀', '萧逆天', '玄幻奇幻', '东方玄幻', '大热', 'male', 323.7, 9.1, 7.1, '2025-10-01', 0.0003557142857142857, 0, 0, 2.1933889403768925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1648167', '开局截胡五虎上将', '孔明很愁', '历史', '穿越历史', '完结', 'male', 775.3, 9.1, 2.7, '2025-10-01', 0.0008519780219780219, 0, 0, 0.3482522894363473, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1648172', '仙棺，神墟，剑无敌！', '千年老龟', '玄幻奇幻', '东方玄幻', '大热', 'male', 359.2, 9, 9.5, '2025-10-01', 0.0003991111111111111, 0, 0, 2.6447661469933186, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '游戏', '虚拟网游', '大热', 'male', 709.5, 9.2, 6.9, '2025-10-01', 0.0007711956521739131, 0, 0, 0.9725158562367865, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1653604', '我的冰山女神老婆', '冰城妖玉', '都市', '都市高手', '完结', 'male', 853.2, 9.3, 1.4, '2025-10-01', 0.0009174193548387096, 0, 0, 0.16408813877168305, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1654986', '团宠小师妹才是真大佬', '千金兔', '幻想言情', '玄幻仙侠', '完结', 'women', 0.7, 9.7, 2.5, '2025-10-01', 0.0000007216494845360825, 0, 0, 357.14285714285717, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1655407', '鸿蒙霸体诀', '鱼初见', '玄幻奇幻', '东方玄幻', '大热', 'male', 791.6, 9.1, 34.3, '2025-10-01', 0.0008698901098901099, 0, 0, 4.33299646286003, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1665743', '皇室奶团萌翻全京城', '司司', '古代言情', '古代情缘', '完结', 'women', 0.8, 9.7, 4.8, '2025-10-01', 0.0000008247422680412372, 0, 0, 599.9999999999999, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1666957', '重生后我顶替了前夫白月光', '九九月', '现代言情', '总裁豪门', '完结', 'women', 0.9, 9.1, 1.6, '2025-10-01', 0.0000009890109890109891, 0, 0, 177.7777777777778, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1670199', '我的养成系女友', '佛系和尚', '都市', '热血校园', '完结', 'male', 509.7, 9.5, 1.6, '2025-10-01', 0.0005365263157894736, 0, 0, 0.31391014322150285, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1672578', '逃荒后三岁福宝被团宠了', '时好', '古代言情', '种田经商', '完结', 'women', 0.5, 9.7, 3.2, '2025-10-01', 0.0000005154639175257732, 0, 0, 640, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1672801', '太古吞天诀', '心无尘', '玄幻奇幻', '东方玄幻', '完结', 'male', 183.7, 9, 2.4, '2025-10-01', 0.00020411111111111113, 0, 0, 1.3064779531845399, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1673461', '三个缩小版大佬带百亿资产上门', '一轮玫瑰', '现代言情', '总裁豪门', '完结', 'women', 0.6, 9.5, 2.2, '2025-10-01', 0.0000006315789473684211, 0, 0, 366.6666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '现代言情', '总裁豪门', '完结', 'women', 0.7, 9.6, 4.9, '2025-10-01', 0.0000007291666666666667, 0, 0, 700.0000000000001, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1684583', '春棠欲醉', '锦一', '古代言情', '古代情缘', '大热', 'women', 34.7, 9.7, 20.6, '2025-10-01', 0.000035773195876288664, 0, 0, 59.36599423631124, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1689214', '藏起孕肚离婚，郁总全球疯找', '苏小鱼', '现代言情', '总裁豪门', '完结', 'women', 1.2, 9.4, 1.6, '2025-10-01', 0.000001276595744680851, 0, 0, 133.33333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1693832', '超神玩家', '失落叶', '游戏', '虚拟网游', '完结', 'male', 444.1, 9.3, 1.3, '2025-10-01', 0.0004775268817204301, 0, 0, 0.2927268633190723, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '都市', '都市高手', '大热', 'male', 199.6, 9.1, 6, '2025-10-01', 0.00021934065934065935, 0, 0, 3.0060120240480965, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1706674', '开局麒麟肾，吓哭九个绝色娇妻', '神级大牛', '都市', '都市高手', '完结', 'male', 494.6, 9.1, 2.1, '2025-10-01', 0.0005435164835164835, 0, 0, 0.4245855236554792, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1730848', '徒儿快下山，你师姐等不及了', '雨落狂流', '都市', '都市高手', '完结', 'male', 139.8, 9.1, 2.1, '2025-10-01', 0.00015362637362637365, 0, 0, 1.502145922746781, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1738577', '女神的逍遥狂医', '东方天策', '都市', '都市高手', '完结', 'male', 176.5, 9.2, 1.4, '2025-10-01', 0.00019184782608695653, 0, 0, 0.7932011331444758, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1761978', '葬神棺', '浮生一诺', '玄幻奇幻', '东方玄幻', '大热', 'male', 34.7, 9.3, 50.2, '2025-10-01', 0.000037311827956989247, 0, 0, 144.6685878962536, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1763089', '喜棺开，百鬼散，王妃她从地狱来', '一碗佛跳墙', '古代言情', '古代情缘', '大热', 'women', 34.7, 9.8, 8.5, '2025-10-01', 0.000035408163265306125, 0, 0, 24.49567723342939, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1763673', '捉奸当天，豪门继承人拉我去领证', '慕容悠然', '现代言情', '总裁豪门', '大热', 'women', 378.7, 9.4, 19.6, '2025-10-01', 0.00040287234042553187, 0, 0, 5.175600739371535, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1764505', '我团宠小师妹，嚣张点怎么了', '瑰夏', '幻想言情', '玄幻仙侠', '大热', 'women', 365, 9.7, 13, '2025-10-01', 0.00037628865979381443, 0, 0, 3.5616438356164384, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1764634', '七零：最硬糙汉被媳妇撩红了眼', '一尾小锦鲤', '现代言情', '年代重生', '大热', 'women', 34.7, 9.3, 16.8, '2025-10-01', 0.000037311827956989247, 0, 0, 48.414985590778095, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1765545', '轻熟', '乌木桃枝', '现代言情', '职场情缘', '完结', 'women', 0.8, 9.8, 2.5, '2025-10-01', 0.0000008163265306122449, 0, 0, 312.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1768764', '出阳神', '罗樵森', '奇闻异事', '奇门秘术', '完结', 'male', 296.9, 9.4, 2.5, '2025-10-01', 0.0003158510638297872, 0, 0, 0.8420343550016841, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1771336', '王妃她五行缺德', '棠花落', '古代言情', '宫闱宅斗', '完结', 'women', 0.4, 9.7, 2, '2025-10-01', 0.0000004123711340206186, 0, 0, 500, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1776773', '第一召唤师', '喵喵大人', '幻想言情', '玄幻仙侠', '大热', 'women', 405.6, 9.7, 5.5, '2025-10-01', 0.0004181443298969073, 0, 0, 1.356015779092702, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1778388', '灵骨被夺，帝女她觉醒神脉杀回来了', '澜岸', '幻想言情', '玄幻仙侠', '完结', 'women', 1.1, 9.7, 2.6, '2025-10-01', 0.000001134020618556701, 0, 0, 236.36363636363632, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1780456', '混沌鼎', '鬼疯子', '玄幻奇幻', '东方玄幻', '完结', 'male', 121.6, 9, 1.4, '2025-10-01', 0.0001351111111111111, 0, 0, 1.151315789473684, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1783142', '天剑神狱', '叶问', '玄幻奇幻', '东方玄幻', '完结', 'male', 91.5, 9.1, 1.6, '2025-10-01', 0.00010054945054945055, 0, 0, 1.7486338797814207, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1801623', '帝国皇太子，老子不干了！', '灰色小猫', '历史', '架空历史', '完结', 'male', 338.6, 8.9, 2.4, '2025-10-01', 0.0003804494382022472, 0, 0, 0.7088009450679267, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1802216', '诱她，一夜成瘾', '壹鹿小跑', '现代言情', '总裁豪门', '大热', 'women', 549.9, 9.4, 4.4, '2025-10-01', 0.0005849999999999999, 0, 0, 0.8001454809965449, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1803024', '神算萌妻：傅太太才是玄学真大佬', '易小升', '现代言情', '都市奇幻', '大热', 'women', 34.7, 9.7, 12.7, '2025-10-01', 0.000035773195876288664, 0, 0, 36.59942363112391, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1803136', '第一凤女', '十二妖', '古代言情', '宫闱宅斗', '大热', 'women', 34.7, 9.7, 38.5, '2025-10-01', 0.000035773195876288664, 0, 0, 110.95100864553314, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1803283', '皇叔借点功德，王妃把符画猛了', '安卿心', '古代言情', '宫闱宅斗', '大热', 'women', 34.7, 9.7, 104.4, '2025-10-01', 0.000035773195876288664, 0, 0, 300.86455331412105, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1804346', '绝世天命大反派', '金裘花马', '玄幻奇幻', '异世大陆', '大热', 'male', 834.3, 9, 14.8, '2025-10-01', 0.0009269999999999999, 0, 0, 1.773942227016661, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1809333', '网游：我召唤的骷髅全是位面之子？', '禅心道骨', '游戏', '虚拟网游', '完结', 'male', 220.1, 9.4, 1.5, '2025-10-01', 0.00023414893617021274, 0, 0, 0.6815084052703316, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1809361', '逍遥四公子', '修果', '历史', '架空历史', '大热', 'male', 34.7, 9.3, 78.8, '2025-10-01', 0.000037311827956989247, 0, 0, 227.08933717579248, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1815020', '巅峰权途', '争渡', '都市', '官场', '大热', 'male', 436.2, 9.3, 45.5, '2025-10-01', 0.0004690322580645161, 0, 0, 10.430994956442, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1819118', '八零养崽：清冷美人被科研大佬宠上天！', '桔子阿宝', '现代言情', '年代重生', '完结', 'women', 1.2, 9.6, 1.9, '2025-10-01', 0.00000125, 0, 0, 158.33333333333331, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1830569', '凤池生春', '秦安安', '古代言情', '宫闱宅斗', '大热', 'women', 527.5, 9.7, 12.9, '2025-10-01', 0.0005438144329896908, 0, 0, 2.445497630331754, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1830570', '世子先别死，夫人有喜了', '沙拉薯条', '古代言情', '古代情缘', '大热', 'women', 34.7, 9.6, 13, '2025-10-01', 0.00003614583333333334, 0, 0, 37.46397694524495, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1833599', '枭龙出山', '轩仔', '都市', '都市高手', '大热', 'male', 81.6, 9.1, 5.2, '2025-10-01', 0.00008967032967032968, 0, 0, 6.3725490196078445, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1837360', '昭春意', '犹鱼丝', '古代言情', '宫闱宅斗', '完结', 'women', 1, 9.7, 2.5, '2025-10-01', 0.0000010309278350515464, 0, 0, 250, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1838037', '典狱长大人深不可测！', '黄泉隼', '都市', '都市高武', '完结', 'male', 187.9, 9.5, 1.6, '2025-10-01', 0.00019778947368421053, 0, 0, 0.8515167642362959, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1838355', '离婚后，前妻姐崩溃了', '洛王', '都市', '都市生活', '完结', 'male', 620.3, 8.7, 2.8, '2025-10-01', 0.0007129885057471265, 0, 0, 0.4513944865387715, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1840296', '夫君清心寡欲，我却连生三胎', '米团开花', '古代言情', '宫闱宅斗', '大热', 'women', 296.4, 9.7, 6.1, '2025-10-01', 0.00030556701030927836, 0, 0, 2.058029689608637, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1844850', '饥荒年，我囤货娇养了古代大将军', '苜肉', '古代言情', '古代情缘', '大热', 'women', 34.7, 9.6, 13.1, '2025-10-01', 0.00003614583333333334, 0, 0, 37.7521613832853, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1847406', '此夜逢君', '晨露嫣然', '古代言情', '宫闱宅斗', '完结', 'women', 1, 9.7, 2.8, '2025-10-01', 0.0000010309278350515464, 0, 0, 280, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1848642', '离婚吧，真当我是废物啊', '凝望之影', '都市', '都市高手', '完结', 'male', 103.6, 8.9, 2.4, '2025-10-01', 0.00011640449438202247, 0, 0, 2.3166023166023164, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1848650', '夜火缠绵', '骨子鱼', '现代言情', '总裁豪门', '完结', 'women', 1.1, 9.5, 1.5, '2025-10-01', 0.0000011578947368421055, 0, 0, 136.36363636363635, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1850556', '让我娶傻千金，你又回来求我离婚？', '摸鱼小将', '都市', '都市高手', '大热', 'male', 161.7, 9.1, 5.5, '2025-10-01', 0.0001776923076923077, 0, 0, 3.4013605442176873, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1850695', '炼神鼎', '秋月梧桐', '玄幻奇幻', '东方玄幻', '大热', 'male', 193.6, 9, 15.2, '2025-10-01', 0.0002151111111111111, 0, 0, 7.851239669421488, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1853441', '春华照灼', '蝉不知雪', '古代言情', '宫闱宅斗', '完结', 'women', 0.6, 9.7, 2.6, '2025-10-01', 0.0000006185567010309279, 0, 0, 433.33333333333337, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1854610', '八零娇女一撒娇，高冷军少领证了', '白茶流萤', '现代言情', '年代重生', '大热', 'women', 510.4, 9.2, 15.1, '2025-10-01', 0.0005547826086956522, 0, 0, 2.9584639498432606, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1857847', '重生再嫁皇胄，我只想乱帝心夺凤位', '月下小兔', '古代言情', '宫闱宅斗', '大热', 'women', 593, 9.4, 9.5, '2025-10-01', 0.0006308510638297872, 0, 0, 1.6020236087689714, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1858392', '咬春靥', '空酒瓶', '古代言情', '宫闱宅斗', '大热', 'women', 327.1, 8.4, 4.5, '2025-10-01', 0.0003894047619047619, 0, 0, 1.375726077652094, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1858924', '无间令', '无间之令', '古代言情', '宫闱宅斗', '完结', 'women', 1.1, 9.3, 2.7, '2025-10-01', 0.0000011827956989247313, 0, 0, 245.45454545454547, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1863729', '断亲不伺候了，哥哥们破产睡天桥', '红十三', '现代言情', '总裁豪门', '大热', 'women', 566.4, 9.1, 3, '2025-10-01', 0.0006224175824175824, 0, 0, 0.5296610169491526, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1864493', '打到北极圈了，你让我继承皇位？', '橡皮泥', '历史', '架空历史', '大热', 'male', 300.5, 9.3, 11.5, '2025-10-01', 0.00032311827956989247, 0, 0, 3.826955074875208, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1867139', '师叔，你的法宝太不正经了', '李别浪', '玄幻奇幻', '东方玄幻', '大热', 'male', 482.9, 9.4, 14.9, '2025-10-01', 0.0005137234042553191, 0, 0, 3.0855249534065026, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1871638', '你迎娶平妻？我带崽入宫当皇后', '虎金金', '古代言情', '古代情缘', '完结', 'women', 0.4, 9.6, 2.1, '2025-10-01', 0.0000004166666666666667, 0, 0, 525, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1872563', '为奴三年后，整个侯府跪求我原谅', '莫小弃', '古代言情', '古代情缘', '大热', 'women', 34.7, 8.8, 38.9, '2025-10-01', 0.000039431818181818184, 0, 0, 112.10374639769452, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1873655', '重生八零：离婚后被军少宠上天', '小白蛇', '现代言情', '年代重生', '大热', 'women', 607.4, 9.7, 6.6, '2025-10-01', 0.0006261855670103093, 0, 0, 1.0865986170563056, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1875137', '断绝关系后，我的召唤兽全是黑暗生物', '可破', '都市', '都市高武', '完结', 'male', 294.3, 9.1, 1.8, '2025-10-01', 0.00032340659340659344, 0, 0, 0.6116207951070336, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1876687', '和离前夜，她重生回了出嫁前', '柳程安', '古代言情', '古代情缘', '大热', 'women', 434.1, 9.5, 5.2, '2025-10-01', 0.00045694736842105265, 0, 0, 1.19788067265607, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1879542', '我宫斗冠军，矜贵世子俯首称臣', '唐荔枝', '古代言情', '宫闱宅斗', '大热', 'women', 676.9, 9.7, 6.4, '2025-10-01', 0.0006978350515463918, 0, 0, 0.9454867779583397, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1882743', '郡主她百鬼送嫁，少将军敢娶吗？', '一碗佛跳墙', '古代言情', '古代情缘', '完结', 'women', 0.5, 9.8, 2.5, '2025-10-01', 0.000000510204081632653, 0, 0, 500, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1882754', '边军悍卒', '木有金箍', '历史', '架空历史', '大热', 'male', 552, 9.3, 36.1, '2025-10-01', 0.0005935483870967742, 0, 0, 6.5398550724637685, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1885415', '再睁眼！高冷女知青在我怀里哭唧唧', '九伐', '都市', '都市生活', '完结', 'male', 88.3, 9.2, 0.5, '2025-10-01', 0.00009597826086956522, 0, 0, 0.5662514156285391, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1893629', '捡了小福星后，将军府旺疯了', '树己不树人', '古代言情', '宫闱宅斗', '完结', 'women', 0.6, 9.5, 1.3, '2025-10-01', 0.0000006315789473684211, 0, 0, 216.66666666666669, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1929412', '重生：清纯转校生表白我，校花哭惨了', '一缕微光', '都市', '热血校园', '完结', 'male', 81.6, 9.4, 2, '2025-10-01', 0.00008680851063829787, 0, 0, 2.450980392156863, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1936358', '大楚第一逍遥王', '打得你喵喵叫', '历史', '架空历史', '大热', 'male', 77.8, 9, 5, '2025-10-01', 0.00008644444444444444, 0, 0, 6.426735218508997, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1941048', '全能真千金归来，发现家人住狗窝', '温小浅', '现代言情', '总裁豪门', '完结', 'women', 0.3, 9.4, 1.9, '2025-10-01', 0.00000031914893617021275, 0, 0, 633.3333333333333, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1946790', '谁说校花高冷？这校花可太甜软了', '佛系和尚', '都市', '热血校园', '完结', 'male', 107.2, 9.6, 1.9, '2025-10-01', 0.00011166666666666668, 0, 0, 1.7723880597014925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1949070', '孩子谁爱生谁生，我勾帝心夺凤位', '爱吃石榴', '古代言情', '宫闱宅斗', '大热', 'women', 1.1, 9.6, 28.7, '2025-10-01', 0.0000011458333333333335, 0, 0, 2609.0909090909086, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1949695', '被贵妃配给太监当对食后', '沙子', '古代言情', '宫闱宅斗', '大热', 'women', 1.2, 9.5, 24.7, '2025-10-01', 0.0000012631578947368422, 0, 0, 2058.333333333333, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1957149', '出宫前夜，沦为暴君掌中物', '素律', '古代言情', '宫闱宅斗', '大热', 'women', 341, 9.4, 16.4, '2025-10-01', 0.0003627659574468085, 0, 0, 4.809384164222873, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1959895', '十二只SSS级鬼宠，你管这叫差班生', '洛青澜', '都市', '灵气复苏', '完结', 'male', 104, 9.2, 0.9, '2025-10-01', 0.00011304347826086957, 0, 0, 0.8653846153846154, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1960821', '雪夜活埋后，我夺了假千金凤命', '柠檬小丸子', '古代言情', '宫闱宅斗', '大热', 'women', 136.8, 9.5, 8.1, '2025-10-01', 0.000144, 0, 0, 5.921052631578946, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1960964', '从小媳妇要传宗接代开始', '断章', '历史', '架空历史', '大热', 'male', 202.6, 9.2, 9, '2025-10-01', 0.00022021739130434785, 0, 0, 4.4422507403751235, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1965108', '召诸神，踏万界，天命帝女逆乾坤', '澜岸', '幻想言情', '玄幻仙侠', '大热', 'women', 74.8, 9.7, 6.7, '2025-10-01', 0.00007711340206185567, 0, 0, 8.9572192513369, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1968483', '霍总，太太不复婚，只改嫁！', '相思一顾', '现代言情', '总裁豪门', '大热', 'women', 1.1, 9.5, 8, '2025-10-01', 0.0000011578947368421055, 0, 0, 727.2727272727273, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1968910', '全家夺我军功，重生嫡女屠了满门', '我吃饱饱', '古代言情', '宫闱宅斗', '大热', 'women', 467.6, 9.6, 38.3, '2025-10-01', 0.00048708333333333335, 0, 0, 8.190761334473908, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1971248', '在恋综当老六？一句泡面仙人全网暴火', '肉包打狗', '都市', '明星娱乐', '完结', 'male', 80, 9.1, 1.7, '2025-10-01', 0.00008791208791208792, 0, 0, 2.125, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1971590', '众仙俯首', '咸鱼老白', '玄幻奇幻', '东方玄幻', '大热', 'male', 184.1, 9.4, 12.6, '2025-10-01', 0.00019585106382978722, 0, 0, 6.844106463878327, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1975352', '叉腰腰，全家都是我捡来哒！', '柠檬鱼头', '幻想言情', '玄幻仙侠', '大热', 'women', 0.8, 9.7, 11.2, '2025-10-01', 0.0000008247422680412372, 0, 0, 1399.9999999999998, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1976312', '观音泥', '溪芝', '现代言情', '现代悬疑', '新书', 'women', 2.3, 8.6, 0.1, '2025-10-01', 0.0000026744186046511624, 0, 0, 4.347826086956522, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('197810', '都市最狂医仙', '花小刺', '都市', '都市高武', '完结', 'male', 789.8, 9.1, 2.1, '2025-10-01', 0.0008679120879120879, 0, 0, 0.26589009875917957, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '武侠仙侠', '上古洪荒', '大热', 'male', 65.9, 9.2, 2.4, '2025-10-01', 0.00007163043478260871, 0, 0, 3.641881638846737, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982193', '我的26岁女总裁', '卧龙岗小弟', '都市', '都市生活', '完结', 'male', 69.5, 9, 3.5, '2025-10-01', 0.00007722222222222222, 0, 0, 5.0359712230215825, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982371', '你宠白月光，我收凤印你急什么', '江墨甜', '古代言情', '宫闱宅斗', '大热', 'women', 62.6, 8.9, 6.4, '2025-10-01', 0.00007033707865168539, 0, 0, 10.223642172523963, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982718', '真没必要让我重生', '刘大咪', '都市', '都市生活', '完结', 'male', 30.5, 8.9, 1.2, '2025-10-01', 0.00003426966292134831, 0, 0, 3.934426229508196, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1988961', '重生1984：我靠赶海打渔成首富', '菠萝炒饭', '都市', '都市生活', '大热', 'male', 172.9, 9, 16, '2025-10-01', 0.00019211111111111113, 0, 0, 9.253903990746096, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1989780', '权力医途', '端午', '都市', '官场', '大热', 'male', 189.3, 9.1, 19.5, '2025-10-01', 0.00020802197802197804, 0, 0, 10.301109350237718, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1991675', '我赚够两千就下播，榜一大哥却急了', '哼哼哈哈', '现代言情', '总裁豪门', '大热', 'women', 251.7, 9.8, 8.2, '2025-10-01', 0.00025683673469387755, 0, 0, 3.2578466428287642, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1991811', '错良缘', '雨山雪', '古代言情', '宫闱宅斗', '大热', 'women', 61.8, 9.6, 3.3, '2025-10-01', 0.000064375, 0, 0, 5.339805825242718, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1994128', '搬空婆家离婚后，被八零京少宠上天', '猫爱锅包肉', '现代言情', '年代重生', '完结', 'women', 0.7, 9.5, 2.1, '2025-10-01', 0.0000007368421052631578, 0, 0, 300.00000000000006, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1994174', '恶婆婆重生后，怂包儿媳被宠成宝！', '洇鹤', '古代言情', '宫闱宅斗', '新书', 'women', 3.8, 8.9, 0.2, '2025-10-01', 0.000004269662921348315, 0, 0, 5.2631578947368425, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1994365', '高门长媳', 'Ms腊肠', '古代言情', '古代情缘', '大热', 'women', 63.1, 9.5, 3.8, '2025-10-01', 0.00006642105263157894, 0, 0, 6.0221870047543575, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2003997', '末世囤货养崽，从娘胎开始旺妈咪', '小桃花', '幻想言情', '末世求生', '完结', 'women', 0.6, 9.6, 1.5, '2025-10-01', 0.000000625, 0, 0, 250, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('200456', '在他深情中陨落', '浮生三千', '现代言情', '总裁豪门', '完结', 'women', 0.3, 9.7, 1.9, '2025-10-01', 0.00000030927835051546394, 0, 0, 633.3333333333333, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2004996', '仙侣', '鬼疯子', '武侠仙侠', '幻想修真', '大热', 'male', 106.3, 8.9, 11.3, '2025-10-01', 0.000119438202247191, 0, 0, 10.630291627469427, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2007504', '结婚三年喊错名，成对家老公了你哭什么', '木易未央', '都市', '都市高手', '完结', 'male', 20.5, 8.7, 0.3, '2025-10-01', 0.0000235632183908046, 0, 0, 1.4634146341463414, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2010008', '高武校长，我的实力是全校总和！', '邯郸财阀', '都市', '都市高武', '大热', 'male', 122.9, 9.3, 5.7, '2025-10-01', 0.0001321505376344086, 0, 0, 4.637917005695687, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2012529', '极品女神赖上我', '陈行者', '都市', '商战职场', '大热', 'male', 173.7, 9, 23.3, '2025-10-01', 0.00019299999999999997, 0, 0, 13.413932066781808, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2014122', '于他怀中轻颤', '苏晚舟', '现代言情', '总裁豪门', '大热', 'women', 0.7, 9.6, 8.7, '2025-10-01', 0.0000007291666666666667, 0, 0, 1242.857142857143, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2014393', '掌门怀孕，关我一个杂役什么事', '雨夜终曲', '玄幻奇幻', '东方玄幻', '大热', 'male', 253.9, 9, 30.9, '2025-10-01', 0.0002821111111111111, 0, 0, 12.17014572666404, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2015371', '再近点，就失控了', '雪泥', '现代言情', '青春校园', '大热', 'women', 274.3, 9.9, 11.3, '2025-10-01', 0.0002770707070707071, 0, 0, 4.119577105359095, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2018535', '洪荒：我屡出毒计，十二祖巫劝我冷静！', '橘黄的橙子', '武侠仙侠', '上古洪荒', '完结', 'male', 47.3, 8.9, 1.9, '2025-10-01', 0.000053146067415730336, 0, 0, 4.016913319238901, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2019227', '随母改嫁旺新家，重生嫡女嘎嘎乱杀', '三十嘉', '古代言情', '宫闱宅斗', '大热', 'women', 1.2, 9.6, 14.6, '2025-10-01', 0.00000125, 0, 0, 1216.6666666666665, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2020570', '重生70：让你守门，你整了个蘑菇云？', '历史小尘埃', '都市', '都市生活', '完结', 'male', 20.7, 9.1, 1.1, '2025-10-01', 0.000022747252747252748, 0, 0, 5.314009661835749, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2020674', '从市委大秘到权力之巅', '洗礼先生', '都市', '官场', '大热', 'male', 34.7, 9.1, 5.5, '2025-10-01', 0.00003813186813186814, 0, 0, 15.850144092219018, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2021927', '西游：取经？关我混沌魔猿什么事！', '南木北树', '武侠仙侠', '上古洪荒', '完结', 'male', 69.7, 9, 2.4, '2025-10-01', 0.00007744444444444445, 0, 0, 3.443328550932568, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2021943', '诱哄，假千金被禁欲商总拉去领证了', '雾里重逢', '现代言情', '总裁豪门', '完结', 'women', 0.4, 9.7, 3.3, '2025-10-01', 0.0000004123711340206186, 0, 0, 824.9999999999998, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('202630', '道门诡谈', '李十一', '奇闻异事', '奇门秘术', '完结', 'male', 155.7, 9.2, 1.4, '2025-10-01', 0.00016923913043478261, 0, 0, 0.8991650610147721, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2027063', '敲骨吸髓？重生另选家人宠我如宝', '清砚', '古代言情', '宫闱宅斗', '大热', 'women', 138.2, 9.5, 37.7, '2025-10-01', 0.00014547368421052628, 0, 0, 27.279305354558613, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2028957', '桃花劫', '推窗望岳', '都市', '商战职场', '大热', 'male', 224.8, 9.2, 40.4, '2025-10-01', 0.00024434782608695655, 0, 0, 17.97153024911032, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2029607', '我的道侣是诸天第一女帝', '虎眸', '玄幻奇幻', '东方玄幻', '新书', 'male', 4.2, 8.4, 0.1, '2025-10-01', 0.000005, 0, 0, 2.380952380952381, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2029739', '穿成恶毒继母，手握空间灵泉养崽崽', 'YJ紫霞仙子', '古代言情', '种田经商', '新书', 'women', 3, 8.4, 0.1, '2025-10-01', 0.0000035714285714285714, 0, 0, 3.3333333333333335, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2032899', '让你当书童，你成大夏文圣', '炫迈', '历史', '架空历史', '大热', 'male', 61.9, 9, 3.6, '2025-10-01', 0.00006877777777777778, 0, 0, 5.815831987075929, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2038328', '重生不嫁高门后，高冷权臣追疯了！', '溪午闻钟', '古代言情', '古代情缘', '新书', 'women', 2.9, 8.4, 0.1, '2025-10-01', 0.0000034523809523809523, 0, 0, 3.4482758620689653, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2038351', '公府上下宠我如宝，养兄一家后悔了', '钱多多君', '古代言情', '宫闱宅斗', '新书', 'women', 2.8, 8.4, 0.1, '2025-10-01', 0.0000033333333333333333, 0, 0, 3.571428571428572, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2038385', 'SSSSSSSSSSSSS级镇狱狂龙', '封情老衲', '都市', '都市高手', '大热', 'male', 101.9, 9.1, 51.5, '2025-10-01', 0.00011197802197802199, 0, 0, 50.53974484789009, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2040657', '末世抢机缘：我的我的都是我的！', '文鳐', '幻想言情', '末世求生', '新书', 'women', 4.1, 9.5, 0.3, '2025-10-01', 0.00000431578947368421, 0, 0, 7.3170731707317085, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2044077', '妾本丝萝，只图钱帛', '锅包又又又', '古代言情', '宫闱宅斗', '新书', 'women', 23.4, 9.6, 1.4, '2025-10-01', 0.000024375, 0, 0, 5.982905982905983, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2046282', '人生赢家', '烟云客横渡积水潭', '都市', '商战职场', '新书', 'male', 4.5, 8.9, 0.5, '2025-10-01', 0.000005056179775280899, 0, 0, 11.11111111111111, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2046772', '纵情人生', '一缕微光', '都市', '都市高手', '大热', 'male', 38.4, 9, 4.5, '2025-10-01', 0.00004266666666666667, 0, 0, 11.71875, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2048050', '抢我婚约嫁太子？我携孕肚嫁皇帝', '缓缓归', '古代言情', '宫闱宅斗', '大热', 'women', 50.9, 9.6, 17.8, '2025-10-01', 0.00005302083333333333, 0, 0, 34.9705304518664, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2048060', '从酒肆杂役开始武道化圣', '为你傲视蒼穹', '玄幻奇幻', '东方玄幻', '新书', 'male', 6.8, 9.1, 0.6, '2025-10-01', 0.0000074725274725274726, 0, 0, 8.823529411764707, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2052699', '主播甜又野，六个顶级大佬缠着宠', '墨如金', '现代言情', '总裁豪门', '新书', 'women', 0.5, 8.6, 0.1, '2025-10-01', 0.0000005813953488372093, 0, 0, 20, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2053703', '三年同房两次，要离婚他跪求复合', '一只小甜饼', '现代言情', '总裁豪门', '大热', 'women', 37.8, 9.3, 6.5, '2025-10-01', 0.00004064516129032257, 0, 0, 17.195767195767196, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2053895', '带崽搬空婆家，易孕娇女随军被亲哭', '金岁岁', '现代言情', '年代重生', '新书', 'women', 22.6, 9.4, 4, '2025-10-01', 0.000024042553191489362, 0, 0, 17.699115044247787, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2053898', '他的小撩精', '街灯读我', '现代言情', '总裁豪门', '大热', 'women', 0.6, 9.7, 18.5, '2025-10-01', 0.0000006185567010309279, 0, 0, 3083.3333333333335, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2054267', '三年婚姻喂了狗，二嫁律师宠疯了', '炎热的夏天', '现代言情', '总裁豪门', '新书', 'women', 1.7, 8.6, 0.1, '2025-10-01', 0.0000019767441860465115, 0, 0, 5.882352941176471, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2054313', '阴阳塔', '水管开花', '玄幻奇幻', '东方玄幻', '新书', 'male', 11.2, 9, 1.7, '2025-10-01', 0.000012444444444444445, 0, 0, 15.17857142857143, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2055375', '姜医生，贺总约你去民政局', '江月何年', '现代言情', '总裁豪门', '新书', 'women', 6.4, 8.8, 0.3, '2025-10-01', 0.000007272727272727273, 0, 0, 4.687499999999999, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2056878', '大小姐重生选夫，小小硬汉拿捏拿捏', '暖宝宝爱吃饭', '现代言情', '年代重生', '新书', 'women', 9.2, 9.3, 3.3, '2025-10-01', 0.000009892473118279569, 0, 0, 35.869565217391305, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2057124', '靠私房菜名震京城，凤印上门了！', '宋九九', '古代言情', '种田经商', '新书', 'women', 6.9, 9.8, 2.2, '2025-10-01', 0.0000070408163265306125, 0, 0, 31.884057971014496, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2057468', '权力巅峰：从县委大院开始', '今晚吃鸡', '都市', '官场', '新书', 'male', 9, 9.1, 1.3, '2025-10-01', 0.00000989010989010989, 0, 0, 14.444444444444446, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2057573', '窃医术，夺至亲？神医嫡女杀疯了！', '九汐公子', '古代言情', '宫闱宅斗', '新书', 'women', 1, 9.4, 4.1, '2025-10-01', 0.0000010638297872340427, 0, 0, 409.99999999999994, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2059138', '救命！求生综里看风水，爆火全网', '桑桑籽', '现代言情', '娱乐明星', '新书', 'women', 2.3, 8.6, 0.1, '2025-10-01', 0.0000026744186046511624, 0, 0, 4.347826086956522, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2059139', '听懂兽语后，被皇家全员团宠了', '桃酥', '古代言情', '宫闱宅斗', '新书', 'women', 4.3, 9.4, 0.6, '2025-10-01', 0.000004574468085106382, 0, 0, 13.953488372093023, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2059140', '戍边斥候：从奉旨传宗接代开始！', '般若菠萝', '历史', '架空历史', '新书', 'male', 5, 8.8, 0.3, '2025-10-01', 0.0000056818181818181815, 0, 0, 6, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2060174', '转职：我死亡天灾，站起来为了你的君主', '懒惰的帅比', '都市', '都市高武', '新书', 'male', 3, 8.4, 0.2, '2025-10-01', 0.0000035714285714285714, 0, 0, 6.666666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2060180', '科举：开局官府发妻，卷成状元', '明月天衣', '历史', '架空历史', '新书', 'male', 3.1, 9.2, 0.3, '2025-10-01', 0.000003369565217391305, 0, 0, 9.67741935483871, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2060824', '让你当狱长，没让你把神魔改造成卷王', '最怕取名字', '玄幻奇幻', '东方玄幻', '新书', 'male', 1.1, 8.6, 0.1, '2025-10-01', 0.0000012790697674418605, 0, 0, 9.090909090909092, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061260', '七零读心，掏空家产带福宝寻夫随军', '沫沫无闻', '现代言情', '年代重生', '新书', 'women', 5.1, 9, 0.3, '2025-10-01', 0.000005666666666666667, 0, 0, 5.88235294117647, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061262', '哑巴小向导，被七个顶级哨兵缠上了', '疯麦', '幻想言情', '未来科幻', '新书', 'women', 0.4, 8.8, 0.1, '2025-10-01', 0.00000045454545454545457, 0, 0, 25, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061266', '边荒小吏', '东门吹牛', '历史', '架空历史', '新书', 'male', 2.7, 8.4, 0.1, '2025-10-01', 0.0000032142857142857147, 0, 0, 3.7037037037037033, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061267', '边军枭卒：从领媳妇开始皇图霸业', '凉小城', '历史', '架空历史', '新书', 'male', 1.9, 8.8, 0.2, '2025-10-01', 0.000002159090909090909, 0, 0, 10.526315789473685, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061269', '七零美人二嫁后，随军西北撩硬汉', '一然', '现代言情', '年代重生', '新书', 'women', 0.4, 8.6, 0.1, '2025-10-01', 0.0000004651162790697675, 0, 0, 25, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061794', '开局送老婆，我成了众仙之父！', '西地那非', '玄幻奇幻', '异世大陆', '新书', 'male', 4, 9.2, 0.5, '2025-10-01', 0.000004347826086956522, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061800', '重生1985，我靠万物标签赶海发家', '吃不完的荔枝', '都市', '都市生活', '新书', 'male', 1.4, 8.6, 0.1, '2025-10-01', 0.0000016279069767441858, 0, 0, 7.142857142857144, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061849', '官府发男人，绝色罪女抬我回家', '凶名赫赫', '历史', '架空历史', '新书', 'male', 5.2, 8.8, 0.4, '2025-10-01', 0.0000059090909090909085, 0, 0, 7.6923076923076925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2061854', '恐怖时代：从斩诡开始永生不死', '戒律', '都市', '灵气复苏', '新书', 'male', 2.1, 8.4, 0.1, '2025-10-01', 0.0000025, 0, 0, 4.761904761904762, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062320', '随母改嫁换新爹，拖油瓶成了团宠', '萝兹萝丝', '现代言情', '年代重生', '新书', 'women', 4.3, 9.5, 1.2, '2025-10-01', 0.0000045263157894736834, 0, 0, 27.906976744186046, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062787', '镇世龙王，你说他是废物赘婿？', '小只气球', '都市', '都市高手', '新书', 'male', 1.5, 8.4, 0.1, '2025-10-01', 0.0000017857142857142857, 0, 0, 6.666666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062788', '穿越大唐：从驿站小卒到帝国巨擘', '亲爱的葡萄', '历史', '穿越历史', '新书', 'male', 1.7, 9.2, 0.1, '2025-10-01', 0.000001847826086956522, 0, 0, 5.882352941176471, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062836', '重回七零：跟着小白脸爸进城吃软饭', '巫颜', '现代言情', '年代重生', '新书', 'women', 4.2, 9.6, 0.6, '2025-10-01', 0.0000043750000000000005, 0, 0, 14.285714285714285, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063237', '怀孕生女他不管，提离婚他崩溃了', '凌淮', '现代言情', '总裁豪门', '新书', 'women', 0.6, 8.8, 0.6, '2025-10-01', 0.0000006818181818181818, 0, 0, 100, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063605', '九阴九阳', '仗剑修真', '玄幻奇幻', '东方玄幻', '新书', 'male', 28, 9.1, 17.7, '2025-10-01', 0.00003076923076923077, 0, 0, 63.21428571428571, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063611', '小蘑菇今天也在吃软饭', '垂耳兔', '古代言情', '古代情缘', '新书', 'women', 4.3, 9.8, 1.3, '2025-10-01', 0.000004387755102040816, 0, 0, 30.232558139534888, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063933', '网游：进化万物，我成唯一至高神！', '苍月翔', '游戏', '虚拟网游', '新书', 'male', 3.2, 9.2, 0.3, '2025-10-01', 0.000003478260869565218, 0, 0, 9.374999999999998, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064055', '挺孕肚离婚二嫁财阀，渣前夫悔疯了', '一颗胖梨', '现代言情', '总裁豪门', '新书', 'women', 19.5, 9.4, 8.5, '2025-10-01', 0.000020744680851063828, 0, 0, 43.58974358974359, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065349', '每日情报：乱世边军一小兵', '推拿医生', '历史', '架空历史', '新书', 'male', 1.4, 8.6, 0.1, '2025-10-01', 0.0000016279069767441858, 0, 0, 7.142857142857144, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065792', '边军老卒，从娶媳妇开始横扫六国！', '齐天小圣', '历史', '架空历史', '新书', 'male', 3.1, 8.7, 0.2, '2025-10-01', 0.0000035632183908045983, 0, 0, 6.451612903225806, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065877', '医路情劫', '微微狂笑', '都市', '都市高手', '新书', 'male', 4.8, 8.8, 0.8, '2025-10-01', 0.0000054545454545454545, 0, 0, 16.666666666666668, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065893', '太监无双', '水山', '历史', '架空历史', '新书', 'male', 3.4, 9.1, 0.6, '2025-10-01', 0.0000037362637362637363, 0, 0, 17.647058823529413, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066872', '离婚后，从幼儿园会演开始爆火全网', '烂番薯', '都市', '明星娱乐', '新书', 'male', 4.1, 9.2, 0.2, '2025-10-01', 0.000004456521739130434, 0, 0, 4.878048780487806, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2066875', '种田修仙：从随机刷新词条开始', '浪兰飞山', '玄幻奇幻', '异世大陆', '新书', 'male', 1.7, 8.6, 0.1, '2025-10-01', 0.0000019767441860465115, 0, 0, 5.882352941176471, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067201', '掏空仇家空间流放，亲爹一家悔哭', '景惠', '古代言情', '种田经商', '新书', 'women', 15, 9.5, 5.8, '2025-10-01', 0.000015789473684210526, 0, 0, 38.666666666666664, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067310', '问鼎：从选调警员到权力巅峰', '叶少华', '都市', '官场', '新书', 'male', 2.8, 9.2, 0.5, '2025-10-01', 0.0000030434782608695654, 0, 0, 17.857142857142858, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067312', '网游：开局一条龙服务', '黑白相间', '游戏', '虚拟网游', '新书', 'male', 5.1, 9.3, 0.9, '2025-10-01', 0.000005483870967741935, 0, 0, 17.647058823529413, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067421', '你爱绿茶我让位，再嫁大佬你别跪', '落雪颂梅', '现代言情', '总裁豪门', '新书', 'women', 2.2, 8.4, 0.3, '2025-10-01', 0.0000026190476190476192, 0, 0, 13.636363636363635, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2070054', '穿成恶女向导，七个顶级哨兵疯抢！', '贰一陆', '幻想言情', '未来科幻', '新书', 'women', 2.6, 9.2, 0.4, '2025-10-01', 0.0000028260869565217393, 0, 0, 15.384615384615385, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2071753', '全球异能觉醒，我修肉身横推万古', '笔下再生', '都市', '都市高武', '新书', 'male', 3.3, 9.2, 0.4, '2025-10-01', 0.00000358695652173913, 0, 0, 12.121212121212123, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2072940', '第五年重逢，驰先生再度失控', '锦锦不是妖', '现代言情', '总裁豪门', '新书', 'women', 0.5, 9.9, 3.7, '2025-10-01', 0.000000505050505050505, 0, 0, 740, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2073165', '被他吻时心动', '玛丽苏狗蛋', '现代言情', '总裁豪门', '新书', 'women', 3.5, 9.2, 0.4, '2025-10-01', 0.0000038043478260869566, 0, 0, 11.428571428571429, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2073577', '人在废丹房，我以丹药证道成仙！', '伽蓝之梦', '玄幻奇幻', '异世大陆', '新书', 'male', 35.5, 9.3, 16.4, '2025-10-01', 0.00003817204301075269, 0, 0, 46.197183098591545, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2073626', '万倍返还！我靠荒野求生养活龙国', '年年有玉', '玄幻奇幻', '异世大陆', '新书', 'male', 1.3, 8.4, 0.1, '2025-10-01', 0.0000015476190476190476, 0, 0, 7.6923076923076925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074077', '开局一辆垃圾车，假千金杀穿末世', '温念君', '幻想言情', '末世求生', '新书', 'women', 0.6, 9.2, 0.1, '2025-10-01', 0.0000006521739130434782, 0, 0, 16.666666666666668, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074179', '混沌吞天诀', '凭虚御风', '玄幻奇幻', '东方玄幻', '新书', 'male', 2.1, 9.2, 0.3, '2025-10-01', 0.000002282608695652174, 0, 0, 14.285714285714285, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074326', '萌兽驾到，京圈大佬集体翘班洗奶瓶', '听听不听', '现代言情', '总裁豪门', '新书', 'women', 0.7, 9.2, 0.2, '2025-10-01', 0.0000007608695652173913, 0, 0, 28.571428571428577, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074363', '被逼自刎，嫡女重生撕婚书覆皇朝', '柠檬小丸子', '古代言情', '宫闱宅斗', '新书', 'women', 3.1, 9.2, 0.8, '2025-10-01', 0.000003369565217391305, 0, 0, 25.806451612903224, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074393', '乱世荒年：从打猎开始无限抽奖', '可破', '历史', '架空历史', '新书', 'male', 2.2, 9.2, 0.3, '2025-10-01', 0.000002391304347826087, 0, 0, 13.636363636363635, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074395', '断绝关系？我转身科举成状元！', '天霸', '历史', '架空历史', '新书', 'male', 2, 8.4, 0.1, '2025-10-01', 0.0000023809523809523808, 0, 0, 5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074408', '全星际都想rua元帅的小奶崽', '未礼', '幻想言情', '未来科幻', '新书', 'women', 2.6, 8.4, 0.2, '2025-10-01', 0.0000030952380952380953, 0, 0, 7.6923076923076925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074459', '重生2006，从被白富美包车开始', '隔壁小王本尊', '都市', '都市生活', '新书', 'male', 2.1, 9.2, 0.3, '2025-10-01', 0.000002282608695652174, 0, 0, 14.285714285714285, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074462', '七零孕妻进军营，野痞兵王缠吻不休', '玖甜妹子', '现代言情', '年代重生', '新书', 'women', 4.6, 9.2, 0.9, '2025-10-01', 0.000005, 0, 0, 19.565217391304348, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074544', '年代军工：让你当厂长，你整出了蘑菇蛋', '三鹿天下', '都市', '都市生活', '新书', 'male', 2.6, 9.2, 0.4, '2025-10-01', 0.0000028260869565217393, 0, 0, 15.384615384615385, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074547', '请神弼马温，被嘲猴子D级神官？', '黑鱼鱼鱼鱼', '都市', '都市高武', '新书', 'male', 2.2, 9.2, 0.1, '2025-10-01', 0.000002391304347826087, 0, 0, 4.545454545454546, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2075172', '穿成掌勺丫鬟，我把病秧子喂活了', '水中有鱼', '古代言情', '种田经商', '新书', 'women', 0.8, 9.2, 0.5, '2025-10-01', 0.0000008695652173913045, 0, 0, 62.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076380', '女子监狱出真龙，出狱后全球震动', '我非良人', '都市', '都市高武', '新书', 'male', 3.9, 9.6, 1, '2025-10-01', 0.0000040625, 0, 0, 25.641025641025646, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076400', '镇荒印', '李中有梦', '玄幻奇幻', '东方玄幻', '新书', 'male', 2.1, 9.2, 0.2, '2025-10-01', 0.000002282608695652174, 0, 0, 9.523809523809524, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076478', '狂野都市', '大丙', '都市', '都市生活', '新书', 'male', 1.6, 8.4, 0.2, '2025-10-01', 0.0000019047619047619047, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076479', '净身出户后，大佬全部身家求复合', '夜微雨', '现代言情', '总裁豪门', '新书', 'women', 0.9, 8.4, 0.1, '2025-10-01', 0.0000010714285714285714, 0, 0, 11.111111111111112, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076498', '一觉醒来三年后，七零长姐凶又甜', '叫我富贵叭', '现代言情', '年代重生', '新书', 'women', 2.4, 9.2, 0.4, '2025-10-01', 0.000002608695652173913, 0, 0, 16.666666666666668, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076502', '斗罗V：人面魔蛛，多子多福', '龙小君', 'N次元', '衍生同人', '新书', 'male', 4.5, 8.8, 0.5, '2025-10-01', 0.0000051136363636363635, 0, 0, 11.11111111111111, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2076515', '乾元混沌塔', '织花明路', '玄幻奇幻', '东方玄幻', '新书', 'male', 1.9, 8.6, 0.2, '2025-10-01', 0.0000022093023255813954, 0, 0, 10.526315789473685, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2077477', '上界帝子你敢甩，我娶女帝你哭什么？', '墨白', '玄幻奇幻', '东方玄幻', '新书', 'male', 2.4, 9.2, 0.2, '2025-10-01', 0.000002608695652173913, 0, 0, 8.333333333333334, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2078333', '边境反贼：从解救女囚开始', '女帝', '历史', '架空历史', '新书', 'male', 3.2, 9.2, 0.6, '2025-10-01', 0.000003478260869565218, 0, 0, 18.749999999999996, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2078905', '夺我灵泉空间？掏空资产嫁京少爽翻天', '桃乐漫', '现代言情', '年代重生', '新书', 'women', 1.1, 9.2, 1.3, '2025-10-01', 0.0000011956521739130436, 0, 0, 118.18181818181816, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2079417', '经常杀人的朋友', '魂燚', '都市', '都市高武', '新书', 'male', 3.6, 9.2, 0.7, '2025-10-01', 0.00000391304347826087, 0, 0, 19.444444444444443, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('208897', '极品天师', '月下冰河', '都市', '都市高武', '完结', 'male', 34.7, 9.2, 1.4, '2025-10-01', 0.00003771739130434783, 0, 0, 4.034582132564841, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('210772', '都市之最强仙医', '夫子', '都市', '都市高武', '完结', 'male', 534.5, 9, 1.5, '2025-10-01', 0.0005938888888888888, 0, 0, 0.2806361085126286, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213108', '都市全能医圣', '玖月天', '都市', '都市高武', '完结', 'male', 181.7, 9.1, 1.4, '2025-10-01', 0.00019967032967032968, 0, 0, 0.7705008255365988, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213189', '混沌剑帝', '运也', '玄幻奇幻', '东方玄幻', '大热', 'male', 905.8, 9.1, 6, '2025-10-01', 0.0009953846153846154, 0, 0, 0.6623978803267829, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213502', '小皇叔腹黑又难缠', '一碧榶榶', '古代言情', '宫闱宅斗', '完结', 'women', 0.6, 9.6, 2, '2025-10-01', 0.000000625, 0, 0, 333.33333333333337, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213692', '武帝归来', '修果', '都市', '都市高武', '完结', 'male', 948, 9.1, 1.8, '2025-10-01', 0.0010417582417582417, 0, 0, 0.189873417721519, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('213853', '极品小相师', '大丙', '都市', '都市高武', '完结', 'male', 185, 9.3, 1.8, '2025-10-01', 0.0001989247311827957, 0, 0, 0.9729729729729729, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('214147', '阴阳诡匠', '洛小阳', '奇闻异事', '奇门秘术', '完结', 'male', 259.2, 9.6, 1.9, '2025-10-01', 0.00027, 0, 0, 0.7330246913580246, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('214514', '活人阴差', '末日诗人', '奇闻异事', '恐怖灵异', '完结', 'male', 546.1, 9.1, 2.1, '2025-10-01', 0.0006001098901098901, 0, 0, 0.3845449551364219, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('215264', '都市战狼', '荆南', '都市', '都市高手', '完结', 'male', 415.2, 9.2, 1.8, '2025-10-01', 0.00045130434782608697, 0, 0, 0.4335260115606937, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('215476', '学霸女王马甲多', '灰夫人', '现代言情', '总裁豪门', '完结', 'women', 0.8, 9.8, 2.2, '2025-10-01', 0.0000008163265306122449, 0, 0, 275, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('215874', '吞天造化经', '鬼疯子', '玄幻奇幻', '东方玄幻', '完结', 'male', 757.7, 9.1, 2.6, '2025-10-01', 0.0008326373626373627, 0, 0, 0.3431437244291936, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('216054', '极品小道长', '任公独钓', '奇闻异事', '奇门秘术', '完结', 'male', 124.4, 9.3, 0.8, '2025-10-01', 0.00013376344086021505, 0, 0, 0.6430868167202572, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('217267', '民间诡闻实录之阴阳先生', '罗樵森', '奇闻异事', '奇门秘术', '完结', 'male', 428.5, 9.5, 1.3, '2025-10-01', 0.0004510526315789474, 0, 0, 0.3033838973162194, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('217770', '全师门就我一个废柴', '白木木', '幻想言情', '玄幻仙侠', '大热', 'women', 1, 9.8, 7.9, '2025-10-01', 0.000001020408163265306, 0, 0, 790, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('219040', '极道剑尊', '二十七杯酒', '玄幻奇幻', '东方玄幻', '大热', 'male', 872.4, 9.2, 16, '2025-10-01', 0.0009482608695652175, 0, 0, 1.8340210912425492, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('219310', '全世界都玩异能只有我修仙', '缘起云涌', 'N次元', '原生幻想', '完结', 'male', 126.1, 9.2, 1.4, '2025-10-01', 0.00013706521739130436, 0, 0, 1.1102299762093577, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('219498', '君夫人的马甲层出不穷', '荷衣', '现代言情', '总裁豪门', '大热', 'women', 1.2, 9.7, 5.1, '2025-10-01', 0.0000012371134020618557, 0, 0, 425, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('221137', '网游之全服公敌', '黑白相间', '游戏', '虚拟网游', '完结', 'male', 715.9, 9.3, 1.8, '2025-10-01', 0.0007697849462365591, 0, 0, 0.25143176421287894, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1655967', '吞噬九重天', '屠刀成佛', '玄幻奇幻', '东方玄幻', '大热', 'male', 360.3, 9.1, 20.8, '2025-10-01', 0.000395934065934066, 0, 0, 5.772966971967804, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1658048', '六年后，我携四个幼崽炸翻前夫家', '相思一顾', '现代言情', '总裁豪门', '大热', 'women', 34.7, 9.6, 30.1, '2025-10-01', 0.00003614583333333334, 0, 0, 86.74351585014409, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1669371', '吞天神帝', '小三叔', '玄幻奇幻', '东方玄幻', '完结', 'male', 106.5, 9, 1.5, '2025-10-01', 0.00011833333333333334, 0, 0, 1.4084507042253522, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1694124', '女总裁的贴身龙帅', '枯木封雨', '都市', '都市高手', '完结', 'male', 50.1, 9, 1, '2025-10-01', 0.00005566666666666667, 0, 0, 1.996007984031936, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1710753', '舔狗反派只想苟，女主不按套路走！', '我是愤怒', '都市', '都市高手', '大热', 'male', 34.7, 9.5, 32.9, '2025-10-01', 0.00003652631578947369, 0, 0, 94.81268011527376, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1780393', '蛇骨阴香', '北派无尽夏', '现代言情', '现代悬疑', '完结', 'women', 0.3, 9.6, 1.7, '2025-10-01', 0.0000003125, 0, 0, 566.6666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1807804', '重启2008：从拯救绝色女老师开始逆袭', '封尘往昔', '都市', '商战职场', '完结', 'male', 384.9, 9, 1, '2025-10-01', 0.00042766666666666664, 0, 0, 0.2598077422707197, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1836527', '凰宫梦', '蓝九九', '古代言情', '宫闱宅斗', '大热', 'women', 938.4, 9.7, 38.2, '2025-10-01', 0.0009674226804123712, 0, 0, 4.07075873827792, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1837399', '圣手大医仙', '带刺的毛球', '都市', '都市高手', '完结', 'male', 30.7, 8.9, 1.1, '2025-10-01', 0.00003449438202247191, 0, 0, 3.5830618892508146, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1839533', '锦帐春深', '温流', '古代言情', '宫闱宅斗', '大热', 'women', 494.9, 9.7, 5.9, '2025-10-01', 0.0005102061855670104, 0, 0, 1.1921600323297639, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1850580', '我非池中物', '夜泊秦淮', '都市', '都市生活', '大热', 'male', 115, 9.1, 8.4, '2025-10-01', 0.00012637362637362638, 0, 0, 7.304347826086957, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1851542', '麒麟出世，师父让我下山去结婚', '御龙', '都市', '都市高手', '完结', 'male', 85, 9, 3.4, '2025-10-01', 0.00009444444444444444, 0, 0, 4, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1864909', '将军活不过仨月，换亲后我旺他百年', '不知绿', '古代言情', '古代情缘', '大热', 'women', 138.1, 9.6, 4.9, '2025-10-01', 0.00014385416666666667, 0, 0, 3.548153511947864, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1868453', '噬神鼎', '三千晴空', '玄幻奇幻', '东方玄幻', '大热', 'male', 235.5, 8.9, 4.8, '2025-10-01', 0.0002646067415730337, 0, 0, 2.038216560509554, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1873716', '换嫁给绝嗣太子后我连生三胎', '昔也', '古代言情', '宫闱宅斗', '完结', 'women', 0.6, 9.5, 2.5, '2025-10-01', 0.0000006315789473684211, 0, 0, 416.6666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1873810', '换婚病危世子，她一胎三宝赢麻了', '雨过阳光', '古代言情', '宫闱宅斗', '完结', 'women', 0.6, 9.6, 2.5, '2025-10-01', 0.000000625, 0, 0, 416.6666666666667, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1880008', '吞天神体：从仙女奉献开始无敌', '南云月', '玄幻奇幻', '东方玄幻', '大热', 'male', 70.8, 9.2, 15.8, '2025-10-01', 0.00007695652173913044, 0, 0, 22.316384180790962, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1887846', '七零美人到西北，硬汉红温了', '棠元', '现代言情', '年代重生', '大热', 'women', 236, 9.7, 5.1, '2025-10-01', 0.00024329896907216496, 0, 0, 2.1610169491525424, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1924828', '还不起人情债，我只好当她男朋友了', '无色', '都市', '都市生活', '大热', 'male', 145.7, 9, 4.6, '2025-10-01', 0.00016188888888888885, 0, 0, 3.157172271791352, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1927415', '离婚三天：我冷淡至极，他索吻成瘾', '风羽轻轻', '现代言情', '总裁豪门', '大热', 'women', 224.5, 9.5, 13.5, '2025-10-01', 0.00023631578947368422, 0, 0, 6.013363028953229, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1946720', '1977，开局女知青以身相许', '家有十猫', '都市', '都市生活', '大热', 'male', 185.2, 9, 13.9, '2025-10-01', 0.00020577777777777776, 0, 0, 7.505399568034559, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1948430', '重生60：从深山打猎开始致富', 'KITTT', '都市', '乡村生活', '大热', 'male', 80.9, 9.3, 4.2, '2025-10-01', 0.00008698924731182796, 0, 0, 5.19159456118665, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1956587', '五岁萌妃炸京城，我阿娘是侯府真千金', '幻想鱼', '古代言情', '宫闱宅斗', '完结', 'women', 0.9, 9.6, 2, '2025-10-01', 0.0000009375, 0, 0, 222.22222222222223, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1965109', '守寡重生，送断袖夫君下黄泉', '指尖上的行走', '古代言情', '宫闱宅斗', '完结', 'women', 0.7, 9.7, 4.1, '2025-10-01', 0.0000007216494845360825, 0, 0, 585.7142857142857, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('197091', '民间诡闻实录', '罗樵森', '奇闻异事', '奇门秘术', '大热', 'male', 34.7, 9.6, 8.4, '2025-10-01', 0.00003614583333333334, 0, 0, 24.207492795389047, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1977771', '傅总，夫人不想当首富太太了', '蓝尧', '现代言情', '总裁豪门', '大热', 'women', 187.6, 9.4, 15.7, '2025-10-01', 0.00019957446808510634, 0, 0, 8.368869936034114, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1978758', '小姑奶奶下山了，在桥洞底下摆摊算命', '骑着猫的小鱼干', '现代言情', '都市奇幻', '大热', 'women', 1.1, 9.7, 11.4, '2025-10-01', 0.000001134020618556701, 0, 0, 1036.3636363636363, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1981956', '柔弱医修今天也在背地里暴打魔尊', '白木木', '幻想言情', '玄幻仙侠', '大热', 'women', 263.9, 9.8, 16.9, '2025-10-01', 0.00026928571428571426, 0, 0, 6.403940886699508, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982356', '渣夫别跪了，夫人嫁顶级大佬啦', '乐恩', '现代言情', '总裁豪门', '大热', 'women', 704.5, 9.2, 47.5, '2025-10-01', 0.0007657608695652175, 0, 0, 6.742370475514549, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1982967', '厉总，太太在外面有两个私生子', '十里山河', '现代言情', '总裁豪门', '大热', 'women', 94.7, 9.1, 2.4, '2025-10-01', 0.00010406593406593407, 0, 0, 2.5343189017951424, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1994507', '权力争锋', '东流无歇', '都市', '官场', '大热', 'male', 37, 9.1, 5, '2025-10-01', 0.00004065934065934066, 0, 0, 13.513513513513514, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('1995023', '边关兵王', '青岳', '历史', '架空历史', '大热', 'male', 347.1, 9.4, 41.6, '2025-10-01', 0.0003692553191489362, 0, 0, 11.985018726591761, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2011930', '末世别人砍丧尸，我在房车炫美食', '槿花篱', '幻想言情', '末世求生', '大热', 'women', 41.7, 9.7, 3.1, '2025-10-01', 0.00004298969072164949, 0, 0, 7.434052757793765, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2016384', '冷婚五年，离婚夜他却失控了', '温见鹿', '现代言情', '总裁豪门', '新书', 'women', 0.9, 9, 1.2, '2025-10-01', 0.000001, 0, 0, 133.33333333333331, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2024797', '七零资本娇小姐，下放后硬汉宠上天', '梅才华', '现代言情', '年代重生', '新书', 'women', 7.8, 8.8, 0.3, '2025-10-01', 0.000008863636363636363, 0, 0, 3.8461538461538463, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2027484', '领证爽约？我转嫁你哥哭什么', '欧橙', '现代言情', '总裁豪门', '大热', 'women', 126.2, 9.2, 10.4, '2025-10-01', 0.0001371739130434783, 0, 0, 8.240887480190175, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2028796', '陛下管管吧，六皇子又发疯了！', '追风boy', '历史', '架空历史', '完结', 'male', 14.2, 9, 0.8, '2025-10-01', 0.00001577777777777778, 0, 0, 5.633802816901409, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2029029', '离婚后，我权势滔天，你哭什么', '水门绅士', '都市', '都市高手', '大热', 'male', 181.6, 8.9, 18.2, '2025-10-01', 0.0002040449438202247, 0, 0, 10.022026431718063, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2047215', '皇后谁爱当谁当，我嫁权臣横着走', '素手摘星', '古代言情', '权谋天下', '新书', 'women', 8.1, 9.5, 3.4, '2025-10-01', 0.000008526315789473683, 0, 0, 41.97530864197531, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2052831', '长生从助仙子修行开始', '勿问', '玄幻奇幻', '东方玄幻', '新书', 'male', 3, 8.6, 0.3, '2025-10-01', 0.000003488372093023256, 0, 0, 10, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2053789', '权力沉浮', '空中鹰', '都市', '官场', '新书', 'male', 6.1, 8.8, 1, '2025-10-01', 0.000006931818181818181, 0, 0, 16.393442622950822, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2055000', '快穿好孕美人，绝嗣反派黑化了', '虞忧', '幻想言情', '无限快穿', '新书', 'women', 3.4, 8.4, 0.2, '2025-10-01', 0.0000040476190476190474, 0, 0, 5.882352941176471, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2055374', '七零美人要离婚，冷面军少他急了', '钱小二', '现代言情', '年代重生', '新书', 'women', 0.8, 9.5, 10.7, '2025-10-01', 0.0000008421052631578948, 0, 0, 1337.4999999999998, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2057569', '领主：我招募的士兵怎么都是玩家', '禅心道骨', '玄幻奇幻', '异世大陆', '新书', 'male', 9.7, 9.5, 2.9, '2025-10-01', 0.000010210526315789473, 0, 0, 29.896907216494846, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2057884', '神级捡漏王：无良校花逼我去扯证', '李卯卯', '都市', '都市高武', '新书', 'male', 5.3, 8.9, 0.7, '2025-10-01', 0.000005955056179775281, 0, 0, 13.20754716981132, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2062363', '离婚后，我转嫁大佬你哭什么？', '舒子曦', '现代言情', '总裁豪门', '新书', 'women', 0.5, 8.6, 0.1, '2025-10-01', 0.0000005813953488372093, 0, 0, 20, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063290', '让我做外室？我另嫁你哭什么', '皎皎朗月', '古代言情', '古代情缘', '新书', 'women', 2.4, 9.2, 0.3, '2025-10-01', 0.000002608695652173913, 0, 0, 12.5, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2063306', '重返二十岁心动，他才是白月光', '浮景', '现代言情', '青春校园', '新书', 'women', 1.1, 9.2, 0.1, '2025-10-01', 0.0000011956521739130436, 0, 0, 9.090909090909092, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064747', '都市狠人', '北冥鱼', '都市', '商战职场', '新书', 'male', 5.6, 9.1, 1.9, '2025-10-01', 0.000006153846153846154, 0, 0, 33.92857142857143, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2064966', '成全他和青梅后，我却成了白月光', '墨墨卿卿', '现代言情', '总裁豪门', '新书', 'women', 36.1, 9.6, 17.2, '2025-10-01', 0.00003760416666666667, 0, 0, 47.64542936288088, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065274', '英雄本色', '疯十八', '都市', '商战职场', '新书', 'male', 1.4, 8.6, 0.1, '2025-10-01', 0.0000016279069767441858, 0, 0, 7.142857142857144, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065353', '只剩七天寿命？先休渣夫再杀全家', '南山野', '古代言情', '宫闱宅斗', '新书', 'women', 0.8, 9.2, 0.3, '2025-10-01', 0.0000008695652173913045, 0, 0, 37.49999999999999, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065807', '重生下乡：我才不当冤大头！', '清蒸大白蛆', '都市', '乡村生活', '新书', 'male', 13.2, 8.9, 2.7, '2025-10-01', 0.000014831460674157301, 0, 0, 20.454545454545457, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065879', '一天暴涨一年修为，你说你后悔了？', '小陈little', '都市', '都市高武', '新书', 'male', 4.2, 9.2, 0.3, '2025-10-01', 0.000004565217391304348, 0, 0, 7.142857142857142, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2065896', '重生孕肚藏福宝，灾年养崽掀族祠', '瑞侈', '古代言情', '种田经商', '新书', 'women', 3.5, 9.2, 0.5, '2025-10-01', 0.0000038043478260869566, 0, 0, 14.285714285714285, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067244', '开局杀敌爆属性，我功力滔天', '潇湘烨雨', '玄幻奇幻', '东方玄幻', '新书', 'male', 2.7, 9.2, 0.3, '2025-10-01', 0.0000029347826086956523, 0, 0, 11.11111111111111, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067317', '夫人拒不原谅，高冷渣夫失控了', '严以妃', '现代言情', '总裁豪门', '新书', 'women', 2.3, 9.2, 0.5, '2025-10-01', 0.0000025, 0, 0, 21.73913043478261, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2067319', '闪婚后，老公竟是我大学教授', '多多美', '现代言情', '职场情缘', '新书', 'women', 1, 8.4, 0.3, '2025-10-01', 0.0000011904761904761904, 0, 0, 30, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074368', '职路扶摇', '桑迪', '都市', '商战职场', '新书', 'male', 1.3, 8.4, 0.1, '2025-10-01', 0.0000015476190476190476, 0, 0, 7.6923076923076925, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2074390', '错虐白月光，祁总跪地求复合', '鹿景景', '现代言情', '总裁豪门', '新书', 'women', 1.7, 9.2, 0.1, '2025-10-01', 0.000001847826086956522, 0, 0, 5.882352941176471, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2075201', '魔道神豪携亿万魔晶，在两界杀疯了', '风九元', '玄幻奇幻', '东方玄幻', '新书', 'male', 1.7, 9.2, 0.3, '2025-10-01', 0.000001847826086956522, 0, 0, 17.647058823529413, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('2077743', '灾荒年捡回姐妹花，我粮肉满仓！', '小小月月落落', '历史', '架空历史', '新书', 'male', 3.1, 9.2, 0.5, '2025-10-01', 0.000003369565217391305, 0, 0, 16.129032258064516, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '科幻', '末世危机', '大热', 'male', 34.7, 9, 9, '2025-10-01', 0.00003855555555555556, 0, 0, 25.936599423631122, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('222157', '我有神级收益系统', '不是蚊子', '都市', '都市高武', '完结', 'male', 921.2, 9.2, 2.8, '2025-10-01', 0.0010013043478260871, 0, 0, 0.30395136778115495, 0, '正常', 1, '可正常阅读');
+INSERT INTO `ads_user_avoid_pitfalls` VALUES ('222767', '离婚后她惊艳了世界', '明婳', '现代言情', '总裁豪门', '大热', 'women', 34.7, 9.6, 100, '2025-10-01', 0.00003614583333333334, 0, 0, 288.1844380403458, 0, '正常', 1, '可正常阅读');
+
+-- ----------------------------
+-- Table structure for ads_user_layered_recommendation
+-- ----------------------------
+DROP TABLE IF EXISTS `ads_user_layered_recommendation`;
+CREATE TABLE `ads_user_layered_recommendation`  (
+  `book_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `author` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category1_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category2_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `gender_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `numeric_popularity` double NULL DEFAULT NULL,
+  `numeric_score` double NULL DEFAULT NULL,
+  `numeric_read_count` double NULL DEFAULT NULL,
+  `status` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `category_heat_rank` int NULL DEFAULT NULL,
+  `subcategory_heat_rank` int NULL DEFAULT NULL,
+  `category_avg_popularity` double NULL DEFAULT NULL,
+  `relative_heat` double NULL DEFAULT NULL,
+  `is_niche_hit` int NULL DEFAULT NULL,
+  `is_high_score_niche` int NULL DEFAULT NULL,
+  `niche_recommendation_score` double NULL DEFAULT NULL,
+  `recommendation_level` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ads_user_layered_recommendation
+-- ----------------------------
+INSERT INTO `ads_user_layered_recommendation` VALUES ('217267', '民间诡闻实录之阴阳先生', '罗樵森', '奇闻异事', '奇门秘术', 'male', 428.5, 9.5, 1.3, '已完结', 2, 1, 225.45000000000005, 1.9006431581281877, 1, 1, 0.7790385894876912, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('214783', '山野诡闻笔记', '吴大胆', '奇闻异事', '奇门秘术', 'male', 414, 9.5, 3.4, '已完结', 3, 2, 225.45000000000005, 1.836327345309381, 1, 1, 0.7751796407185628, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1768764', '出阳神', '罗樵森', '奇闻异事', '奇门秘术', 'male', 296.9, 9.4, 2.5, '已完结', 4, 3, 225.45000000000005, 1.3169217121312926, 1, 1, 0.7370153027278776, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('214147', '阴阳诡匠', '洛小阳', '奇闻异事', '奇门秘术', 'male', 259.2, 9.6, 1.9, '已完结', 5, 4, 225.45000000000005, 1.149700598802395, 1, 1, 0.7409820359281436, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982358', '天黑请点灯', '罗樵森', '奇闻异事', '奇门秘术', 'male', 157.9, 9.4, 7, '连载中', 7, 5, 225.45000000000005, 0.7003770237303171, 1, 0, 0.7000226214238191, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('202630', '道门诡谈', '李十一', '奇闻异事', '奇门秘术', 'male', 155.7, 9.2, 1.4, '已完结', 8, 6, 225.45000000000005, 0.6906187624750497, 1, 0, 0.6854371257485029, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('216054', '极品小道长', '任公独钓', '奇闻异事', '奇门秘术', 'male', 124.4, 9.3, 0.8, '已完结', 9, 7, 225.45000000000005, 0.5517853182523841, 1, 0, 0.6841071190951431, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('218179', '天命风水神相', '半盏清茶', '奇闻异事', '奇门秘术', 'male', 59.1, 9.2, 1.4, '已完结', 10, 8, 225.45000000000005, 0.2621423819028609, 1, 0, 0.6597285429141716, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('197091', '民间诡闻实录', '罗樵森', '奇闻异事', '奇门秘术', 'male', 34.7, 9.6, 8.4, '已完结', 11, 9, 225.45000000000005, 0.1539143934353515, 0, 0, 0.6812348636061211, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('214514', '活人阴差', '末日诗人', '奇闻异事', '恐怖灵异', 'male', 546.1, 9.1, 2.1, '已完结', 1, 1, 225.45000000000005, 2.4222665779552, 1, 1, 0.7823359946773119, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213190', '阴阳鲁班咒', '一气三元', '奇闻异事', '恐怖灵异', 'male', 226.6, 9.4, 1.5, '已完结', 6, 2, 225.45000000000005, 1.0051009092925258, 1, 0, 0.7183060545575516, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2077779', '规则怪谈：我能找出错误的规则', '老猫写文', '奇闻异事', '恐怖灵异', 'male', 2.3, 9.2, 0.2, '连载中', 12, 3, 225.45000000000005, 0.010201818585052116, 0, 0, 0.644612109115103, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1970603', '星际兽世：万人迷小人类深陷修罗场', '含冬小鱼', '幻想言情', '异世幻想', 'women', 0.3, 9.6, 0.5, '连载中', 21, 1, 40, 0.0075, 0, 0, 0.6724499999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2055000', '快穿好孕美人，绝嗣反派黑化了', '虞忧', '幻想言情', '无限快穿', 'women', 3.4, 8.4, 0.2, '连载中', 8, 1, 40, 0.08499999999999999, 0, 0, 0.5931, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2058468', '快穿：小狐狸她漂亮但能打', '十一肆', '幻想言情', '无限快穿', 'women', 3.3, 8.8, 0.2, '连载中', 9, 2, 40, 0.08249999999999999, 1, 0, 0.62095, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1684297', '规则怪谈，欢迎来到甜蜜的家', '弦泠兮', '幻想言情', '无限快穿', 'women', 0.7, 9.8, 2.9, '已完结', 17, 3, 40, 0.017499999999999998, 0, 0, 0.68705, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2054284', '快穿：我要当绝嗣大佬独生女', '挽书', '幻想言情', '无限快穿', 'women', 0.7, 9.4, 1.8, '连载中', 17, 3, 40, 0.017499999999999998, 0, 0, 0.65905, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064964', '规则怪谈：我的超能力给诡异整破防了', 'fishlike', '幻想言情', '无限快穿', 'women', 0.7, 8.6, 0.1, '连载中', 17, 3, 40, 0.017499999999999998, 0, 0, 0.60305, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1781450', '无限流：在惊悚世界当万人迷', '白日宴火', '幻想言情', '无限快穿', 'women', 0.4, 9.9, 3.3, '已完结', 20, 4, 40, 0.01, 0, 0, 0.6936, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2070054', '穿成恶女向导，七个顶级哨兵疯抢！', '贰一陆', '幻想言情', '未来科幻', 'women', 2.6, 9.2, 0.4, '连载中', 10, 1, 40, 0.065, 1, 0, 0.6478999999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074408', '全星际都想rua元帅的小奶崽', '未礼', '幻想言情', '未来科幻', 'women', 2.6, 8.4, 0.2, '连载中', 10, 1, 40, 0.065, 0, 0, 0.5919, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1846315', '小雌性是万人迷，养了一窝毛绒绒', '一个刚正不阿的女人', '幻想言情', '未来科幻', 'women', 0.9, 9.8, 3.2, '已完结', 15, 2, 40, 0.0225, 0, 0, 0.68735, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061262', '哑巴小向导，被七个顶级哨兵缠上了', '疯麦', '幻想言情', '未来科幻', 'women', 0.4, 8.8, 0.1, '连载中', 20, 3, 40, 0.01, 0, 0, 0.6166, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2011930', '末世别人砍丧尸，我在房车炫美食', '槿花篱', '幻想言情', '末世求生', 'women', 41.7, 9.7, 3.1, '连载中', 6, 1, 40, 1.0425, 1, 0, 0.7415499999999999, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2040657', '末世抢机缘：我的我的都是我的！', '文鳐', '幻想言情', '末世求生', 'women', 4.1, 9.5, 0.3, '连载中', 7, 2, 40, 0.1025, 1, 0, 0.6711499999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1807740', '末世前中彩票，我囤上亿物资躺赢', '诺禾', '幻想言情', '末世求生', 'women', 1, 9.6, 1.7, '已完结', 14, 3, 40, 0.025, 0, 0, 0.6734999999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2003997', '末世囤货养崽，从娘胎开始旺妈咪', '小桃花', '幻想言情', '末世求生', 'women', 0.6, 9.6, 1.5, '已完结', 18, 4, 40, 0.015, 0, 0, 0.6728999999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074077', '开局一辆垃圾车，假千金杀穿末世', '温念君', '幻想言情', '末世求生', 'women', 0.6, 9.2, 0.1, '连载中', 18, 4, 40, 0.015, 0, 0, 0.6448999999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1870439', '空间通末世：我囤亿万物资养兵王', '小桃花', '幻想言情', '末世求生', 'women', 0.3, 9.6, 1.6, '已完结', 21, 5, 40, 0.0075, 0, 0, 0.6724499999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1776773', '第一召唤师', '喵喵大人', '幻想言情', '玄幻仙侠', 'women', 405.6, 9.7, 5.5, '已完结', 1, 1, 40, 10.14, 1, 1, 1.2873999999999999, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1764505', '我团宠小师妹，嚣张点怎么了', '瑰夏', '幻想言情', '玄幻仙侠', 'women', 365, 9.7, 13, '已完结', 2, 2, 40, 9.125, 1, 1, 1.2265, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1981956', '柔弱医修今天也在背地里暴打魔尊', '白木木', '幻想言情', '玄幻仙侠', 'women', 263.9, 9.8, 16.9, '连载中', 3, 3, 40, 6.597499999999999, 1, 1, 1.08185, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1965108', '召诸神，踏万界，天命帝女逆乾坤', '澜岸', '幻想言情', '玄幻仙侠', 'women', 74.8, 9.7, 6.7, '连载中', 4, 4, 40, 1.8699999999999999, 1, 1, 0.7911999999999999, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2038910', '你惹她干什么？她修的是杀道啊', '璃焰', '幻想言情', '玄幻仙侠', 'women', 57, 9.6, 6.3, '连载中', 5, 5, 40, 1.425, 1, 1, 0.7575, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074090', '挖我灵根？重生后新师门待我如宝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', 'women', 2.4, 9.2, 0.3, '连载中', 11, 6, 40, 0.06, 0, 0, 0.6476, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076863', '换宗门，当团宠，师妹她修生钱道', '金池', '幻想言情', '玄幻仙侠', 'women', 1.8, 9.2, 0.3, '连载中', 12, 7, 40, 0.045, 0, 0, 0.6466999999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1778388', '灵骨被夺，帝女她觉醒神脉杀回来了', '澜岸', '幻想言情', '玄幻仙侠', 'women', 1.1, 9.7, 2.6, '已完结', 13, 8, 40, 0.027500000000000004, 0, 0, 0.68065, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('217770', '全师门就我一个废柴', '白木木', '幻想言情', '玄幻仙侠', 'women', 1, 9.8, 7.9, '已完结', 14, 9, 40, 0.025, 0, 0, 0.6875, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('215243', '第一瞳术师', '喵喵大人', '幻想言情', '玄幻仙侠', 'women', 0.8, 9.8, 19.5, '已完结', 16, 10, 40, 0.02, 0, 0, 0.6872, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1975352', '叉腰腰，全家都是我捡来哒！', '柠檬鱼头', '幻想言情', '玄幻仙侠', 'women', 0.8, 9.7, 11.2, '连载中', 16, 10, 40, 0.02, 0, 0, 0.6801999999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1654986', '团宠小师妹才是真大佬', '千金兔', '幻想言情', '玄幻仙侠', 'women', 0.7, 9.7, 2.5, '已完结', 17, 11, 40, 0.017499999999999998, 0, 0, 0.6800499999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1772694', '神尊强宠，废物小姐竟是绝世女帝', '动物园在逃小熊猫', '幻想言情', '玄幻仙侠', 'women', 0.5, 9.6, 3.1, '已完结', 19, 12, 40, 0.0125, 0, 0, 0.67275, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1730259', '踏神界逆九州：废物七小姐权倾天下', '苏音', '幻想言情', '玄幻仙侠', 'women', 0.3, 9.7, 2.1, '已完结', 21, 13, 40, 0.0075, 0, 0, 0.6794499999999999, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1989835', '刚入截教，听到截教气运在抱怨', '超爱吃甜粽子', '武侠仙侠', '上古洪荒', 'male', 74.9, 9.2, 1.3, '已完结', 2, 1, 72.82000000000001, 1.028563581433672, 1, 1, 0.7057138148860203, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2021927', '西游：取经？关我混沌魔猿什么事！', '南木北树', '武侠仙侠', '上古洪荒', 'male', 69.7, 9, 2.4, '已完结', 3, 2, 72.82000000000001, 0.9571546278494918, 1, 1, 0.6874292776709695, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1978712', '开局炼化金翅大鹏，圣人懵了！', '惜柒', '武侠仙侠', '上古洪荒', 'male', 65.9, 9.2, 2.4, '已完结', 4, 3, 72.82000000000001, 0.9049711617687448, 1, 1, 0.6982982697061246, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2018535', '洪荒：我屡出毒计，十二祖巫劝我冷静！', '橘黄的橙子', '武侠仙侠', '上古洪荒', 'male', 47.3, 8.9, 1.9, '已完结', 5, 4, 72.82000000000001, 0.6495468277945619, 1, 0, 0.6619728096676737, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2004996', '仙侣', '鬼疯子', '武侠仙侠', '幻想修真', 'male', 106.3, 8.9, 11.3, '连载中', 1, 1, 72.82000000000001, 1.459763801153529, 1, 0, 0.7105858280692118, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1817221', '史上最强师父', '炒方便面', '玄幻奇幻', '东方玄幻', 'male', 976.5, 9.2, 25.7, '连载中', 1, 1, 207.11351351351357, 4.714805825242717, 1, 1, 0.926888349514563, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213189', '混沌剑帝', '运也', '玄幻奇幻', '东方玄幻', 'male', 905.8, 9.1, 6, '已完结', 2, 2, 207.11351351351357, 4.3734471239169, 1, 1, 0.899406827435014, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('219040', '极道剑尊', '二十七杯酒', '玄幻奇幻', '东方玄幻', 'male', 872.4, 9.2, 16, '连载中', 3, 3, 207.11351351351357, 4.212182900093954, 1, 1, 0.8967309740056372, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1655407', '鸿蒙霸体诀', '鱼初见', '玄幻奇幻', '东方玄幻', 'male', 791.6, 9.1, 34.3, '连载中', 5, 4, 207.11351351351357, 3.8220586700073067, 1, 1, 0.8663235202004382, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('202636', '九转星辰诀', '晨弈', '玄幻奇幻', '东方玄幻', 'male', 760.8, 9.2, 4.3, '已完结', 6, 5, 207.11351351351357, 3.6733479486376437, 1, 0, 0.8644008769182585, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('215874', '吞天造化经', '鬼疯子', '玄幻奇幻', '东方玄幻', 'male', 757.7, 9.1, 2.6, '已完结', 7, 6, 207.11351351351357, 3.658380311097191, 1, 0, 0.8565028186658313, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1767940', '混沌塔', '惊蛰落月', '玄幻奇幻', '东方玄幻', 'male', 582.4, 9.2, 32.2, '连载中', 8, 7, 207.11351351351357, 2.8119845495354414, 1, 0, 0.8127190729721263, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('216404', '荒古武神', '化十', '玄幻奇幻', '东方玄幻', 'male', 527.2, 9.1, 8.3, '连载中', 9, 8, 207.11351351351357, 2.5454640359118903, 1, 0, 0.7897278421547134, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213697', '葬天神帝', '我爱弹棉花', '玄幻奇幻', '东方玄幻', 'male', 526.9, 9.1, 6.7, '连载中', 10, 9, 207.11351351351357, 2.544015554859588, 1, 0, 0.7896409332915751, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('208594', '吞天圣帝', '枫落忆痕', '玄幻奇幻', '东方玄幻', 'male', 483.6, 9.1, 8, '连载中', 11, 10, 207.11351351351357, 2.3349514563106792, 0, 0, 0.7770970873786407, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1867139', '师叔，你的法宝太不正经了', '李别浪', '玄幻奇幻', '东方玄幻', 'male', 482.9, 9.4, 14.9, '连载中', 12, 11, 207.11351351351357, 2.331571667188641, 0, 0, 0.7978943000313184, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1924831', '有帝族背景还开挂，我无敌了！', '不太勇敢', '玄幻奇幻', '东方玄幻', 'male', 385.8, 9.1, 15.8, '连载中', 13, 12, 207.11351351351357, 1.8627466332602565, 0, 0, 0.7487647979956153, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1655967', '吞噬九重天', '屠刀成佛', '玄幻奇幻', '东方玄幻', 'male', 360.3, 9.1, 20.8, '连载中', 14, 13, 207.11351351351357, 1.7396257438145941, 0, 0, 0.7413775446288755, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1648172', '仙棺，神墟，剑无敌！', '千年老龟', '玄幻奇幻', '东方玄幻', 'male', 359.2, 9, 9.5, '连载中', 15, 14, 207.11351351351357, 1.7343146466228203, 0, 0, 0.7340588787973692, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1729484', '凡尘飞仙', '齐甲', '玄幻奇幻', '东方玄幻', 'male', 345.1, 9.3, 11.4, '连载中', 16, 15, 207.11351351351357, 1.6662360371646305, 0, 0, 0.7509741622298779, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1989600', '掌天图', '四眼秀才', '玄幻奇幻', '东方玄幻', 'male', 325.8, 9.1, 27, '连载中', 17, 16, 207.11351351351357, 1.5730504227998743, 0, 0, 0.7313830253679924, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1647094', '九转吞天诀', '萧逆天', '玄幻奇幻', '东方玄幻', 'male', 323.7, 9.1, 7.1, '连载中', 18, 17, 207.11351351351357, 1.5629110554337609, 0, 0, 0.7307746633260256, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1888581', '葬仙棺', '执笔人', '玄幻奇幻', '东方玄幻', 'male', 321.4, 9.1, 15.4, '连载中', 19, 18, 207.11351351351357, 1.5518060340327795, 0, 0, 0.7301083620419666, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('214890', '混沌天尊', '新闻工作者', '玄幻奇幻', '东方玄幻', 'male', 315.1, 9, 2.9, '已完结', 20, 19, 207.11351351351357, 1.5213879319344397, 0, 0, 0.7212832759160663, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('215067', '九转修罗诀', '李中有梦', '玄幻奇幻', '东方玄幻', 'male', 309.7, 9, 2.1, '已完结', 21, 20, 207.11351351351357, 1.495315272993005, 0, 0, 0.7197189163795803, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1828483', '乾坤塔', '新闻工作者', '玄幻奇幻', '东方玄幻', 'male', 306.5, 8.9, 4.2, '已完结', 22, 21, 207.11351351351357, 1.479864808435118, 0, 0, 0.7117918885061071, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1754203', '玲珑塔', '一丝凉意', '玄幻奇幻', '东方玄幻', 'male', 268.4, 9.3, 8.9, '连载中', 23, 22, 207.11351351351357, 1.2959077147927753, 0, 0, 0.7287544628875665, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1963728', '玄黄鼎', '不做梵高', '玄幻奇幻', '东方玄幻', 'male', 259.1, 9, 17.1, '连载中', 24, 23, 207.11351351351357, 1.2510048021714164, 0, 0, 0.705060288130285, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1780785', '吞天混沌经：开局先吞圣女修为', '一阵乱写', '玄幻奇幻', '东方玄幻', 'male', 255.6, 9.1, 6.9, '连载中', 25, 24, 207.11351351351357, 1.2341058565612273, 0, 0, 0.7110463513936736, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2014393', '掌门怀孕，关我一个杂役什么事', '雨夜终曲', '玄幻奇幻', '东方玄幻', 'male', 253.9, 9, 30.9, '连载中', 26, 25, 207.11351351351357, 1.22589779726485, 0, 0, 0.703553867835891, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1872576', '我来自上界帝族，成婚当天媳妇跟人跑', '社恐啊社恐', '玄幻奇幻', '东方玄幻', 'male', 236.5, 8.8, 1.2, '已完结', 27, 26, 207.11351351351357, 1.1418858962313392, 0, 0, 0.6845131537738803, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1868453', '噬神鼎', '三千晴空', '玄幻奇幻', '东方玄幻', 'male', 235.5, 8.9, 4.8, '连载中', 28, 27, 207.11351351351357, 1.1370576260569993, 0, 0, 0.69122345756342, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1850695', '炼神鼎', '秋月梧桐', '玄幻奇幻', '东方玄幻', 'male', 193.6, 9, 15.2, '连载中', 29, 28, 207.11351351351357, 0.934753105752166, 0, 0, 0.6860851863451299, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1971590', '众仙俯首', '咸鱼老白', '玄幻奇幻', '东方玄幻', 'male', 184.1, 9.4, 12.6, '连载中', 30, 29, 207.11351351351357, 0.8888845390959388, 0, 0, 0.7113330723457564, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1672801', '太古吞天诀', '心无尘', '玄幻奇幻', '东方玄幻', 'male', 183.7, 9, 2.4, '已完结', 31, 30, 207.11351351351357, 0.8869532310262028, 0, 0, 0.6832171938615722, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1781303', '穿书反派：开局挖掉女主至尊骨', '晚风起', '玄幻奇幻', '东方玄幻', 'male', 144.4, 8.7, 2, '已完结', 32, 31, 207.11351351351357, 0.6972022131746527, 0, 0, 0.650832132790479, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1780456', '混沌鼎', '鬼疯子', '玄幻奇幻', '东方玄幻', 'male', 121.6, 9, 1.4, '已完结', 34, 32, 207.11351351351357, 0.5871176531997075, 0, 0, 0.6652270591919824, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1970645', '神级刺客，我有一支动物杀手队', '九把火', '玄幻奇幻', '东方玄幻', 'male', 107.8, 9.3, 3.5, '连载中', 35, 33, 207.11351351351357, 0.5204875247938197, 0, 0, 0.6822292514876293, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1669371', '吞天神帝', '小三叔', '玄幻奇幻', '东方玄幻', 'male', 106.5, 9, 1.5, '已完结', 36, 34, 207.11351351351357, 0.514210773567178, 0, 0, 0.6608526464140307, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1783142', '天剑神狱', '叶问', '玄幻奇幻', '东方玄幻', 'male', 91.5, 9.1, 1.6, '已完结', 37, 35, 207.11351351351357, 0.44178672095208255, 0, 0, 0.6635072032571249, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1961152', '太阳神体：从为仙女解毒开始无敌！', '有木', '玄幻奇幻', '东方玄幻', 'male', 82, 9.1, 4, '连载中', 38, 36, 207.11351351351357, 0.3959181542958554, 0, 0, 0.6607550892577512, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1880008', '吞天神体：从仙女奉献开始无敌', '南云月', '玄幻奇幻', '东方玄幻', 'male', 70.8, 9.2, 15.8, '连载中', 40, 37, 207.11351351351357, 0.34184152834325077, 0, 0, 0.664510491700595, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2024150', '玄幻：从炼制合情丹开始长生！', '柿饼吃个糖', '玄幻奇幻', '东方玄幻', 'male', 70.5, 9, 1.1, '已完结', 41, 38, 207.11351351351357, 0.3403930472909489, 0, 0, 0.6504235828374569, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1984439', '炼仙鼎', '在下不求人', '玄幻奇幻', '东方玄幻', 'male', 58.7, 9.2, 7.3, '连载中', 42, 39, 207.11351351351357, 0.2834194592337404, 0, 0, 0.6610051675540243, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1956592', '一天一造化，苟在仙武成道祖', '日落倾河', '玄幻奇幻', '东方玄幻', 'male', 52.6, 8.8, 0.9, '已完结', 43, 40, 207.11351351351357, 0.25396701117026826, 0, 0, 0.6312380206702161, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('149769', '九阳武神', '我吃面包', '玄幻奇幻', '东方玄幻', 'male', 34.7, 9.1, 16.2, '连载中', 45, 41, 207.11351351351357, 0.16754097504958762, 0, 0, 0.6470524585029751, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('210771', '万古龙帝', '拓跋流云', '玄幻奇幻', '东方玄幻', 'male', 34.7, 9.1, 2, '已完结', 45, 41, 207.11351351351357, 0.16754097504958762, 0, 0, 0.6470524585029751, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213092', '吞噬古帝', '黑白仙鹤', '玄幻奇幻', '东方玄幻', 'male', 34.7, 9.2, 13.3, '连载中', 45, 41, 207.11351351351357, 0.16754097504958762, 0, 0, 0.6540524585029751, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1761978', '葬神棺', '浮生一诺', '玄幻奇幻', '东方玄幻', 'male', 34.7, 9.3, 50.2, '连载中', 45, 41, 207.11351351351357, 0.16754097504958762, 0, 0, 0.6610524585029752, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063605', '九阴九阳', '仗剑修真', '玄幻奇幻', '东方玄幻', 'male', 28, 9.1, 17.7, '连载中', 46, 42, 207.11351351351357, 0.1351915648815116, 0, 0, 0.6451114938928906, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2054313', '阴阳塔', '水管开花', '玄幻奇幻', '东方玄幻', 'male', 11.2, 9, 1.7, '连载中', 47, 43, 207.11351351351357, 0.05407662595260464, 0, 0, 0.6332445975571562, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2072619', '长生：从寿元零点一年开始', '馀杯', '玄幻奇幻', '东方玄幻', 'male', 8, 9.1, 3.1, '连载中', 49, 44, 207.11351351351357, 0.0386261613947176, 0, 0, 0.6393175696836829, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2048060', '从酒肆杂役开始武道化圣', '为你傲视蒼穹', '玄幻奇幻', '东方玄幻', 'male', 6.8, 9.1, 0.6, '连载中', 50, 45, 207.11351351351357, 0.03283223718550996, 0, 0, 0.6389699342311305, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2053254', '混沌神鼎：从为女帝解毒开始无敌', '战神宇哥', '玄幻奇幻', '东方玄幻', 'male', 3.3, 8.9, 0.4, '连载中', 53, 47, 207.11351351351357, 0.01593329157532101, 0, 0, 0.6239559974945192, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2052831', '长生从助仙子修行开始', '勿问', '玄幻奇幻', '东方玄幻', 'male', 3, 8.6, 0.3, '连载中', 54, 48, 207.11351351351357, 0.014484810523019101, 0, 0, 0.6028690886313811, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2067244', '开局杀敌爆属性，我功力滔天', '潇湘烨雨', '玄幻奇幻', '东方玄幻', 'male', 2.7, 9.2, 0.3, '连载中', 55, 49, 207.11351351351357, 0.013036329470717192, 0, 0, 0.6447821797682429, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2037407', '炼妖塔', '霸业', '玄幻奇幻', '东方玄幻', 'male', 2.4, 8.6, 0.1, '连载中', 56, 50, 207.11351351351357, 0.01158784841841528, 0, 0, 0.6026952709051049, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2077477', '上界帝子你敢甩，我娶女帝你哭什么？', '墨白', '玄幻奇幻', '东方玄幻', 'male', 2.4, 9.2, 0.2, '连载中', 56, 50, 207.11351351351357, 0.01158784841841528, 0, 0, 0.6446952709051048, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066841', '混元书', '枫如江画', '玄幻奇幻', '东方玄幻', 'male', 2.3, 9.2, 0.5, '连载中', 57, 51, 207.11351351351357, 0.01110502140098131, 0, 0, 0.6446663012840588, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074179', '混沌吞天诀', '凭虚御风', '玄幻奇幻', '东方玄幻', 'male', 2.1, 9.2, 0.3, '连载中', 58, 52, 207.11351351351357, 0.01013936736611337, 0, 0, 0.6446083620419667, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076400', '镇荒印', '李中有梦', '玄幻奇幻', '东方玄幻', 'male', 2.1, 9.2, 0.2, '连载中', 58, 52, 207.11351351351357, 0.01013936736611337, 0, 0, 0.6446083620419667, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2078304', '转生狗妖，我在万世轮回成仙！', '六尺七寸', '玄幻奇幻', '东方玄幻', 'male', 2, 9.2, 0.2, '连载中', 59, 53, 207.11351351351357, 0.0096565403486794, 0, 0, 0.6445793924209207, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076515', '乾元混沌塔', '织花明路', '玄幻奇幻', '东方玄幻', 'male', 1.9, 8.6, 0.2, '连载中', 60, 54, 207.11351351351357, 0.00917371333124543, 0, 0, 0.6025504227998747, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2075201', '魔道神豪携亿万魔晶，在两界杀疯了', '风九元', '玄幻奇幻', '东方玄幻', 'male', 1.7, 9.2, 0.3, '连载中', 62, 56, 207.11351351351357, 0.00820805929637749, 0, 0, 0.6444924835577825, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074333', '一掌退大帝，你说他是杂役弟子？', '百万单机王', '玄幻奇幻', '东方玄幻', 'male', 1.2, 8.6, 0.1, '连载中', 64, 57, 207.11351351351357, 0.00579392420920764, 0, 0, 0.6023476354525524, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2060824', '让你当狱长，没让你把神魔改造成卷王', '最怕取名字', '玄幻奇幻', '东方玄幻', 'male', 1.1, 8.6, 0.1, '连载中', 65, 58, 207.11351351351357, 0.005311097191773671, 0, 0, 0.6023186658315064, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1804346', '绝世天命大反派', '金裘花马', '玄幻奇幻', '异世大陆', 'male', 834.3, 9, 14.8, '连载中', 4, 1, 207.11351351351357, 4.028225806451611, 1, 1, 0.8716935483870967, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2027749', '刚抽中SSS级天赋，你跟我说游戏停服', '吃猫的鱼仔', '玄幻奇幻', '异世大陆', 'male', 74.5, 9.2, 4.2, '连载中', 39, 2, 207.11351351351357, 0.35970612798830764, 0, 0, 0.6655823676792983, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2073577', '人在废丹房，我以丹药证道成仙！', '伽蓝之梦', '玄幻奇幻', '异世大陆', 'male', 35.5, 9.3, 16.4, '连载中', 44, 3, 207.11351351351357, 0.17140359118905935, 0, 0, 0.6612842154713436, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2057569', '领主：我招募的士兵怎么都是玩家', '禅心道骨', '玄幻奇幻', '异世大陆', 'male', 9.7, 9.5, 2.9, '连载中', 48, 4, 207.11351351351357, 0.04683422069109509, 0, 0, 0.6678100532414656, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061794', '开局送老婆，我成了众仙之父！', '西地那非', '玄幻奇幻', '异世大陆', 'male', 4, 9.2, 0.5, '连载中', 52, 5, 207.11351351351357, 0.0193130806973588, 0, 0, 0.6451587848418414, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066875', '种田修仙：从随机刷新词条开始', '浪兰飞山', '玄幻奇幻', '异世大陆', 'male', 1.7, 8.6, 0.1, '连载中', 62, 6, 207.11351351351357, 0.00820805929637749, 0, 0, 0.6024924835577826, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2073625', '我都人间武圣了，你让我当傀儡皇帝？', '小呀小馒头', '玄幻奇幻', '王朝争霸', 'male', 0.8, 9.2, 0.1, '连载中', 66, 1, 207.11351351351357, 0.0038626161394717602, 0, 0, 0.6442317569683682, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1946350', '玄幻：长生神子，证道何须退婚挖骨！', '王二的刀', '玄幻奇幻', '诸天万界', 'male', 137.3, 9.2, 1.8, '已完结', 33, 1, 207.11351351351357, 0.6629214949368409, 0, 0, 0.6837752896962104, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('206343', '恐怖复苏之全球武装怪胎', '老郭在此', '科幻', '末世危机', 'male', 602.2, 9.4, 0.9, '已完结', 1, 1, 234.86000000000004, 2.5640807289449032, 1, 1, 0.8118448437366942, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1697498', '末世天灾，抢艘航母当基地', '封卷残云', '科幻', '末世危机', 'male', 460.3, 8.8, 1.2, '已完结', 2, 2, 234.86000000000004, 1.9598909988929571, 1, 0, 0.7335934599335774, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2051697', '末世，从吞尸体开始进化', '只是小脑虎', '科幻', '末世危机', 'male', 42.4, 9.2, 5.9, '连载中', 3, 3, 234.86000000000004, 0.18053308353912967, 1, 1, 0.6548319850123477, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('209898', '我能采集万物', '存叶', '科幻', '末世危机', 'male', 34.7, 9.2, 1.5, '已完结', 4, 4, 234.86000000000004, 0.14774759431150472, 1, 1, 0.6528648556586902, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('219542', '全球灾变之末日游戏', '我爱吃猫片', '科幻', '末世危机', 'male', 34.7, 9, 9, '已完结', 4, 4, 234.86000000000004, 0.14774759431150472, 1, 1, 0.6388648556586903, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2014975', '重生84：九个赔钱货？我把女儿宠上天', '一只大香蕉', '都市', '乡村生活', 'male', 88.3, 9.2, 5.6, '连载中', 56, 1, 141.6941176470589, 0.6231733643307867, 0, 0, 0.6813904018598471, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1948430', '重生60：从深山打猎开始致富', 'KITTT', '都市', '乡村生活', 'male', 80.9, 9.3, 4.2, '连载中', 61, 2, 141.6941176470589, 0.5709481899701093, 0, 0, 0.6852568913982066, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1996523', '全队笑我是傻子，我反手娶了俏知青！', '红色小晶体', '都市', '乡村生活', 'male', 44.4, 8.8, 0.8, '已完结', 70, 3, 141.6941176470589, 0.3133510461640649, 0, 0, 0.6348010627698439, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065807', '重生下乡：我才不当冤大头！', '清蒸大白蛆', '都市', '乡村生活', 'male', 13.2, 8.9, 2.7, '连载中', 81, 4, 141.6941176470589, 0.09315841912985713, 0, 0, 0.6285895051477914, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2067420', '年代：开局一把小猎枪，娇妻貌美肉满仓', '钓鱼捞', '都市', '乡村生活', 'male', 6, 8.9, 0.7, '连载中', 86, 5, 141.6941176470589, 0.04234473596811688, 0, 0, 0.6255406841580871, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066874', '七五：虎妞为伴，再收个落难大小姐', '任性的狮子', '都市', '乡村生活', 'male', 4.1, 9.1, 0.4, '连载中', 94, 6, 141.6941176470589, 0.0289355695782132, 0, 0, 0.6387361341746927, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064995', '重回六十年代，从挖何首乌开始', '巍巍青山', '都市', '乡村生活', 'male', 3.1, 9.2, 0.1, '连载中', 98, 7, 141.6941176470589, 0.021878113583527054, 0, 0, 0.6453126868150115, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2060816', '重生78：我靠岛赶海，带全家暴富！', '夕墨沉烟', '都市', '乡村生活', 'male', 2.7, 8.8, 0.2, '连载中', 102, 8, 141.6941176470589, 0.019055131185652597, 0, 0, 0.6171433078711391, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('209888', '重回1991', '南三石', '都市', '商战职场', 'male', 581.2, 9.3, 1.3, '已完结', 8, 1, 141.6941176470589, 4.101793424111589, 1, 0, 0.8971076054466953, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1807804', '重启2008：从拯救绝色女老师开始逆袭', '封尘往昔', '都市', '商战职场', 'male', 384.9, 9, 1, '已完结', 15, 2, 141.6941176470589, 2.7164148123546976, 0, 0, 0.7929848887412818, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2023697', '男人野性', '月下冰河', '都市', '商战职场', 'male', 262.1, 9.1, 51, '连载中', 23, 3, 141.6941176470589, 1.8497592162072392, 0, 0, 0.7479855529724342, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2028957', '桃花劫', '推窗望岳', '都市', '商战职场', 'male', 224.8, 9.2, 40.4, '连载中', 25, 4, 141.6941176470589, 1.586516107605446, 0, 0, 0.7391909664563266, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2012529', '极品女神赖上我', '陈行者', '都市', '商战职场', 'male', 173.7, 9, 23.3, '连载中', 42, 5, 141.6941176470589, 1.2258801062769835, 0, 0, 0.703552806376619, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2027737', '向上登攀', '老虎本尊', '都市', '商战职场', 'male', 29.4, 9.1, 5.8, '连载中', 78, 6, 141.6941176470589, 0.2074892062437727, 0, 0, 0.6494493523746263, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064747', '都市狠人', '北冥鱼', '都市', '商战职场', 'male', 5.6, 9.1, 1.9, '连载中', 88, 7, 141.6941176470589, 0.03952175357024242, 0, 0, 0.6393713052142145, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2046282', '人生赢家', '烟云客横渡积水潭', '都市', '商战职场', 'male', 4.5, 8.9, 0.5, '连载中', 92, 8, 141.6941176470589, 0.03175855197608766, 0, 0, 0.6249055131185652, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065274', '英雄本色', '疯十八', '都市', '商战职场', 'male', 1.4, 8.6, 0.1, '连载中', 111, 9, 141.6941176470589, 0.009880438392560606, 0, 0, 0.6025928263035536, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1815020', '巅峰权途', '争渡', '都市', '官场', 'male', 436.2, 9.3, 45.5, '连载中', 12, 1, 141.6941176470589, 3.0784623048820974, 0, 0, 0.8357077382929259, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1989780', '权力医途', '端午', '都市', '官场', 'male', 189.3, 9.1, 19.5, '连载中', 30, 2, 141.6941176470589, 1.3359764197940878, 0, 0, 0.7171585851876452, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1806041', '巅峰青云路', '登封造极', '都市', '官场', 'male', 180.3, 9.2, 31, '连载中', 38, 3, 141.6941176470589, 1.2724593158419124, 0, 0, 0.7203475589505146, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1994507', '权力争锋', '东流无歇', '都市', '官场', 'male', 37, 9.1, 5, '连载中', 72, 4, 141.6941176470589, 0.2611258718033874, 0, 0, 0.6526675523082032, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2020674', '从市委大秘到权力之巅', '洗礼先生', '都市', '官场', 'male', 34.7, 9.1, 5.5, '连载中', 73, 5, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6516936233809365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2057468', '权力巅峰：从县委大院开始', '今晚吃鸡', '都市', '官场', 'male', 9, 9.1, 1.3, '连载中', 83, 6, 141.6941176470589, 0.06351710395217532, 0, 0, 0.6408110262371304, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2053789', '权力沉浮', '空中鹰', '都市', '官场', 'male', 6.1, 8.8, 1, '连载中', 85, 7, 141.6941176470589, 0.043050481567585494, 0, 0, 0.6185830288940551, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074181', '权力巅峰：从市委大秘开始', '鹏鹏君本尊', '都市', '官场', 'male', 4.8, 9, 1.1, '连载中', 91, 8, 141.6941176470589, 0.0338757887744935, 0, 0, 0.6320325473264696, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2073050', '权力巅峰：SSSS级村书记！', '荒苑爆红', '都市', '官场', 'male', 3.9, 9.3, 1.4, '连载中', 95, 9, 141.6941176470589, 0.027524078379275972, 0, 0, 0.6526514447027566, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2067310', '问鼎：从选调警员到权力巅峰', '叶少华', '都市', '官场', 'male', 2.8, 9.2, 0.5, '连载中', 101, 10, 141.6941176470589, 0.01976087678512121, 0, 0, 0.6451856526071071, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1971248', '在恋综当老六？一句泡面仙人全网暴火', '肉包打狗', '都市', '明星娱乐', 'male', 80, 9.1, 1.7, '已完结', 63, 1, 141.6941176470589, 0.5645964795748918, 0, 0, 0.6708757887744934, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2047644', '我的钱全捐了，老婆竟是天后', '伤心小呆', '都市', '明星娱乐', 'male', 6.7, 8.8, 0.2, '连载中', 84, 2, 141.6941176470589, 0.04728495516439719, 0, 0, 0.6188370973098638, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066872', '离婚后，从幼儿园会演开始爆火全网', '烂番薯', '都市', '明星娱乐', 'male', 4.1, 9.2, 0.2, '连载中', 94, 3, 141.6941176470589, 0.0289355695782132, 0, 0, 0.6457361341746927, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2057851', '从把傲娇室友捧成娱乐天后开始', '罗宝爱花卷', '都市', '明星娱乐', 'male', 1.9, 9.2, 0.1, '连载中', 107, 4, 141.6941176470589, 0.013409166389903679, 0, 0, 0.6448045499833941, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1959895', '十二只SSS级鬼宠，你管这叫差班生', '洛青澜', '都市', '灵气复苏', 'male', 104, 9.2, 0.9, '已完结', 51, 1, 141.6941176470589, 0.7339754234473592, 0, 0, 0.6880385254068414, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1670199', '我的养成系女友', '佛系和尚', '都市', '热血校园', 'male', 509.7, 9.5, 1.6, '已完结', 10, 1, 141.6941176470589, 3.597185320491529, 1, 0, 0.8808311192294916, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1851521', '魔女校花从无绯闻，直到遇上了我', '铲子王', '都市', '热血校园', 'male', 175.8, 9.3, 1.6, '已完结', 40, 2, 141.6941176470589, 1.2407007638658247, 0, 0, 0.7254420458319495, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1946790', '谁说校花高冷？这校花可太甜软了', '佛系和尚', '都市', '热血校园', 'male', 107.2, 9.6, 1.9, '已完结', 50, 3, 141.6941176470589, 0.756559282630355, 0, 0, 0.7173935569578213, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1929412', '重生：清纯转校生表白我，校花哭惨了', '一缕微光', '都市', '热血校园', 'male', 81.6, 9.4, 2, '已完结', 60, 4, 141.6941176470589, 0.5758884091663895, 0, 0, 0.6925533045499834, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('152973', '最强学霸系统', '佛系和尚', '都市', '热血校园', 'male', 34.7, 9.5, 1.7, '已完结', 73, 5, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6796936233809365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1758273', '重生2000：从追求青涩校花同桌开始', '痞子老妖', '都市', '热血校园', 'male', 34.7, 9.3, 19.4, '连载中', 73, 5, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6656936233809366, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('214789', '我和软萌女友的恋爱日常', '佛系和尚', '都市', '热血校园', 'male', 34.7, 9.7, 8.1, '已完结', 73, 5, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6936936233809365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1838355', '离婚后，前妻姐崩溃了', '洛王', '都市', '都市生活', 'male', 620.3, 8.7, 2.8, '已完结', 7, 1, 141.6941176470589, 4.377739953503816, 1, 0, 0.8716643972102289, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982360', '步步登阶', '江湖如梦', '都市', '都市生活', 'male', 377.3, 9.2, 47.2, '连载中', 16, 2, 141.6941176470589, 2.662778146795083, 0, 0, 0.8037666888077049, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1946720', '1977，开局女知青以身相许', '家有十猫', '都市', '都市生活', 'male', 185.2, 9, 13.9, '连载中', 33, 3, 141.6941176470589, 1.3070408502158744, 0, 0, 0.7084224510129524, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1988961', '重生1984：我靠赶海打渔成首富', '菠萝炒饭', '都市', '都市生活', 'male', 172.9, 9, 16, '连载中', 43, 4, 141.6941176470589, 1.2202341414812348, 0, 0, 0.703214048488874, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1978748', '重生61，我带了一座军火库', '小白兔吃萝卜', '都市', '都市生活', 'male', 171, 9.1, 11.1, '连载中', 44, 5, 141.6941176470589, 1.2068249750913311, 0, 0, 0.7094094985054797, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1924828', '还不起人情债，我只好当她男朋友了', '无色', '都市', '都市生活', 'male', 145.7, 9, 4.6, '连载中', 46, 6, 141.6941176470589, 1.0282713384257716, 0, 0, 0.6916962803055463, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1850580', '我非池中物', '夜泊秦淮', '都市', '都市生活', 'male', 115, 9.1, 8.4, '连载中', 49, 7, 141.6941176470589, 0.8116074393889069, 0, 0, 0.6856964463633343, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1983530', '厂长收手吧！国家真的压不住了！', '正义反派', '都市', '都市生活', 'male', 102.3, 9.3, 9.3, '连载中', 53, 8, 141.6941176470589, 0.7219777482563928, 0, 0, 0.6943186648953836, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1885415', '再睁眼！高冷女知青在我怀里哭唧唧', '九伐', '都市', '都市生活', 'male', 88.3, 9.2, 0.5, '已完结', 56, 9, 141.6941176470589, 0.6231733643307867, 0, 0, 0.6813904018598471, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2022495', '情劫', '花小刺', '都市', '都市生活', 'male', 82, 9.1, 6.6, '连载中', 59, 10, 141.6941176470589, 0.578711391564264, 0, 0, 0.6717226834938558, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1941553', '我的峥嵘岁月', '牛不易', '都市', '都市生活', 'male', 80.7, 9.2, 5.5, '连载中', 62, 11, 141.6941176470589, 0.5695366987711721, 0, 0, 0.6781722019262703, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982193', '我的26岁女总裁', '卧龙岗小弟', '都市', '都市生活', 'male', 69.5, 9, 3.5, '已完结', 65, 12, 141.6941176470589, 0.4904931916306872, 0, 0, 0.6594295914978412, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1992776', '我叫二狗，一条会咬人的狗！', '半解不解', '都市', '都市生活', 'male', 32.9, 9.1, 1.3, '已完结', 74, 13, 141.6941176470589, 0.23219030222517423, 0, 0, 0.6509314181335104, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982718', '真没必要让我重生', '刘大咪', '都市', '都市生活', 'male', 30.5, 8.9, 1.2, '已完结', 77, 14, 141.6941176470589, 0.21525240783792748, 0, 0, 0.6359151444702756, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2020570', '重生70：让你守门，你整了个蘑菇云？', '历史小尘埃', '都市', '都市生活', 'male', 20.7, 9.1, 1.1, '已完结', 79, 15, 141.6941176470589, 0.14608933909000324, 0, 0, 0.6457653603454001, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065885', '重生85：带猫咪去赶海，狂宠九个女儿', '咸鱼咸鱼', '都市', '都市生活', 'male', 4.1, 9.2, 0.8, '连载中', 94, 16, 141.6941176470589, 0.0289355695782132, 0, 0, 0.6457361341746927, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063976', '都市情劫', '御龙', '都市', '都市生活', 'male', 3, 8.8, 1, '连载中', 99, 17, 141.6941176470589, 0.02117236798405844, 0, 0, 0.6172703420790435, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074544', '年代军工：让你当厂长，你整出了蘑菇蛋', '三鹿天下', '都市', '都市生活', 'male', 2.6, 9.2, 0.4, '连载中', 103, 18, 141.6941176470589, 0.018349385586183983, 0, 0, 0.645100963135171, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074459', '重生2006，从被白富美包车开始', '隔壁小王本尊', '都市', '都市生活', 'male', 2.1, 9.2, 0.3, '连载中', 106, 19, 141.6941176470589, 0.01482065758884091, 0, 0, 0.6448892394553304, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061800', '重生1985，我靠万物标签赶海发家', '吃不完的荔枝', '都市', '都市生活', 'male', 1.4, 8.6, 0.1, '连载中', 111, 21, 141.6941176470589, 0.009880438392560606, 0, 0, 0.6025928263035536, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1653604', '我的冰山女神老婆', '冰城妖玉', '都市', '都市高手', 'male', 853.2, 9.3, 1.4, '已完结', 3, 1, 141.6941176470589, 6.02142145466622, 1, 1, 1.0122852872799732, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1834789', '警报！真龙出狱！', '红透半边天', '都市', '都市高手', 'male', 819.6, 9.2, 71.1, '连载中', 4, 2, 141.6941176470589, 5.784290933244766, 1, 1, 0.9910574559946859, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1724453', '妙手大仙医', '金佛', '都市', '都市高手', 'male', 686.1, 9.2, 18, '连载中', 6, 3, 141.6941176470589, 4.842120557954165, 1, 0, 0.9345272334772499, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1706674', '开局麒麟肾，吓哭九个绝色娇妻', '神级大牛', '都市', '都市高手', 'male', 494.6, 9.1, 2.1, '已完结', 11, 4, 141.6941176470589, 3.490617734971768, 0, 0, 0.846437064098306, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('211115', '都市逍遥天医', '星空野狼', '都市', '都市高手', 'male', 435.9, 9.3, 1.4, '已完结', 13, 5, 141.6941176470589, 3.0763450680836915, 0, 0, 0.8355807040850215, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('215264', '都市战狼', '荆南', '都市', '都市高手', 'male', 415.2, 9.2, 1.8, '已完结', 14, 6, 141.6941176470589, 2.930255728993688, 0, 0, 0.8198153437396212, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1675640', '镇天神医', '五杯咖啡', '都市', '都市高手', 'male', 355.8, 9.2, 12.3, '连载中', 18, 7, 141.6941176470589, 2.511042842909331, 0, 0, 0.7946625705745598, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1723049', '天门神医', '小楼听雨本尊', '都市', '都市高手', 'male', 274.4, 9.2, 5.9, '连载中', 20, 8, 141.6941176470589, 1.9365659249418785, 0, 0, 0.7601939554965126, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('219660', '臭保镖，求你放过我们吧！', '流水不逝', '都市', '都市高手', 'male', 270.3, 9.2, 1.9, '已完结', 21, 9, 141.6941176470589, 1.9076303553636655, 0, 0, 0.7584578213218198, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1651341', '盖世圣医', '林阳', '都市', '都市高手', 'male', 268.4, 9.1, 0.9, '已完结', 22, 10, 141.6941176470589, 1.8942211889737617, 0, 0, 0.7506532713384256, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1989239', '财戒', '嚣张农民', '都市', '都市高手', 'male', 238.5, 9.1, 12, '连载中', 24, 11, 141.6941176470589, 1.683203254732646, 0, 0, 0.7379921952839587, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1709320', '徒儿，饶了五位绝美师父吧', '不渊', '都市', '都市高手', 'male', 207.1, 9.1, 2.1, '已完结', 27, 12, 141.6941176470589, 1.461599136499501, 0, 0, 0.72469594818997, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1695416', '徒儿你无敌了，出狱报仇去吧', '一梅独秀', '都市', '都市高手', 'male', 199.6, 9.1, 6, '已完结', 29, 13, 141.6941176470589, 1.408668216539355, 0, 0, 0.7215200929923612, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1697715', '被关女子监狱三年，我修炼成仙了', '一只狸猫', '都市', '都市高手', 'male', 183.1, 9, 7.9, '连载中', 35, 14, 141.6941176470589, 1.2922201926270334, 0, 0, 0.707533211557622, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2029029', '离婚后，我权势滔天，你哭什么', '水门绅士', '都市', '都市高手', 'male', 181.6, 8.9, 18.2, '连载中', 37, 15, 141.6941176470589, 1.2816340086350042, 0, 0, 0.6998980405181002, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1738577', '女神的逍遥狂医', '东方天策', '都市', '都市高手', 'male', 176.5, 9.2, 1.4, '已完结', 39, 16, 141.6941176470589, 1.245640983062105, 0, 0, 0.7187384589837262, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2033005', 'SSSSSSSSSSSSSS满级神医', '星空野狼', '都市', '都市高手', 'male', 174.7, 9, 20.7, '连载中', 41, 17, 141.6941176470589, 1.2329375622716698, 0, 0, 0.7039762537363002, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1850556', '让我娶傻千金，你又回来求我离婚？', '摸鱼小将', '都市', '都市高手', 'male', 161.7, 9.1, 5.5, '连载中', 45, 18, 141.6941176470589, 1.1411906343407499, 0, 0, 0.7054714380604449, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1730848', '徒儿快下山，你师姐等不及了', '雨落狂流', '都市', '都市高手', 'male', 139.8, 9.1, 2.1, '已完结', 47, 19, 141.6941176470589, 0.9866323480571234, 0, 0, 0.6961979408834273, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1848642', '离婚吧，真当我是废物啊', '凝望之影', '都市', '都市高手', 'male', 103.6, 8.9, 2.4, '已完结', 52, 20, 141.6941176470589, 0.7311524410494847, 0, 0, 0.6668691464629691, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2038385', 'SSSSSSSSSSSSS级镇狱狂龙', '封情老衲', '都市', '都市高手', 'male', 101.9, 9.1, 51.5, '连载中', 54, 21, 141.6941176470589, 0.7191547658585185, 0, 0, 0.680149285951511, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2052700', '小司机的美女总裁老婆', '最爱老板娘', '都市', '都市高手', 'male', 91.8, 9.1, 23.9, '连载中', 55, 22, 141.6941176470589, 0.6478744603121882, 0, 0, 0.6758724676187312, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1851542', '麒麟出世，师父让我下山去结婚', '御龙', '都市', '都市高手', 'male', 85, 9, 3.4, '已完结', 57, 23, 141.6941176470589, 0.5998837595483225, 0, 0, 0.6659930255728994, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1885468', '我医武双绝，体内还有一条龙', '月辰', '都市', '都市高手', 'male', 84.6, 9, 5, '连载中', 58, 24, 141.6941176470589, 0.597060777150448, 0, 0, 0.6658236466290269, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1833599', '枭龙出山', '轩仔', '都市', '都市高手', 'male', 81.6, 9.1, 5.2, '连载中', 60, 25, 141.6941176470589, 0.5758884091663895, 0, 0, 0.6715533045499833, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2027742', 'SSSSSSSSSS级狂龙出狱', '成书', '都市', '都市高手', 'male', 73.1, 9, 4.8, '连载中', 64, 26, 141.6941176470589, 0.5159000332115573, 0, 0, 0.6609540019926934, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1888573', '女富婆的超级神医', '狼性佛心', '都市', '都市高手', 'male', 64.7, 9.1, 2, '已完结', 67, 27, 141.6941176470589, 0.45661740285619373, 0, 0, 0.6643970441713716, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1694124', '女总裁的贴身龙帅', '枯木封雨', '都市', '都市高手', 'male', 50.1, 9, 1, '已完结', 68, 28, 141.6941176470589, 0.353578545333776, 0, 0, 0.6512147127200265, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2046772', '纵情人生', '一缕微光', '都市', '都市高手', 'male', 38.4, 9, 4.5, '连载中', 71, 29, 141.6941176470589, 0.271006310195948, 0, 0, 0.6462603786117569, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1711646', '阎王下山', '苍月夜', '都市', '都市高手', 'male', 34.7, 8.9, 24, '连载中', 73, 30, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6376936233809366, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('207105', '傲世潜龙', '西装暴徒', '都市', '都市高手', 'male', 34.7, 9.1, 30.6, '连载中', 73, 30, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6516936233809365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('215780', '绝世强龙', '张龙虎', '都市', '都市高手', 'male', 34.7, 8.8, 3.2, '已完结', 73, 30, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6306936233809366, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1710753', '舔狗反派只想苟，女主不按套路走！', '我是愤怒', '都市', '都市高手', 'male', 34.7, 9.5, 32.9, '连载中', 73, 30, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6796936233809365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1837399', '圣手大医仙', '带刺的毛球', '都市', '都市高手', 'male', 30.7, 8.9, 1.1, '已完结', 76, 31, 141.6941176470589, 0.2166638990368647, 0, 0, 0.6359998339422119, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2007504', '结婚三年喊错名，成对家老公了你哭什么', '木易未央', '都市', '都市高手', 'male', 20.5, 8.7, 0.3, '已完结', 80, 32, 141.6941176470589, 0.144677847891066, 0, 0, 0.6176806708734638, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065894', '神医下山：美女总裁非我不嫁', '月下无人', '都市', '都市高手', 'male', 5, 8.8, 0.8, '连载中', 90, 33, 141.6941176470589, 0.03528727997343074, 0, 0, 0.6181172367984058, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065877', '医路情劫', '微微狂笑', '都市', '都市高手', 'male', 4.8, 8.8, 0.8, '连载中', 91, 34, 141.6941176470589, 0.0338757887744935, 0, 0, 0.6180325473264696, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064344', '都市绝品神医', '就爱吃牛肉', '都市', '都市高手', 'male', 3.9, 8.8, 0.2, '连载中', 95, 35, 141.6941176470589, 0.027524078379275972, 0, 0, 0.6176514447027566, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2077960', '刚下山，全球大佬跪迎我回家', '霜叶红于二月花', '都市', '都市高手', 'male', 2.4, 9.2, 0.4, '连载中', 104, 38, 141.6941176470589, 0.01693789438724675, 0, 0, 0.6450162736632347, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062825', '捡漏！', '外八字', '都市', '都市高手', 'male', 1.4, 8.6, 0.1, '连载中', 111, 40, 141.6941176470589, 0.009880438392560606, 0, 0, 0.6025928263035536, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213692', '武帝归来', '修果', '都市', '都市高武', 'male', 948, 9.1, 1.8, '已完结', 1, 1, 141.6941176470589, 6.690468282962467, 1, 1, 1.038428096977748, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('222157', '我有神级收益系统', '不是蚊子', '都市', '都市高武', 'male', 921.2, 9.2, 2.8, '已完结', 2, 2, 141.6941176470589, 6.501328462304879, 1, 1, 1.0340797077382926, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('197810', '都市最狂医仙', '花小刺', '都市', '都市高武', 'male', 789.8, 9.1, 2.1, '已完结', 5, 3, 141.6941176470589, 5.573978744603118, 1, 1, 0.9714387246761871, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('210772', '都市之最强仙医', '夫子', '都市', '都市高武', 'male', 534.5, 9, 1.5, '已完结', 9, 4, 141.6941176470589, 3.7722102291597457, 1, 0, 0.8563326137495848, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1812053', '警报！龙国出现SSS级修仙者！', '紫枫', '都市', '都市高武', 'male', 365.4, 9.2, 6.7, '连载中', 17, 5, 141.6941176470589, 2.5787944204583177, 0, 0, 0.7987276652274989, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1875137', '断绝关系后，我的召唤兽全是黑暗生物', '可破', '都市', '都市高武', 'male', 294.3, 9.1, 1.8, '已完结', 19, 6, 141.6941176470589, 2.077009299236133, 0, 0, 0.7616205579541678, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1766962', '苟到炼气10000层，飞升回地球', '拂衣惊雪', '都市', '都市高武', 'male', 219.7, 8.5, 1.1, '已完结', 26, 7, 141.6941176470589, 1.5505230820325464, 0, 0, 0.6880313849219527, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1970299', '借我传宗接代？我反手绑定女神无敌', '茶巨', '都市', '都市高武', 'male', 206.8, 9.2, 6.7, '已完结', 28, 8, 141.6941176470589, 1.4594818997010952, 0, 0, 0.7315689139820656, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1810234', '从女子监狱走出的修仙者', '河图大妖', '都市', '都市高武', 'male', 188, 9, 5.2, '连载中', 31, 9, 141.6941176470589, 1.3268017270009955, 0, 0, 0.7096081036200598, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1838037', '典狱长大人深不可测！', '黄泉隼', '都市', '都市高武', 'male', 187.9, 9.5, 1.6, '已完结', 32, 10, 141.6941176470589, 1.326095981401527, 0, 0, 0.7445657588840915, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213853', '极品小相师', '大丙', '都市', '都市高武', 'male', 185, 9.3, 1.8, '已完结', 34, 11, 141.6941176470589, 1.3056293590169372, 0, 0, 0.7293377615410163, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213108', '都市全能医圣', '玖月天', '都市', '都市高武', 'male', 181.7, 9.1, 1.4, '已完结', 36, 12, 141.6941176470589, 1.2823397542344728, 0, 0, 0.7139403852540682, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2010008', '高武校长，我的实力是全校总和！', '邯郸财阀', '都市', '都市高武', 'male', 122.9, 9.3, 5.7, '连载中', 48, 13, 141.6941176470589, 0.8673613417469275, 0, 0, 0.7030416805048156, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2034828', '唯一真神', '北冥', '都市', '都市高武', 'male', 65.6, 9.1, 2.2, '已完结', 66, 14, 141.6941176470589, 0.4629691132514112, 0, 0, 0.6647781467950846, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1968456', '断绝关系后，觉醒SSS级天赋百分百爆率', '赛博说书人', '都市', '都市高武', 'male', 47.4, 9, 2, '已完结', 69, 15, 141.6941176470589, 0.33452341414812337, 0, 0, 0.6500714048488874, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('195958', '盖世神医', '狐颜乱语', '都市', '都市高武', 'male', 34.7, 9.3, 139.9, '连载中', 73, 16, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6656936233809366, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('151584', '极品戒指', '淮阴小侯', '都市', '都市高武', 'male', 34.7, 9.1, 1.4, '已完结', 73, 16, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6516936233809365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('208897', '极品天师', '月下冰河', '都市', '都市高武', 'male', 34.7, 9.2, 1.4, '已完结', 73, 16, 141.6941176470589, 0.24489372301560933, 0, 0, 0.6586936233809365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1996973', '赌石，我的龙瞳能鉴定一切！', '一梅独秀', '都市', '都市高武', 'male', 32.5, 9, 3, '已完结', 75, 17, 141.6941176470589, 0.22936731982729977, 0, 0, 0.643762039189638, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2024794', '武圣看门武王扫地，你嫌我武馆太垃圾？', '白鹫', '都市', '都市高武', 'male', 10.9, 9, 0.4, '已完结', 82, 18, 141.6941176470589, 0.07692627034207901, 0, 0, 0.6346155762205248, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2059102', '让你求生，你竟在疯狂摸尸？', '半山闲客', '都市', '都市高武', 'male', 5.9, 8.9, 1, '连载中', 87, 19, 141.6941176470589, 0.041638990368648265, 0, 0, 0.6254983394221189, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2057884', '神级捡漏王：无良校花逼我去扯证', '李卯卯', '都市', '都市高武', 'male', 5.3, 8.9, 0.7, '连载中', 89, 20, 141.6941176470589, 0.03740451677183658, 0, 0, 0.6252442710063102, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065879', '一天暴涨一年修为，你说你后悔了？', '小陈little', '都市', '都市高武', 'male', 4.2, 9.2, 0.3, '连载中', 93, 21, 141.6941176470589, 0.02964131517768182, 0, 0, 0.6457784789106609, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076380', '女子监狱出真龙，出狱后全球震动', '我非良人', '都市', '都市高武', 'male', 3.9, 9.6, 1, '连载中', 95, 22, 141.6941176470589, 0.027524078379275972, 0, 0, 0.6736514447027565, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2079417', '经常杀人的朋友', '魂燚', '都市', '都市高武', 'male', 3.6, 9.2, 0.7, '连载中', 96, 23, 141.6941176470589, 0.02540684158087013, 0, 0, 0.6455244104948521, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2071753', '全球异能觉醒，我修肉身横推万古', '笔下再生', '都市', '都市高武', 'male', 3.3, 9.2, 0.4, '连载中', 97, 24, 141.6941176470589, 0.023289604782464283, 0, 0, 0.6453973762869477, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074547', '请神弼马温，被嘲猴子D级神官？', '黑鱼鱼鱼鱼', '都市', '都市高武', 'male', 2.2, 9.2, 0.1, '连载中', 105, 26, 141.6941176470589, 0.015526403188309524, 0, 0, 0.6449315841912985, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1759390', '分手后，捡到一只吸血鬼美少女', '黄泉隼', 'N次元', '原生幻想', 'male', 318.8, 9.5, 1.5, '已完结', 1, 1, 66.08571428571427, 4.82403804582793, 1, 1, 0.9544422827496757, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('219310', '全世界都玩异能只有我修仙', '缘起云涌', 'N次元', '原生幻想', 'male', 126.1, 9.2, 1.4, '已完结', 2, 2, 66.08571428571427, 1.9081279723303073, 1, 1, 0.7584876783398183, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2067718', '四合院：开局猎户，邻居喝风我吃肉！', '刚烈的汉子', 'N次元', '衍生同人', 'male', 5.2, 8.9, 0.4, '连载中', 3, 1, 66.08571428571427, 0.07868568958063123, 1, 0, 0.6277211413748379, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076502', '斗罗V：人面魔蛛，多子多福', '龙小君', 'N次元', '衍生同人', 'male', 4.5, 8.8, 0.5, '连载中', 4, 2, 66.08571428571427, 0.06809338521400779, 1, 0, 0.6200856031128404, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2075109', '四合院：从火车列车员开始', '我家有母老虎', 'N次元', '衍生同人', 'male', 3.3, 8.8, 0.6, '连载中', 5, 3, 66.08571428571427, 0.04993514915693904, 1, 0, 0.6189961089494164, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066484', '四合院：从技术员到人生赢家', '辰语', 'N次元', '衍生同人', 'male', 2.5, 8.4, 0.1, '连载中', 6, 4, 66.08571428571427, 0.03782965845222655, 0, 0, 0.5902697795071336, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2078351', '四合院：开局爆锤众禽', '沉鱼', 'N次元', '衍生同人', 'male', 2.2, 8.6, 0.3, '连载中', 7, 5, 66.08571428571427, 0.03329009943795937, 1, 0, 0.6039974059662775, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1860026', '世子无双', '宁峥', '历史', '架空历史', 'male', 909.8, 9.2, 16, '连载中', 1, 1, 118.02499999999995, 7.708536327049357, 1, 1, 1.1065121796229613, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('208898', '极品小侯爷', '梦入山河', '历史', '架空历史', 'male', 676.5, 9.2, 1.5, '已完结', 3, 2, 118.02499999999995, 5.7318364753230275, 1, 1, 0.9879101885193815, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1882754', '边军悍卒', '木有金箍', '历史', '架空历史', 'male', 552, 9.3, 36.1, '连载中', 4, 3, 118.02499999999995, 4.67697521711502, 1, 1, 0.9316185130269012, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1995023', '边关兵王', '青岳', '历史', '架空历史', 'male', 347.1, 9.4, 41.6, '连载中', 5, 4, 118.02499999999995, 2.940902351196782, 1, 1, 0.8344541410718069, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1801623', '帝国皇太子，老子不干了！', '灰色小猫', '历史', '架空历史', 'male', 338.6, 8.9, 2.4, '已完结', 6, 5, 118.02499999999995, 2.868883711078163, 1, 0, 0.7951330226646898, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1864493', '打到北极圈了，你让我继承皇位？', '橡皮泥', '历史', '架空历史', 'male', 300.5, 9.3, 11.5, '连载中', 7, 6, 118.02499999999995, 2.546070747722941, 1, 0, 0.8037642448633765, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1960964', '从小媳妇要传宗接代开始', '断章', '历史', '架空历史', 'male', 202.6, 9.2, 9, '连载中', 8, 7, 118.02499999999995, 1.7165854691802591, 1, 0, 0.7469951281508155, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1956833', '我就上山打个猎，你让我逐鹿中原？', '张正经', '历史', '架空历史', 'male', 173.8, 9.2, 4.2, '连载中', 9, 8, 118.02499999999995, 1.4725693708959973, 1, 0, 0.7323541622537597, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1965987', '被贬边疆，成就最强藩王', '绯雨', '历史', '架空历史', 'male', 171.5, 9, 12.1, '连载中', 10, 9, 118.02499999999995, 1.453081974158018, 1, 0, 0.7171849184494811, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1805751', '开局被女土匪看中，我占山为王', '键盘起灰', '历史', '架空历史', 'male', 166.1, 9.3, 1.7, '已完结', 11, 10, 118.02499999999995, 1.4073289557297188, 0, 0, 0.7354397373437831, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982723', '无敌逍遥侯', '沧海种树', '历史', '架空历史', 'male', 132.5, 9.1, 33.3, '连载中', 12, 11, 118.02499999999995, 1.1226435077314134, 0, 0, 0.7043586104638847, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1936358', '大楚第一逍遥王', '打得你喵喵叫', '历史', '架空历史', 'male', 77.8, 9, 5, '连载中', 13, 12, 118.02499999999995, 0.6591823766151241, 0, 0, 0.6695509425969075, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2032899', '让你当书童，你成大夏文圣', '炫迈', '历史', '架空历史', 'male', 61.9, 9, 3.6, '连载中', 14, 13, 118.02499999999995, 0.5244651556873546, 0, 0, 0.6614679093412412, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1747899', '无敌六皇子', '梁山老鬼', '历史', '架空历史', 'male', 34.7, 9.3, 39.3, '已完结', 15, 14, 118.02499999999995, 0.2940055073077739, 0, 0, 0.6686403304384665, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('215169', '寒门枭士', '北川', '历史', '架空历史', 'male', 34.7, 9.3, 7.7, '已完结', 15, 14, 118.02499999999995, 0.2940055073077739, 0, 0, 0.6686403304384665, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1809361', '逍遥四公子', '修果', '历史', '架空历史', 'male', 34.7, 9.3, 78.8, '连载中', 15, 14, 118.02499999999995, 0.2940055073077739, 0, 0, 0.6686403304384665, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2052832', '北地悍枭', '狼太孤', '历史', '架空历史', 'male', 30.3, 9.2, 3.6, '连载中', 16, 15, 118.02499999999995, 0.25672527006990054, 0, 0, 0.6594035162041939, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2036574', '被贬北凉，我打造了无敌大雪龙骑！', '画虫的小龙', '历史', '架空历史', 'male', 24.5, 8.9, 1.1, '已完结', 18, 16, 118.02499999999995, 0.20758313916543114, 0, 0, 0.6354549883499259, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2040906', '边军悍卒：从鸡蛋换老婆开始！', '黑夜残影', '历史', '架空历史', 'male', 23.5, 9.2, 2.5, '已完结', 19, 17, 118.02499999999995, 0.19911035797500537, 0, 0, 0.6559466214785002, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2028796', '陛下管管吧，六皇子又发疯了！', '追风boy', '历史', '架空历史', 'male', 14.2, 9, 0.8, '已完结', 20, 18, 118.02499999999995, 0.1203134929040458, 0, 0, 0.6372188095742427, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063608', '边疆老卒，御赐老婆后我越活越勇', '月光大妖怪', '历史', '架空历史', 'male', 10.9, 9, 3.1, '连载中', 21, 19, 118.02499999999995, 0.0923533149756408, 0, 0, 0.6355411988985384, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2060184', '开局娶女囚，我成就最强悍卒', '青衫酌酒', '历史', '架空历史', 'male', 6.4, 9.2, 0.5, '连载中', 23, 20, 118.02499999999995, 0.054225799618724875, 0, 0, 0.6472535479771234, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065959', '让我进京当质子，我开局带兵强掳花魁', '有点刺挠', '历史', '架空历史', 'male', 5.5, 9.2, 0.5, '连载中', 24, 21, 118.02499999999995, 0.046600296547341685, 0, 0, 0.6467960177928405, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061849', '官府发男人，绝色罪女抬我回家', '凶名赫赫', '历史', '架空历史', 'male', 5.2, 8.8, 0.4, '连载中', 25, 22, 118.02499999999995, 0.044058462190213955, 0, 0, 0.6186435077314129, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2059140', '戍边斥候：从奉旨传宗接代开始！', '般若菠萝', '历史', '架空历史', 'male', 5, 8.8, 0.3, '连载中', 26, 23, 118.02499999999995, 0.04236390595212881, 0, 0, 0.6185418343571277, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065893', '太监无双', '水山', '历史', '架空历史', 'male', 3.4, 9.1, 0.6, '连载中', 27, 24, 118.02499999999995, 0.028807456047447586, 0, 0, 0.6387284473628467, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2078333', '边境反贼：从解救女囚开始', '女帝', '历史', '架空历史', 'male', 3.2, 9.2, 0.6, '连载中', 28, 25, 118.02499999999995, 0.027112899809362438, 0, 0, 0.6456267739885616, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2060180', '科举：开局官府发妻，卷成状元', '明月天衣', '历史', '架空历史', 'male', 3.1, 9.2, 0.3, '连载中', 29, 26, 118.02499999999995, 0.02626562169031986, 0, 0, 0.645575937301419, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065792', '边军老卒，从娶媳妇开始横扫六国！', '齐天小圣', '历史', '架空历史', 'male', 3.1, 8.7, 0.2, '连载中', 29, 26, 118.02499999999995, 0.02626562169031986, 0, 0, 0.610575937301419, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2077743', '灾荒年捡回姐妹花，我粮肉满仓！', '小小月月落落', '历史', '架空历史', 'male', 3.1, 9.2, 0.5, '连载中', 29, 26, 118.02499999999995, 0.02626562169031986, 0, 0, 0.645575937301419, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062370', '边疆发男人，从被罪女买走开始！', '陈火火', '历史', '架空历史', 'male', 3, 8.8, 0.4, '连载中', 30, 27, 118.02499999999995, 0.025418343571277282, 0, 0, 0.6175251006142767, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076487', '极品九千岁：我在后宫无法无天！', '莫不愁', '历史', '架空历史', 'male', 2.5, 9.2, 0.4, '连载中', 32, 29, 118.02499999999995, 0.021181952976064403, 0, 0, 0.6452709171785638, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074393', '乱世荒年：从打猎开始无限抽奖', '可破', '历史', '架空历史', 'male', 2.2, 9.2, 0.3, '连载中', 33, 30, 118.02499999999995, 0.018640118618936677, 0, 0, 0.6451184071171361, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061267', '边军枭卒：从领媳妇开始皇图霸业', '凉小城', '历史', '架空历史', 'male', 1.9, 8.8, 0.2, '连载中', 35, 32, 118.02499999999995, 0.016098284261808943, 0, 0, 0.6169658970557085, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2041092', '无双公子', '小陈叔叔', '历史', '架空历史', 'male', 1.6, 9.2, 0.2, '连载中', 37, 33, 118.02499999999995, 0.013556449904681219, 0, 0, 0.6448133869942808, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2072337', '开局撞破皇帝女儿身', '拉满弓月', '历史', '架空历史', 'male', 1.4, 8.6, 0.2, '连载中', 38, 34, 118.02499999999995, 0.011861893666596065, 0, 0, 0.6027117136199958, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065349', '每日情报：乱世边军一小兵', '推拿医生', '历史', '架空历史', 'male', 1.4, 8.6, 0.1, '连载中', 38, 34, 118.02499999999995, 0.011861893666596065, 0, 0, 0.6027117136199958, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1648167', '开局截胡五虎上将', '孔明很愁', '历史', '穿越历史', 'male', 775.3, 9.1, 2.7, '已完结', 2, 1, 118.02499999999995, 6.568947256937092, 1, 1, 1.0311368354162254, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2027735', '三国：我，赤壁周瑜，揽二乔脱离江东', '老骥伏枥', '历史', '穿越历史', 'male', 29.4, 9, 1.5, '已完结', 17, 2, 118.02499999999995, 0.24909976699851735, 0, 0, 0.644945986019911, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2052834', '魂穿吕布：貂蝉离间弑父？那是我亲爹！', '八方来才', '历史', '穿越历史', 'male', 8.8, 9.2, 0.7, '连载中', 22, 3, 118.02499999999995, 0.07456047447574671, 0, 0, 0.6484736284685447, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062788', '穿越大唐：从驿站小卒到帝国巨擘', '亲爱的葡萄', '历史', '穿越历史', 'male', 1.7, 9.2, 0.1, '连载中', 36, 5, 118.02499999999995, 0.014403728023723793, 0, 0, 0.6448642236814234, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1876687', '和离前夜，她重生回了出嫁前', '柳程安', '古代言情', '古代情缘', 'women', 434.1, 9.5, 5.2, '已完结', 8, 1, 84.32210526315792, 5.148116245974083, 1, 0, 0.9738869747584449, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1871612', '爹爹开门，系窝呀！', '垂耳兔', '古代言情', '古代情缘', 'women', 236.2, 9.8, 5.3, '已完结', 13, 2, 84.32210526315792, 2.8011634584175957, 0, 0, 0.8540698075050558, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1864909', '将军活不过仨月，换亲后我旺他百年', '不知绿', '古代言情', '古代情缘', 'women', 138.1, 9.6, 4.9, '已完结', 16, 3, 84.32210526315792, 1.637767458117993, 0, 0, 0.7702660474870795, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1871052', '为奴十年', '探花大人', '古代言情', '古代情缘', 'women', 92.6, 9.7, 2.5, '已完结', 20, 4, 84.32210526315792, 1.098169924849574, 0, 0, 0.7448901954909743, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1994365', '高门长媳', 'Ms腊肠', '古代言情', '古代情缘', 'women', 63.1, 9.5, 3.8, '已完结', 22, 5, 84.32210526315792, 0.748320974708511, 0, 0, 0.7098992584825106, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1985055', '摆摊开饭馆，她惊动全京城', '幸运团团', '古代言情', '古代情缘', 'women', 61.4, 9.8, 5.8, '连载中', 25, 6, 84.32210526315792, 0.7281601877512294, 0, 0, 0.7296896112650738, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1684583', '春棠欲醉', '锦一', '古代言情', '古代情缘', 'women', 34.7, 9.7, 20.6, '已完结', 27, 7, 84.32210526315792, 0.4115172396574538, 0, 0, 0.7036910343794471, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1763089', '喜棺开，百鬼散，王妃她从地狱来', '一碗佛跳墙', '古代言情', '古代情缘', 'women', 34.7, 9.8, 8.5, '已完结', 27, 7, 84.32210526315792, 0.4115172396574538, 0, 0, 0.7106910343794473, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1830570', '世子先别死，夫人有喜了', '沙拉薯条', '古代言情', '古代情缘', 'women', 34.7, 9.6, 13, '已完结', 27, 7, 84.32210526315792, 0.4115172396574538, 0, 0, 0.6966910343794471, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1844850', '饥荒年，我囤货娇养了古代大将军', '苜肉', '古代言情', '古代情缘', 'women', 34.7, 9.6, 13.1, '连载中', 27, 7, 84.32210526315792, 0.4115172396574538, 0, 0, 0.6966910343794471, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1872563', '为奴三年后，整个侯府跪求我原谅', '莫小弃', '古代言情', '古代情缘', 'women', 34.7, 8.8, 38.9, '连载中', 27, 7, 84.32210526315792, 0.4115172396574538, 0, 0, 0.6406910343794472, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063611', '小蘑菇今天也在吃软饭', '垂耳兔', '古代言情', '古代情缘', 'women', 4.3, 9.8, 1.3, '连载中', 37, 8, 84.32210526315792, 0.05099493171547698, 0, 0, 0.6890596959029287, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063290', '让我做外室？我另嫁你哭什么', '皎皎朗月', '古代言情', '古代情缘', 'women', 2.4, 9.2, 0.3, '连载中', 46, 10, 84.32210526315792, 0.02846228746910343, 0, 0, 0.6457077372481461, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2077580', '裴大人，表小姐她又跑了', '蓝莓爆珠', '古代言情', '古代情缘', 'women', 2.3, 9.2, 0.3, '连载中', 47, 11, 84.32210526315792, 0.02727635882455745, 0, 0, 0.6456365815294733, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1669963', '大景巡夜人', '藕池猫咪', '古代言情', '古代情缘', 'women', 1.2, 9.8, 1.8, '已完结', 50, 12, 84.32210526315792, 0.014231143734551715, 0, 0, 0.6868538686240732, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1777995', '将军她是引渡人', '指尖上的行走', '古代言情', '古代情缘', 'women', 1, 9.8, 2.2, '已完结', 52, 13, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6867115571867276, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('217822', '天命成凰', '赵小球', '古代言情', '古代情缘', 'women', 1, 9.4, 3.2, '已完结', 52, 13, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6587115571867276, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1665743', '皇室奶团萌翻全京城', '司司', '古代言情', '古代情缘', 'women', 0.8, 9.7, 4.8, '已完结', 54, 14, 84.32210526315792, 0.00948742915636781, 0, 0, 0.679569245749382, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1954700', '媚君榻', '随山月', '古代言情', '古代情缘', 'women', 0.7, 9.7, 5.2, '已完结', 55, 15, 84.32210526315792, 0.008301500511821833, 0, 0, 0.6794980900307093, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1882743', '郡主她百鬼送嫁，少将军敢娶吗？', '一碗佛跳墙', '古代言情', '古代情缘', 'women', 0.5, 9.8, 2.5, '已完结', 57, 16, 84.32210526315792, 0.005929643222729881, 0, 0, 0.6863557785933638, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1871638', '你迎娶平妻？我带崽入宫当皇后', '虎金金', '古代言情', '古代情缘', 'women', 0.4, 9.6, 2.1, '已完结', 58, 17, 84.32210526315792, 0.004743714578183905, 0, 0, 0.6722846228746909, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1880127', '出生被活埋，萌宝回京杀疯了', '固夏', '古代言情', '古代情缘', 'women', 0.3, 9.6, 3.7, '已完结', 59, 18, 84.32210526315792, 0.0035577859336379286, 0, 0, 0.6722134671560182, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1836527', '凰宫梦', '蓝九九', '古代言情', '宫闱宅斗', 'women', 938.4, 9.7, 38.2, '连载中', 1, 1, 84.32210526315792, 11.12875440041944, 1, 1, 1.3467252640251663, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1879542', '我宫斗冠军，矜贵世子俯首称臣', '唐荔枝', '古代言情', '宫闱宅斗', 'women', 676.9, 9.7, 6.4, '已完结', 2, 2, 84.32210526315792, 8.027550994931712, 1, 1, 1.1606530596959026, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1857847', '重生再嫁皇胄，我只想乱帝心夺凤位', '月下小兔', '古代言情', '宫闱宅斗', 'women', 593, 9.4, 9.5, '连载中', 3, 3, 84.32210526315792, 7.032556862157639, 1, 1, 1.0799534117294585, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1870433', '冻死风雪夜，重生真嫡女虐翻全家', '一颗胖梨', '古代言情', '宫闱宅斗', 'women', 588.1, 9.5, 15.7, '已完结', 4, 4, 84.32210526315792, 6.974446358574887, 1, 1, 1.0834667815144932, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1830569', '凤池生春', '秦安安', '古代言情', '宫闱宅斗', 'women', 527.5, 9.7, 12.9, '已完结', 5, 5, 84.32210526315792, 6.255773599980024, 1, 1, 1.0543464159988014, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1839533', '锦帐春深', '温流', '古代言情', '宫闱宅斗', 'women', 494.9, 9.7, 5.9, '已完结', 6, 6, 84.32210526315792, 5.8691608618580355, 1, 0, 1.0311496517114822, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1968910', '全家夺我军功，重生嫡女屠了满门', '我吃饱饱', '古代言情', '宫闱宅斗', 'women', 467.6, 9.6, 38.3, '连载中', 7, 7, 84.32210526315792, 5.545402341896985, 1, 0, 1.004724140513819, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1976002', '续弦小夫人', '江摇舟', '古代言情', '宫闱宅斗', 'women', 421.4, 9.7, 19.5, '已完结', 9, 8, 84.32210526315792, 4.997503308116744, 1, 0, 0.9788501984870046, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1957149', '出宫前夜，沦为暴君掌中物', '素律', '古代言情', '宫闱宅斗', 'women', 341, 9.4, 16.4, '连载中', 10, 9, 84.32210526315792, 4.044016677901779, 1, 0, 0.9006410006741068, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1858392', '咬春靥', '空酒瓶', '古代言情', '宫闱宅斗', 'women', 327.1, 8.4, 4.5, '已完结', 11, 10, 84.32210526315792, 3.879172596309888, 0, 0, 0.8207503557785932, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1840296', '夫君清心寡欲，我却连生三胎', '米团开花', '古代言情', '宫闱宅斗', 'women', 296.4, 9.7, 6.1, '已完结', 12, 11, 84.32210526315792, 3.515092502434273, 0, 0, 0.8899055501460563, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061856', '王府里来了个捡破烂的崽崽', '三颗小石头', '古代言情', '宫闱宅斗', 'women', 140.5, 9.6, 39.8, '连载中', 14, 12, 84.32210526315792, 1.6662297455870965, 0, 0, 0.7719737847352257, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2027063', '敲骨吸髓？重生另选家人宠我如宝', '清砚', '古代言情', '宫闱宅斗', 'women', 138.2, 9.5, 37.7, '连载中', 15, 13, 84.32210526315792, 1.638953386762539, 0, 0, 0.7633372032057523, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1960821', '雪夜活埋后，我夺了假千金凤命', '柠檬小丸子', '古代言情', '宫闱宅斗', 'women', 136.8, 9.5, 8.1, '连载中', 17, 14, 84.32210526315792, 1.6223503857388955, 0, 0, 0.7623410231443336, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065888', '解春衫', '随山月', '古代言情', '宫闱宅斗', 'women', 122, 9.7, 61, '连载中', 18, 15, 84.32210526315792, 1.446832946346091, 0, 0, 0.7658099767807653, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2002910', '嫁太监？踏破鬼门女帝凤临天下', '狐狸九', '古代言情', '宫闱宅斗', 'women', 118.8, 9.6, 26, '连载中', 19, 16, 84.32210526315792, 1.4088832297206197, 0, 0, 0.7565329937832371, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2052703', '双生兄弟要换亲？我稳做侯门主母', '林拾酒', '古代言情', '宫闱宅斗', 'women', 75.1, 9.5, 8.8, '连载中', 21, 17, 84.32210526315792, 0.8906324120540281, 0, 0, 0.7184379447232416, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982371', '你宠白月光，我收凤印你急什么', '江墨甜', '古代言情', '宫闱宅斗', 'women', 62.6, 8.9, 6.4, '连载中', 23, 18, 84.32210526315792, 0.7423913314857811, 0, 0, 0.6675434798891469, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1991811', '错良缘', '雨山雪', '古代言情', '宫闱宅斗', 'women', 61.8, 9.6, 3.3, '已完结', 24, 19, 84.32210526315792, 0.7329039023294133, 0, 0, 0.7159742341397647, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2048050', '抢我婚约嫁太子？我携孕肚嫁皇帝', '缓缓归', '古代言情', '宫闱宅斗', 'women', 50.9, 9.6, 17.8, '连载中', 26, 20, 84.32210526315792, 0.6036376800739018, 0, 0, 0.7082182608044341, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1803136', '第一凤女', '十二妖', '古代言情', '宫闱宅斗', 'women', 34.7, 9.7, 38.5, '已完结', 27, 21, 84.32210526315792, 0.4115172396574538, 0, 0, 0.7036910343794471, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1803283', '皇叔借点功德，王妃把符画猛了', '安卿心', '古代言情', '宫闱宅斗', 'women', 34.7, 9.7, 104.4, '连载中', 27, 21, 84.32210526315792, 0.4115172396574538, 0, 0, 0.7036910343794471, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2044077', '妾本丝萝，只图钱帛', '锅包又又又', '古代言情', '宫闱宅斗', 'women', 23.4, 9.6, 1.4, '连载中', 28, 22, 84.32210526315792, 0.2775073028237584, 0, 0, 0.6886504381694254, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062422', '惨死认亲日，嫡女夺回凤命杀疯了', '雪落听风', '古代言情', '宫闱宅斗', 'women', 14.1, 9.5, 2.8, '连载中', 30, 23, 84.32210526315792, 0.16721593888098263, 0, 0, 0.6750329563328589, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066505', '侯府捡的小福星，全城大佬争着宠', '鱼芽', '古代言情', '宫闱宅斗', 'women', 6.4, 9.5, 2.7, '连载中', 33, 24, 84.32210526315792, 0.07589943325094248, 0, 0, 0.6695539659950565, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2046408', '逆子，开门！你娘回来整顿家风了', '黑葡萄', '古代言情', '宫闱宅斗', 'women', 5.1, 9.2, 0.4, '连载中', 35, 25, 84.32210526315792, 0.06048236087184478, 0, 0, 0.6476289416523106, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064998', '开局抄家，姐姐抢着去流放', '一个豆包', '古代言情', '宫闱宅斗', 'women', 4.7, 9.2, 0.6, '连载中', 36, 26, 84.32210526315792, 0.05573864629366088, 0, 0, 0.6473443187776196, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2059139', '听懂兽语后，被皇家全员团宠了', '桃酥', '古代言情', '宫闱宅斗', 'women', 4.3, 9.4, 0.6, '连载中', 37, 27, 84.32210526315792, 0.05099493171547698, 0, 0, 0.6610596959029287, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1994174', '恶婆婆重生后，怂包儿媳被宠成宝！', '洇鹤', '古代言情', '宫闱宅斗', 'women', 3.8, 8.9, 0.2, '连载中', 38, 28, 84.32210526315792, 0.045065288492747095, 0, 0, 0.6257039173095649, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065813', '开局捉奸，傍上权臣好孕来', '雨过阳光', '古代言情', '宫闱宅斗', 'women', 3.3, 9.2, 0.7, '连载中', 40, 29, 84.32210526315792, 0.039135645270017214, 0, 0, 0.6463481387162009, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074363', '被逼自刎，嫡女重生撕婚书覆皇朝', '柠檬小丸子', '古代言情', '宫闱宅斗', 'women', 3.1, 9.2, 0.8, '连载中', 41, 30, 84.32210526315792, 0.036763787980925264, 0, 0, 0.6462058272788554, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2075347', '被退婚五次，她嫁残王夫君却躺赢', '瓜田立夏', '古代言情', '宫闱宅斗', 'women', 2.5, 9.2, 0.2, '连载中', 45, 32, 84.32210526315792, 0.029648216113649404, 0, 0, 0.6457788929668189, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2055380', '哑奴带崽改嫁，清冷权臣悔疯了', '桐原雪穗穗穗穗', '古代言情', '宫闱宅斗', 'women', 2, 8.6, 0.3, '连载中', 48, 33, 84.32210526315792, 0.023718572890919522, 0, 0, 0.6034231143734552, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2072331', '假嫡女重生想抢婚？再嫁你也得下跪', '木怜青', '古代言情', '宫闱宅斗', 'women', 1.9, 8.6, 0.1, '连载中', 49, 34, 84.32210526315792, 0.022532644246373548, 0, 0, 0.6033519586547824, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1949695', '被贵妃配给太监当对食后', '沙子', '古代言情', '宫闱宅斗', 'women', 1.2, 9.5, 24.7, '连载中', 50, 35, 84.32210526315792, 0.014231143734551715, 0, 0, 0.665853868624073, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2019227', '随母改嫁旺新家，重生嫡女嘎嘎乱杀', '三十嘉', '古代言情', '宫闱宅斗', 'women', 1.2, 9.6, 14.6, '连载中', 50, 35, 84.32210526315792, 0.014231143734551715, 0, 0, 0.672853868624073, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1978709', '惨死生子夜，重生嫡女屠尽侯府', '南酥青子', '古代言情', '宫闱宅斗', 'women', 1.1, 9.3, 7.6, '连载中', 51, 36, 84.32210526315792, 0.01304521509000574, 0, 0, 0.6517827129054004, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1978753', '权臣兼祧两房？郡主重生不嫁了', '景惠', '古代言情', '宫闱宅斗', 'women', 1.1, 9.6, 1.5, '已完结', 51, 36, 84.32210526315792, 0.01304521509000574, 0, 0, 0.6727827129054003, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1858924', '无间令', '无间之令', '古代言情', '宫闱宅斗', 'women', 1.1, 9.3, 2.7, '已完结', 51, 36, 84.32210526315792, 0.01304521509000574, 0, 0, 0.6517827129054004, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1949070', '孩子谁爱生谁生，我勾帝心夺凤位', '爱吃石榴', '古代言情', '宫闱宅斗', 'women', 1.1, 9.6, 28.7, '连载中', 51, 36, 84.32210526315792, 0.01304521509000574, 0, 0, 0.6727827129054003, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1678025', '九皇叔的神医毒妃', '柠檬小丸子', '古代言情', '宫闱宅斗', 'women', 1, 9.5, 3.4, '已完结', 52, 37, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6657115571867275, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1767349', '父皇偷听我心声杀疯了，我负责吃奶', '安已然', '古代言情', '宫闱宅斗', 'women', 1, 9.6, 2.7, '已完结', 52, 37, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6727115571867275, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1837360', '昭春意', '犹鱼丝', '古代言情', '宫闱宅斗', 'women', 1, 9.7, 2.5, '已完结', 52, 37, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6797115571867275, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1847406', '此夜逢君', '晨露嫣然', '古代言情', '宫闱宅斗', 'women', 1, 9.7, 2.8, '已完结', 52, 37, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6797115571867275, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2057573', '窃医术，夺至亲？神医嫡女杀疯了！', '九汐公子', '古代言情', '宫闱宅斗', 'women', 1, 9.4, 4.1, '连载中', 52, 37, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6587115571867276, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1916703', '宁嫁牌位不当妾，国公府我说了算', '林拾酒', '古代言情', '宫闱宅斗', 'women', 0.9, 9.5, 2.8, '已完结', 53, 38, 84.32210526315792, 0.010673357800913786, 0, 0, 0.6656404014680547, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1956587', '五岁萌妃炸京城，我阿娘是侯府真千金', '幻想鱼', '古代言情', '宫闱宅斗', 'women', 0.9, 9.6, 2, '已完结', 53, 38, 84.32210526315792, 0.010673357800913786, 0, 0, 0.6726404014680547, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065353', '只剩七天寿命？先休渣夫再杀全家', '南山野', '古代言情', '宫闱宅斗', 'women', 0.8, 9.2, 0.3, '连载中', 54, 39, 84.32210526315792, 0.00948742915636781, 0, 0, 0.644569245749382, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1965109', '守寡重生，送断袖夫君下黄泉', '指尖上的行走', '古代言情', '宫闱宅斗', 'women', 0.7, 9.7, 4.1, '已完结', 55, 40, 84.32210526315792, 0.008301500511821833, 0, 0, 0.6794980900307093, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1723450', '被王爷赐死，医妃潇洒转身嫁皇叔', '金银满屋', '古代言情', '宫闱宅斗', 'women', 0.6, 9.5, 3.8, '已完结', 56, 41, 84.32210526315792, 0.007115571867275857, 0, 0, 0.6654269343120365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1853441', '春华照灼', '蝉不知雪', '古代言情', '宫闱宅斗', 'women', 0.6, 9.7, 2.6, '已完结', 56, 41, 84.32210526315792, 0.007115571867275857, 0, 0, 0.6794269343120365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1893629', '捡了小福星后，将军府旺疯了', '树己不树人', '古代言情', '宫闱宅斗', 'women', 0.6, 9.5, 1.3, '已完结', 56, 41, 84.32210526315792, 0.007115571867275857, 0, 0, 0.6654269343120365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('213502', '小皇叔腹黑又难缠', '一碧榶榶', '古代言情', '宫闱宅斗', 'women', 0.6, 9.6, 2, '已完结', 56, 41, 84.32210526315792, 0.007115571867275857, 0, 0, 0.6724269343120365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1873716', '换嫁给绝嗣太子后我连生三胎', '昔也', '古代言情', '宫闱宅斗', 'women', 0.6, 9.5, 2.5, '已完结', 56, 41, 84.32210526315792, 0.007115571867275857, 0, 0, 0.6654269343120365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1873810', '换婚病危世子，她一胎三宝赢麻了', '雨过阳光', '古代言情', '宫闱宅斗', 'women', 0.6, 9.6, 2.5, '已完结', 56, 41, 84.32210526315792, 0.007115571867275857, 0, 0, 0.6724269343120365, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062279', '考中状元又怎样，我娘是长公主', '汐家锦锂', '古代言情', '宫闱宅斗', 'women', 0.5, 9.5, 3.6, '连载中', 57, 42, 84.32210526315792, 0.005929643222729881, 0, 0, 0.6653557785933637, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1771336', '王妃她五行缺德', '棠花落', '古代言情', '宫闱宅斗', 'women', 0.4, 9.7, 2, '已完结', 58, 43, 84.32210526315792, 0.004743714578183905, 0, 0, 0.6792846228746909, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1810593', '嫁权臣', '有香如故', '古代言情', '宫闱宅斗', 'women', 0.3, 9.7, 2.2, '已完结', 59, 44, 84.32210526315792, 0.0035577859336379286, 0, 0, 0.6792134671560182, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2047215', '皇后谁爱当谁当，我嫁权臣横着走', '素手摘星', '古代言情', '权谋天下', 'women', 8.1, 9.5, 3.4, '连载中', 31, 1, 84.32210526315792, 0.09606022020822406, 0, 0, 0.6707636132124933, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1824987', '凤归', '扶苏公子', '古代言情', '权谋天下', 'women', 0.7, 9.4, 1.8, '已完结', 55, 2, 84.32210526315792, 0.008301500511821833, 0, 0, 0.6584980900307094, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2067201', '掏空仇家空间流放，亲爹一家悔哭', '景惠', '古代言情', '种田经商', 'women', 15, 9.5, 5.8, '连载中', 29, 1, 84.32210526315792, 0.17788929668189643, 0, 0, 0.6756733578009138, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2057124', '靠私房菜名震京城，凤印上门了！', '宋九九', '古代言情', '种田经商', 'women', 6.9, 9.8, 2.2, '连载中', 32, 2, 84.32210526315792, 0.08182907647367237, 0, 0, 0.6909097445884204, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062265', '换父兄后流放？真千金成了边疆团宠', '君染染', '古代言情', '种田经商', 'women', 5.2, 8.8, 0.8, '连载中', 34, 3, 84.32210526315792, 0.061668289516390765, 0, 0, 0.6197000973709834, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2065896', '重生孕肚藏福宝，灾年养崽掀族祠', '瑞侈', '古代言情', '种田经商', 'women', 3.5, 9.2, 0.5, '连载中', 39, 4, 84.32210526315792, 0.04150750255910916, 0, 0, 0.6464904501535464, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1867208', '真福宝挥手粮满仓，全家悔断肠', '朵瑞米发娑', '古代言情', '种田经商', 'women', 1, 9.3, 1.2, '已完结', 52, 6, 84.32210526315792, 0.011859286445459761, 0, 0, 0.6517115571867276, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2075172', '穿成掌勺丫鬟，我把病秧子喂活了', '水中有鱼', '古代言情', '种田经商', 'women', 0.8, 9.2, 0.5, '连载中', 54, 7, 84.32210526315792, 0.00948742915636781, 0, 0, 0.644569245749382, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1672578', '逃荒后三岁福宝被团宠了', '时好', '古代言情', '种田经商', 'women', 0.5, 9.7, 3.2, '已完结', 57, 8, 84.32210526315792, 0.005929643222729881, 0, 0, 0.6793557785933637, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('221137', '网游之全服公敌', '黑白相间', '游戏', '虚拟网游', 'male', 715.9, 9.3, 1.8, '已完结', 1, 1, 325.8428571428571, 2.197071331491955, 1, 1, 0.7828242798895173, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1650862', '网游开局合成顶级神装', '今晚吃鸡', '游戏', '虚拟网游', 'male', 709.5, 9.2, 6.9, '已完结', 2, 2, 325.8428571428571, 2.177429961857162, 1, 1, 0.7746457977114296, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1693832', '超神玩家', '失落叶', '游戏', '虚拟网游', 'male', 444.1, 9.3, 1.3, '已完结', 3, 3, 325.8428571428571, 1.362926914814328, 1, 1, 0.7327756148888597, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1809333', '网游：我召唤的骷髅全是位面之子？', '禅心道骨', '游戏', '虚拟网游', 'male', 220.1, 9.4, 1.5, '已完结', 4, 4, 325.8428571428571, 0.6754789775965628, 1, 1, 0.6985287386557938, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1984430', '网游：开局刮刮乐，觉醒唯一SSS天赋', '亦晨', '游戏', '虚拟网游', 'male', 183, 9, 9.6, '连载中', 5, 5, 325.8428571428571, 0.5616204129948705, 1, 1, 0.6636972247796923, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2067312', '网游：开局一条龙服务', '黑白相间', '游戏', '虚拟网游', 'male', 5.1, 9.3, 0.9, '连载中', 6, 6, 325.8428571428571, 0.0156517164277259, 1, 0, 0.6519391029856636, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063933', '网游：进化万物，我成唯一至高神！', '苍月翔', '游戏', '虚拟网游', 'male', 3.2, 9.2, 0.3, '连载中', 7, 7, 325.8428571428571, 0.009820684817396643, 1, 0, 0.6445892410890437, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1891461', '主播万人迷，榜一大哥争着宠', '熊就要有个熊样', '现代言情', '娱乐明星', 'women', 675.1, 9.9, 7.7, '已完结', 5, 1, 104.88496240601512, 6.436575696968389, 1, 1, 1.0791945418181033, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074192', '影帝高冷捂不热？那就离婚！', '兔子不爱吃胡萝卜', '现代言情', '娱乐明星', 'women', 2.4, 9.2, 0.3, '连载中', 65, 2, 104.88496240601512, 0.02288221252069935, 0, 0, 0.6453729327512419, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2059138', '救命！求生综里看风水，爆火全网', '桑桑籽', '现代言情', '娱乐明星', 'women', 2.3, 8.6, 0.1, '连载中', 66, 3, 104.88496240601512, 0.021928786999003545, 0, 0, 0.6033157272199402, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1719564', '重生七零再高嫁', '星月相随', '现代言情', '年代重生', 'women', 935.9, 9.7, 8.5, '已完结', 1, 1, 104.88496240601512, 8.923109457551051, 1, 1, 1.214386567453063, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1873655', '重生八零：离婚后被军少宠上天', '小白蛇', '现代言情', '年代重生', 'women', 607.4, 9.7, 6.6, '已完结', 7, 2, 104.88496240601512, 5.7911066187803275, 1, 0, 1.0264663971268195, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1854610', '八零娇女一撒娇，高冷军少领证了', '白茶流萤', '现代言情', '年代重生', 'women', 510.4, 9.2, 15.1, '连载中', 11, 3, 104.88496240601512, 4.866283862735395, 0, 0, 0.9359770317641236, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1952077', '一胎又一胎，说好的禁欲指挥官呢？', '望南云慢', '现代言情', '年代重生', 'women', 457.9, 9.5, 34.7, '连载中', 13, 4, 104.88496240601512, 4.365735463845097, 0, 0, 0.9269441278307058, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1683831', '重生八零嫁给全军第一硬汉', '九羊猪猪', '现代言情', '年代重生', 'women', 374, 9.5, 5.6, '连载中', 16, 5, 104.88496240601512, 3.5658114511423156, 0, 0, 0.8789486870685388, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1887846', '七零美人到西北，硬汉红温了', '棠元', '现代言情', '年代重生', 'women', 236, 9.7, 5.1, '已完结', 23, 6, 104.88496240601512, 2.250084231202103, 0, 0, 0.8140050538721261, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1863508', '重生1994，逃婚海钓赢麻了！', '林溪', '现代言情', '年代重生', 'women', 99.5, 9.7, 7.5, '连载中', 34, 7, 104.88496240601512, 0.9486583940873273, 0, 0, 0.7359195036452396, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1992339', '重回七零，搬空养父母家库房下乡了', '暖以沐', '现代言情', '年代重生', 'women', 93.8, 9.5, 5.6, '连载中', 36, 8, 104.88496240601512, 0.8943131393506664, 0, 0, 0.7186587883610399, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2032046', '守活寡两年去随军，改嫁绝嗣大佬', '糖煵五加', '现代言情', '年代重生', 'women', 48.1, 9.5, 4.3, '连载中', 40, 9, 104.88496240601512, 0.45859767593568285, 0, 0, 0.6925158605561409, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2060462', '七零闪婚不见面，带娃炸翻家属院', '桃桃宝宝', '现代言情', '年代重生', 'women', 38.3, 9.4, 26.2, '连载中', 41, 10, 104.88496240601512, 0.3651619748094938, 0, 0, 0.6799097184885696, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1764634', '七零：最硬糙汉被媳妇撩红了眼', '一尾小锦鲤', '现代言情', '年代重生', 'women', 34.7, 9.3, 16.8, '已完结', 44, 11, 104.88496240601512, 0.3308386560284448, 0, 0, 0.6708503193617067, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2053895', '带崽搬空婆家，易孕娇女随军被亲哭', '金岁岁', '现代言情', '年代重生', 'women', 22.6, 9.4, 4, '连载中', 45, 12, 104.88496240601512, 0.21547416790325225, 0, 0, 0.6709284500741952, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061931', '八零：渣夫骗婚娶大嫂，我转身嫁首长', '锦禾', '现代言情', '年代重生', 'women', 18.5, 9.3, 3.6, '连载中', 47, 13, 104.88496240601512, 0.17638372151372417, 0, 0, 0.6615830232908235, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061932', '九零带崽寻亲，被绝嗣大佬宠疯了', '树梢上', '现代言情', '年代重生', 'women', 10.8, 9.4, 1.2, '连载中', 49, 14, 104.88496240601512, 0.1029699563431471, 0, 0, 0.6641781973805888, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2056878', '大小姐重生选夫，小小硬汉拿捏拿捏', '暖宝宝爱吃饭', '现代言情', '年代重生', 'women', 9.2, 9.3, 3.3, '连载中', 50, 15, 104.88496240601512, 0.08771514799601418, 0, 0, 0.6562629088797609, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2024797', '七零资本娇小姐，下放后硬汉宠上天', '梅才华', '现代言情', '年代重生', 'women', 7.8, 8.8, 0.3, '连载中', 51, 16, 104.88496240601512, 0.07436719069227289, 0, 0, 0.6204620314415363, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2059742', '带球上门后，我成陆少心尖宠', '幸夷', '现代言情', '年代重生', 'women', 6.4, 9.5, 0.9, '连载中', 52, 17, 104.88496240601512, 0.06101923338853161, 0, 0, 0.6686611540033118, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064353', '八零随军：退婚神医被绝嗣大佬宠上天', '煎bingo子', '现代言情', '年代重生', 'women', 5.5, 9.3, 2.5, '连载中', 53, 18, 104.88496240601512, 0.052438403693269346, 0, 0, 0.6541463042215961, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061260', '七零读心，掏空家产带福宝寻夫随军', '沫沫无闻', '现代言情', '年代重生', 'women', 5.1, 9, 0.3, '连载中', 55, 19, 104.88496240601512, 0.04862470160648612, 0, 0, 0.6329174820963892, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074462', '七零孕妻进军营，野痞兵王缠吻不休', '玖甜妹子', '现代言情', '年代重生', 'women', 4.6, 9.2, 0.9, '连载中', 56, 20, 104.88496240601512, 0.04385757399800709, 0, 0, 0.6466314544398803, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062320', '随母改嫁换新爹，拖油瓶成了团宠', '萝兹萝丝', '现代言情', '年代重生', 'women', 4.3, 9.5, 1.2, '连载中', 57, 21, 104.88496240601512, 0.04099729743291967, 0, 0, 0.6674598378459751, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062836', '重回七零：跟着小白脸爸进城吃软饭', '巫颜', '现代言情', '年代重生', 'women', 4.2, 9.6, 0.6, '连载中', 58, 22, 104.88496240601512, 0.04004387191122387, 0, 0, 0.6744026323146733, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066492', '空间系统穿七零，肥妻暴瘦暴富样样行', '慕荣华', '现代言情', '年代重生', 'women', 3.2, 8.8, 0.5, '连载中', 61, 23, 104.88496240601512, 0.030509616694265804, 0, 0, 0.6178305770016559, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2066494', '换嫁绝嗣大佬，我胎胎多宝赢麻了', '猫猫鱼吃果果', '现代言情', '年代重生', 'women', 3, 9.2, 0.4, '连载中', 62, 24, 104.88496240601512, 0.02860276565087419, 0, 0, 0.6457161659390523, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076866', '竹马护资本家小姐，重生改嫁他急了！', '枝云梦', '现代言情', '年代重生', 'women', 2.8, 9.2, 0.6, '连载中', 63, 25, 104.88496240601512, 0.026695914607482576, 0, 0, 0.6456017548764489, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2075352', '资本家假千金，搬空家产嫁糙汉', '韶光煮雪', '现代言情', '年代重生', 'women', 2.4, 9.2, 0.4, '连载中', 65, 27, 104.88496240601512, 0.02288221252069935, 0, 0, 0.6453729327512419, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2076498', '一觉醒来三年后，七零长姐凶又甜', '叫我富贵叭', '现代言情', '年代重生', 'women', 2.4, 9.2, 0.4, '连载中', 65, 27, 104.88496240601512, 0.02288221252069935, 0, 0, 0.6453729327512419, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2057069', '穿书八零，养崽训夫我手拿把掐', '菠萝小微', '现代言情', '年代重生', 'women', 1.6, 8.6, 0.1, '连载中', 71, 29, 104.88496240601512, 0.015254808347132902, 0, 0, 0.602915288500828, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1819118', '八零养崽：清冷美人被科研大佬宠上天！', '桔子阿宝', '现代言情', '年代重生', 'women', 1.2, 9.6, 1.9, '已完结', 72, 30, 104.88496240601512, 0.011441106260349675, 0, 0, 0.6726864663756209, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1758119', '重生八零，闪婚柔情铁血硬汉', '风四爷', '现代言情', '年代重生', 'women', 1.1, 9.7, 1.2, '已完结', 73, 31, 104.88496240601512, 0.01048768073865387, 0, 0, 0.6796292608443192, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2078905', '夺我灵泉空间？掏空资产嫁京少爽翻天', '桃乐漫', '现代言情', '年代重生', 'women', 1.1, 9.2, 1.3, '连载中', 73, 31, 104.88496240601512, 0.01048768073865387, 0, 0, 0.6446292608443192, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1737869', '重生七零，搬空敌人仓库去下乡', '六月无花', '现代言情', '年代重生', 'women', 1, 9.6, 1.7, '已完结', 74, 32, 104.88496240601512, 0.009534255216958063, 0, 0, 0.6725720553130174, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1975889', '懂兽语穿六零，家属院里我最行', '情丝入你心', '现代言情', '年代重生', 'women', 0.8, 9.7, 4.2, '已完结', 76, 33, 104.88496240601512, 0.007627404173566451, 0, 0, 0.6794576442504139, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2015177', '喜报！资本家小姐来海岛随军了', '十肆1', '现代言情', '年代重生', 'women', 0.8, 9.6, 5.1, '已完结', 76, 33, 104.88496240601512, 0.007627404173566451, 0, 0, 0.6724576442504139, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2055374', '七零美人要离婚，冷面军少他急了', '钱小二', '现代言情', '年代重生', 'women', 0.8, 9.5, 10.7, '连载中', 76, 33, 104.88496240601512, 0.007627404173566451, 0, 0, 0.6654576442504139, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074330', '穿成六零小炮灰，大小姐带物资养兵王', '娮小夕', '现代言情', '年代重生', 'women', 0.7, 9.2, 0.4, '连载中', 77, 34, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6444004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1994128', '搬空婆家离婚后，被八零京少宠上天', '猫爱锅包肉', '现代言情', '年代重生', 'women', 0.7, 9.5, 2.1, '已完结', 77, 34, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6654004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1741639', '九零军媳：兵王老公不见面', '香辣小螃蟹', '现代言情', '年代重生', 'women', 0.4, 9.7, 1.8, '已完结', 80, 35, 104.88496240601512, 0.0038137020867832255, 0, 0, 0.679228822125207, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1761352', '易孕体质，七零长嫂凶又甜', '方赢', '现代言情', '年代重生', 'women', 0.4, 9.7, 2.1, '已完结', 80, 35, 104.88496240601512, 0.0038137020867832255, 0, 0, 0.679228822125207, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2061269', '七零美人二嫁后，随军西北撩硬汉', '一然', '现代言情', '年代重生', 'women', 0.4, 8.6, 0.1, '连载中', 80, 35, 104.88496240601512, 0.0038137020867832255, 0, 0, 0.602228822125207, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1889690', '暗恋她的第十一年', '有香如故', '现代言情', '总裁豪门', 'women', 748.6, 9.8, 12, '已完结', 2, 1, 104.88496240601512, 7.137343455414807, 1, 1, 1.1142406073248885, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1994117', '婚后上瘾', '卢平凡', '现代言情', '总裁豪门', 'women', 715.2, 9.6, 65.4, '连载中', 3, 2, 104.88496240601512, 6.818899331168407, 1, 1, 1.0811339598701044, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982356', '渣夫别跪了，夫人嫁顶级大佬啦', '乐恩', '现代言情', '总裁豪门', 'women', 704.5, 9.2, 47.5, '连载中', 4, 3, 104.88496240601512, 6.716882800346956, 1, 1, 1.0470129680208173, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1726987', '大佬十代单传，我为他一胎生四宝', '白生米', '现代言情', '总裁豪门', 'women', 637.9, 9.4, 41.2, '连载中', 6, 4, 104.88496240601512, 6.081901402897548, 1, 0, 1.0229140841738529, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1863729', '断亲不伺候了，哥哥们破产睡天桥', '红十三', '现代言情', '总裁豪门', 'women', 566.4, 9.1, 3, '已完结', 8, 5, 104.88496240601512, 5.400202154885047, 1, 0, 0.9610121292931028, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1802216', '诱她，一夜成瘾', '壹鹿小跑', '现代言情', '总裁豪门', 'women', 549.9, 9.4, 4.4, '已完结', 10, 6, 104.88496240601512, 5.242886943805239, 1, 0, 0.9725732166283143, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1654596', '退婚后被权爷宠上天', '一川风月', '现代言情', '总裁豪门', 'women', 379.2, 9.7, 5.4, '已完结', 14, 7, 104.88496240601512, 3.6153895782704977, 0, 0, 0.8959233746962298, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1763673', '捉奸当天，豪门继承人拉我去领证', '慕容悠然', '现代言情', '总裁豪门', 'women', 378.7, 9.4, 19.6, '连载中', 15, 8, 104.88496240601512, 3.6106224506620186, 0, 0, 0.8746373470397212, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1948025', '夺妻', '将满', '现代言情', '总裁豪门', 'women', 321.2, 9.5, 3.7, '已完结', 17, 9, 104.88496240601512, 3.06240277568693, 0, 0, 0.8487441665412156, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1963904', '他说不爱，婚后却沦陷了', '如鱼', '现代言情', '总裁豪门', 'women', 319.5, 9.5, 34.8, '连载中', 18, 10, 104.88496240601512, 3.0461945418181013, 0, 0, 0.847771672509086, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1771379', '大佬绝嗣！我一夜怀上他两个崽', '相思一顾', '现代言情', '总裁豪门', 'women', 295.1, 9.5, 4.6, '已完结', 19, 11, 104.88496240601512, 2.8135587145243246, 0, 0, 0.8338135228714594, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1759358', '出狱后，我闪婚了植物人大佬', '柠七七', '现代言情', '总裁豪门', 'women', 293.6, 9.4, 7.9, '已完结', 20, 12, 104.88496240601512, 2.799257331698888, 0, 0, 0.8259554399019333, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1991675', '我赚够两千就下播，榜一大哥却急了', '哼哼哈哈', '现代言情', '总裁豪门', 'women', 251.7, 9.8, 8.2, '连载中', 22, 13, 104.88496240601512, 2.3997720381083445, 0, 0, 0.8299863222865007, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1927415', '离婚三天：我冷淡至极，他索吻成瘾', '风羽轻轻', '现代言情', '总裁豪门', 'women', 224.5, 9.5, 13.5, '连载中', 24, 14, 104.88496240601512, 2.1404402962070854, 0, 0, 0.7934264177724251, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1964672', '顾总，你前妻在科研界杀疯了！', '席宝贝', '现代言情', '总裁豪门', 'women', 220.5, 9.5, 32.5, '连载中', 25, 15, 104.88496240601512, 2.1023032753392528, 0, 0, 0.7911381965203551, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1977771', '傅总，夫人不想当首富太太了', '蓝尧', '现代言情', '总裁豪门', 'women', 187.6, 9.4, 15.7, '连载中', 27, 16, 104.88496240601512, 1.7886262787013327, 0, 0, 0.76531757672208, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1979346', '去父留子后才知，前夫爱的人竟是我', '乐希', '现代言情', '总裁豪门', 'women', 144, 9.2, 20.8, '连载中', 28, 17, 104.88496240601512, 1.3729327512419611, 0, 0, 0.7263759650745176, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2050780', '渣夫骗我领假证，转身携千亿资产嫁权少', '唐小糖', '现代言情', '总裁豪门', 'women', 133.9, 9.5, 30.1, '连载中', 29, 18, 104.88496240601512, 1.2766367735506847, 0, 0, 0.741598206413041, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2027484', '领证爽约？我转嫁你哥哭什么', '欧橙', '现代言情', '总裁豪门', 'women', 126.2, 9.2, 10.4, '连载中', 30, 19, 104.88496240601512, 1.2032230083801077, 0, 0, 0.7161933805028063, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1950540', '傅律师，太太说她不回头了', '荣荣子铱', '现代言情', '总裁豪门', 'women', 118.5, 9.4, 6.3, '连载中', 31, 20, 104.88496240601512, 1.1298092432095306, 0, 0, 0.7257885545925719, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2024793', '五年冷婚，我跑路了你发什么疯', '一尾小锦鲤', '现代言情', '总裁豪门', 'women', 118.2, 9.1, 32.7, '连载中', 32, 21, 104.88496240601512, 1.1269489666444432, 0, 0, 0.7046169379986665, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1996931', '不务正夜', '谈栖', '现代言情', '总裁豪门', 'women', 114.8, 9.3, 7.6, '连载中', 33, 22, 104.88496240601512, 1.0945324989067857, 0, 0, 0.7166719499344072, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1982967', '厉总，太太在外面有两个私生子', '十里山河', '现代言情', '总裁豪门', 'women', 94.7, 9.1, 2.4, '已完结', 35, 23, 104.88496240601512, 0.9028939690459287, 0, 0, 0.6911736381427556, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1948198', '半熟', '槿郗', '现代言情', '总裁豪门', 'women', 88.9, 9.5, 8.5, '连载中', 37, 24, 104.88496240601512, 0.8475952887875718, 0, 0, 0.7158557173272543, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2036642', '暗恋十年，庄先生他藏不住了', '雯锦', '现代言情', '总裁豪门', 'women', 72.6, 9.5, 4.3, '连载中', 38, 25, 104.88496240601512, 0.6921869287511554, 0, 0, 0.7065312157250693, '可看');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2004005', '傅总，太太瞒着你生了个童模', '七桉', '现代言情', '总裁豪门', 'women', 55.2, 9.4, 3.8, '连载中', 39, 26, 104.88496240601512, 0.5262908879760851, 0, 0, 0.6895774532785651, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2053703', '三年同房两次，要离婚他跪求复合', '一只小甜饼', '现代言情', '总裁豪门', 'women', 37.8, 9.3, 6.5, '连载中', 42, 27, 104.88496240601512, 0.3603948472010148, 0, 0, 0.6726236908320609, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064966', '成全他和青梅后，我却成了白月光', '墨墨卿卿', '现代言情', '总裁豪门', 'women', 36.1, 9.6, 17.2, '连载中', 43, 28, 104.88496240601512, 0.3441866133321861, 0, 0, 0.6926511967999311, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1699328', '大佬归来，假千金她不装了', '骑着猫的小鱼干', '现代言情', '总裁豪门', 'women', 34.7, 9.7, 52.7, '已完结', 44, 29, 104.88496240601512, 0.3308386560284448, 0, 0, 0.6988503193617066, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1879266', '封总，太太想跟你离婚很久了', '云中觅', '现代言情', '总裁豪门', 'women', 34.7, 9.2, 154.6, '连载中', 44, 29, 104.88496240601512, 0.3308386560284448, 0, 0, 0.6638503193617066, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1658048', '六年后，我携四个幼崽炸翻前夫家', '相思一顾', '现代言情', '总裁豪门', 'women', 34.7, 9.6, 30.1, '连载中', 44, 29, 104.88496240601512, 0.3308386560284448, 0, 0, 0.6918503193617066, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('222767', '离婚后她惊艳了世界', '明婳', '现代言情', '总裁豪门', 'women', 34.7, 9.6, 100, '连载中', 44, 29, 104.88496240601512, 0.3308386560284448, 0, 0, 0.6918503193617066, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2064055', '挺孕肚离婚二嫁财阀，渣前夫悔疯了', '一颗胖梨', '现代言情', '总裁豪门', 'women', 19.5, 9.4, 8.5, '连载中', 46, 30, 104.88496240601512, 0.18591797673068222, 0, 0, 0.6691550786038409, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2055375', '姜医生，贺总约你去民政局', '江月何年', '现代言情', '总裁豪门', 'women', 6.4, 8.8, 0.3, '连载中', 52, 31, 104.88496240601512, 0.06101923338853161, 0, 0, 0.6196611540033119, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2055377', '你偏心，我改嫁！赶紧喊我小婶婶', '江梧蘅', '现代言情', '总裁豪门', 'women', 4.3, 9.3, 0.7, '连载中', 57, 33, 104.88496240601512, 0.04099729743291967, 0, 0, 0.6534598378459752, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2041071', '捡个混球当奶爸，炸翻京圈做团宠！', '夜风微微', '现代言情', '总裁豪门', 'women', 3.7, 9.5, 0.7, '连载中', 59, 34, 104.88496240601512, 0.035276744302744835, 0, 0, 0.6671166046581646, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2073165', '被他吻时心动', '玛丽苏狗蛋', '现代言情', '总裁豪门', 'women', 3.5, 9.2, 0.4, '连载中', 60, 35, 104.88496240601512, 0.033369893259353224, 0, 0, 0.6460021935955611, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2067317', '夫人拒不原谅，高冷渣夫失控了', '严以妃', '现代言情', '总裁豪门', 'women', 2.3, 9.2, 0.5, '连载中', 66, 37, 104.88496240601512, 0.021928786999003545, 0, 0, 0.6453157272199401, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2046394', '直播审判罪女！结果全国为她痛哭', '财神爷独生女', '现代言情', '总裁豪门', 'women', 2.1, 9.2, 0.1, '连载中', 68, 39, 104.88496240601512, 0.020021935955611934, 0, 0, 0.6452013161573367, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2054267', '三年婚姻喂了狗，二嫁律师宠疯了', '炎热的夏天', '现代言情', '总裁豪门', 'women', 1.7, 8.6, 0.1, '连载中', 70, 40, 104.88496240601512, 0.016208233868828706, 0, 0, 0.6029724940321297, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074390', '错虐白月光，祁总跪地求复合', '鹿景景', '现代言情', '总裁豪门', 'women', 1.7, 9.2, 0.1, '连载中', 70, 40, 104.88496240601512, 0.016208233868828706, 0, 0, 0.6449724940321296, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062428', '99次逃婚后，她攀上了京圈权贵', '栗子甜豆糕', '现代言情', '总裁豪门', 'women', 1.6, 9.2, 0.1, '连载中', 71, 41, 104.88496240601512, 0.015254808347132902, 0, 0, 0.6449152885008279, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063300', '五个大佬命里缺我，我只管吃奶', '舒展v', '现代言情', '总裁豪门', 'women', 1.6, 9.2, 0.1, '连载中', 71, 41, 104.88496240601512, 0.015254808347132902, 0, 0, 0.6449152885008279, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1689214', '藏起孕肚离婚，郁总全球疯找', '苏小鱼', '现代言情', '总裁豪门', 'women', 1.2, 9.4, 1.6, '已完结', 72, 42, 104.88496240601512, 0.011441106260349675, 0, 0, 0.658686466375621, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('219498', '君夫人的马甲层出不穷', '荷衣', '现代言情', '总裁豪门', 'women', 1.2, 9.7, 5.1, '已完结', 72, 42, 104.88496240601512, 0.011441106260349675, 0, 0, 0.6796864663756209, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1658839', '穿成孩子妈，奋斗成赢家', '冉阿冉', '现代言情', '总裁豪门', 'women', 1.1, 9.5, 1.4, '已完结', 73, 43, 104.88496240601512, 0.01048768073865387, 0, 0, 0.6656292608443192, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1848650', '夜火缠绵', '骨子鱼', '现代言情', '总裁豪门', 'women', 1.1, 9.5, 1.5, '已完结', 73, 43, 104.88496240601512, 0.01048768073865387, 0, 0, 0.6656292608443192, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1968483', '霍总，太太不复婚，只改嫁！', '相思一顾', '现代言情', '总裁豪门', 'women', 1.1, 9.5, 8, '连载中', 73, 43, 104.88496240601512, 0.01048768073865387, 0, 0, 0.6656292608443192, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2016334', '深情失控，他服软低哄别离婚', '林深深', '现代言情', '总裁豪门', 'women', 0.9, 9.4, 8.7, '连载中', 75, 44, 104.88496240601512, 0.008580829695262257, 0, 0, 0.6585148497817158, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1666957', '重生后我顶替了前夫白月光', '九九月', '现代言情', '总裁豪门', 'women', 0.9, 9.1, 1.6, '已完结', 75, 44, 104.88496240601512, 0.008580829695262257, 0, 0, 0.6375148497817157, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2016384', '冷婚五年，离婚夜他却失控了', '温见鹿', '现代言情', '总裁豪门', 'women', 0.9, 9, 1.2, '连载中', 75, 44, 104.88496240601512, 0.008580829695262257, 0, 0, 0.6305148497817158, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1725180', '我废柴真千金，会亿点玄学怎么了', '甜幽幽', '现代言情', '总裁豪门', 'women', 0.8, 9.7, 2.4, '已完结', 76, 45, 104.88496240601512, 0.007627404173566451, 0, 0, 0.6794576442504139, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('215476', '学霸女王马甲多', '灰夫人', '现代言情', '总裁豪门', 'women', 0.8, 9.8, 2.2, '已完结', 76, 45, 104.88496240601512, 0.007627404173566451, 0, 0, 0.686457644250414, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2014120', '雨夜你陪白月光，我让位后你哭啥', '露将熹', '现代言情', '总裁豪门', 'women', 0.7, 9.1, 1, '已完结', 77, 46, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6374004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074218', '贪恋她', '谢九笙', '现代言情', '总裁豪门', 'women', 0.7, 9.2, 0.5, '连载中', 77, 46, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6444004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074412', '和初恋官宣后，装瘸前夫气得站起来了', '青时序', '现代言情', '总裁豪门', 'women', 0.7, 9.2, 0.2, '连载中', 77, 46, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6444004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1674853', '和腹黑三叔闪婚后真香了', '非池', '现代言情', '总裁豪门', 'women', 0.7, 9.6, 4.9, '已完结', 77, 46, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6724004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2014122', '于他怀中轻颤', '苏晚舟', '现代言情', '总裁豪门', 'women', 0.7, 9.6, 8.7, '连载中', 77, 46, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6724004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2074326', '萌兽驾到，京圈大佬集体翘班洗奶瓶', '听听不听', '现代言情', '总裁豪门', 'women', 0.7, 9.2, 0.2, '连载中', 77, 46, 104.88496240601512, 0.006673978651870644, 0, 0, 0.6444004387191121, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1673461', '三个缩小版大佬带百亿资产上门', '一轮玫瑰', '现代言情', '总裁豪门', 'women', 0.6, 9.5, 2.2, '已完结', 78, 47, 104.88496240601512, 0.005720553130174838, 0, 0, 0.6653432331878104, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2053898', '他的小撩精', '街灯读我', '现代言情', '总裁豪门', 'women', 0.6, 9.7, 18.5, '连载中', 78, 47, 104.88496240601512, 0.005720553130174838, 0, 0, 0.6793432331878104, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063237', '怀孕生女他不管，提离婚他崩溃了', '凌淮', '现代言情', '总裁豪门', 'women', 0.6, 8.8, 0.6, '连载中', 78, 47, 104.88496240601512, 0.005720553130174838, 0, 0, 0.6163432331878105, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1802708', '神算真千金，全豪门跪下喊祖宗', '一只肉九', '现代言情', '总裁豪门', 'women', 0.5, 9.5, 2.4, '已完结', 79, 48, 104.88496240601512, 0.004767127608479031, 0, 0, 0.6652860276565087, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2052699', '主播甜又野，六个顶级大佬缠着宠', '墨如金', '现代言情', '总裁豪门', 'women', 0.5, 8.6, 0.1, '连载中', 79, 48, 104.88496240601512, 0.004767127608479031, 0, 0, 0.6022860276565087, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2072940', '第五年重逢，驰先生再度失控', '锦锦不是妖', '现代言情', '总裁豪门', 'women', 0.5, 9.9, 3.7, '连载中', 79, 48, 104.88496240601512, 0.004767127608479031, 0, 0, 0.6932860276565087, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2062363', '离婚后，我转嫁大佬你哭什么？', '舒子曦', '现代言情', '总裁豪门', 'women', 0.5, 8.6, 0.1, '连载中', 79, 48, 104.88496240601512, 0.004767127608479031, 0, 0, 0.6022860276565087, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2021943', '诱哄，假千金被禁欲商总拉去领证了', '雾里重逢', '现代言情', '总裁豪门', 'women', 0.4, 9.7, 3.3, '已完结', 80, 49, 104.88496240601512, 0.0038137020867832255, 0, 0, 0.679228822125207, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1980267', '陆总别作，太太她不要你了', '是空空呀', '现代言情', '总裁豪门', 'women', 0.3, 9.4, 8.9, '连载中', 81, 50, 104.88496240601512, 0.002860276565087419, 0, 0, 0.6581716165939053, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1941048', '全能真千金归来，发现家人住狗窝', '温小浅', '现代言情', '总裁豪门', 'women', 0.3, 9.4, 1.9, '已完结', 81, 50, 104.88496240601512, 0.002860276565087419, 0, 0, 0.6581716165939053, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('200456', '在他深情中陨落', '浮生三千', '现代言情', '总裁豪门', 'women', 0.3, 9.7, 1.9, '已完结', 81, 50, 104.88496240601512, 0.002860276565087419, 0, 0, 0.6791716165939052, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1976312', '观音泥', '溪芝', '现代言情', '现代悬疑', 'women', 2.3, 8.6, 0.1, '连载中', 66, 1, 104.88496240601512, 0.021928786999003545, 0, 0, 0.6033157272199402, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1861632', '我有一家纸扎铺', '花萝吱吱', '现代言情', '现代悬疑', 'women', 0.4, 9.7, 2.9, '已完结', 80, 2, 104.88496240601512, 0.0038137020867832255, 0, 0, 0.679228822125207, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1780393', '蛇骨阴香', '北派无尽夏', '现代言情', '现代悬疑', 'women', 0.3, 9.6, 1.7, '已完结', 81, 3, 104.88496240601512, 0.002860276565087419, 0, 0, 0.6721716165939052, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1979319', '邢教练，别太野', '七个菜包', '现代言情', '职场情缘', 'women', 1.2, 9.7, 5.4, '已完结', 72, 1, 104.88496240601512, 0.011441106260349675, 0, 0, 0.6796864663756209, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1765545', '轻熟', '乌木桃枝', '现代言情', '职场情缘', 'women', 0.8, 9.8, 2.5, '已完结', 76, 3, 104.88496240601512, 0.007627404173566451, 0, 0, 0.686457644250414, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1738575', '直播算命太准，全网蹲守吃瓜', '荷衣', '现代言情', '都市奇幻', 'women', 551.1, 9.7, 5.9, '已完结', 9, 1, 104.88496240601512, 5.254328050065589, 1, 0, 0.9942596830039352, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1979356', '阴当', '北派无尽夏', '现代言情', '都市奇幻', 'women', 205.6, 9.8, 21.3, '连载中', 26, 2, 104.88496240601512, 1.9602428726065777, 0, 0, 0.8036145723563947, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1803024', '神算萌妻：傅太太才是玄学真大佬', '易小升', '现代言情', '都市奇幻', 'women', 34.7, 9.7, 12.7, '已完结', 44, 3, 104.88496240601512, 0.3308386560284448, 0, 0, 0.6988503193617066, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1978758', '小姑奶奶下山了，在桥洞底下摆摊算命', '骑着猫的小鱼干', '现代言情', '都市奇幻', 'women', 1.1, 9.7, 11.4, '连载中', 73, 4, 104.88496240601512, 0.01048768073865387, 0, 0, 0.6796292608443192, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('1945519', '马甲藏不住，假千金炸翻全京圈', '程不言', '现代言情', '青春校园', 'women', 462.4, 9.8, 6.7, '已完结', 12, 1, 104.88496240601512, 4.408639612321409, 0, 0, 0.9505183767392846, '强烈推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2015371', '再近点，就失控了', '雪泥', '现代言情', '青春校园', 'women', 274.3, 9.9, 11.3, '连载中', 21, 2, 104.88496240601512, 2.615246206011597, 0, 0, 0.8499147723606958, '推荐');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2033943', '再亲一下，高冷校草诱哄小娇娇', '逸捅天下', '现代言情', '青春校园', 'women', 16.5, 9.6, 2, '连载中', 48, 3, 104.88496240601512, 0.15731521107980803, 0, 0, 0.6814389126647884, '一般');
+INSERT INTO `ads_user_layered_recommendation` VALUES ('2063306', '重返二十岁心动，他才是白月光', '浮景', '现代言情', '青春校园', 'women', 1.1, 9.2, 0.1, '连载中', 73, 4, 104.88496240601512, 0.01048768073865387, 0, 0, 0.6446292608443192, '一般');
 
 SET FOREIGN_KEY_CHECKS = 1;

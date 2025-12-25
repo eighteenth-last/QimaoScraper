@@ -1,6 +1,6 @@
 """
 *@BelongsProject: Python
-*@BelongsPackage: 
+*@BelongsPackage:
 *@Author: 程序员Eighteen
 *@CreateTime: 2025-12-16  11:11
 *@Description: 用Spark SQL将dwd层的数据处理成ads层的数据表结构 - 严格按照数仓建模方案
@@ -8,9 +8,8 @@
 """
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import (
-    col, lit, when, lag, avg, max, min, sum as spark_sum, count, 
-    countDistinct, stddev, datediff, length, dense_rank, first,
-    desc, least, collect_list, log10
+    col, lit, when, lag, avg, max, min, sum as spark_sum, count, countDistinct, stddev, datediff, length, dense_rank, first,
+    desc, least, collect_list, log10, row_number
 )
 from pyspark.sql.types import *
 import logging
@@ -147,8 +146,14 @@ class DWDToADSProcessor:
                 .otherwise(lit("冷门"))
             )
             
-            logger.info(f"ads_platform_heat 表创建完成，共 {ads_platform_heat.count()} 条数据")
-            return ads_platform_heat
+            # 只保留最新日期的记录（快照）
+            window_latest = Window.partitionBy("book_id").orderBy(desc("rank_date"))
+            ads_platform_heat_latest = ads_platform_heat.withColumn("rn", row_number().over(window_latest)) \
+                .filter(col("rn") == 1) \
+                .drop("rn")
+            
+            logger.info(f"ads_platform_heat 表创建完成，共 {ads_platform_heat_latest.count()} 条数据")
+            return ads_platform_heat_latest
             
         except Exception as e:
             logger.error(f"创建 ads_platform_heat 失败: {str(e)}")
@@ -165,7 +170,9 @@ class DWDToADSProcessor:
             logger.info("开始创建 ads_platform_ranking_trend 表...")
             
             # 创建窗口函数
-            window_by_book_rank = Window.partitionBy("book_id", "rank_name").orderBy("rank_date")
+            # 修改：计算增长率时应该按 book_id 分区，而不是 (book_id, rank_name)
+            # 这样可以捕捉到书在不同榜单间流转时的总体阅读量增长
+            window_by_book = Window.partitionBy("book_id").orderBy("rank_date")
             
             # 计算榜单效应
             ads_platform_ranking_trend = df.select(
@@ -183,7 +190,7 @@ class DWDToADSProcessor:
             ).withColumn(
                 # 前一期阅读量
                 "prev_read_count",
-                lag("numeric_read_count", 1).over(window_by_book_rank)
+                lag("numeric_read_count", 1).over(window_by_book)
             ).withColumn(
                 # 阅读量增长
                 "read_count_growth",
@@ -220,8 +227,15 @@ class DWDToADSProcessor:
                       least(col("ranking_conversion_rate") / 100, lit(1))).otherwise(0)) * 0.5
             )
             
-            logger.info(f"ads_platform_ranking_trend 表创建完成，共 {ads_platform_ranking_trend.count()} 条数据")
-            return ads_platform_ranking_trend
+            # 只保留最新日期的记录（快照）
+            # 修改：按 (book_id, rank_name) 分区，保留每本书在每个榜单上的最新状态
+            window_latest = Window.partitionBy("book_id", "rank_name").orderBy(desc("rank_date"))
+            ads_platform_ranking_trend_latest = ads_platform_ranking_trend.withColumn("rn", row_number().over(window_latest)) \
+                .filter(col("rn") == 1) \
+                .drop("rn")
+            
+            logger.info(f"ads_platform_ranking_trend 表创建完成，共 {ads_platform_ranking_trend_latest.count()} 条数据")
+            return ads_platform_ranking_trend_latest
             
         except Exception as e:
             logger.error(f"创建 ads_platform_ranking_trend 失败: {str(e)}")
@@ -243,14 +257,19 @@ class DWDToADSProcessor:
         try:
             logger.info("开始创建 ads_author_reason 表...")
             
+            # 只选取最新数据进行统计分析，避免历史数据重复计算权重
+            window_latest = Window.partitionBy("book_id").orderBy(desc("rank_date"))
+            df_latest = df.withColumn("rn", row_number().over(window_latest)).filter(col("rn") == 1).drop("rn")
+            
             # 分析作品特征与热度的关系
-            ads_author_reason = df.select(
+            # 修改：移除 intro 字段依赖，只分析 title
+            ads_author_reason = df_latest.select(
                 col("book_id"),
                 col("title"),
                 col("author"),
                 col("category1_name"),
                 col("category2_name"),
-                col("intro"),
+                # col("intro"), # 已移除 intro 字段
                 col("status"),
                 col("numeric_words"),
                 col("numeric_popularity"),
@@ -267,18 +286,17 @@ class DWDToADSProcessor:
                 .when(col("numeric_words") < 1500000, lit("超长篇(80-150万)"))
                 .otherwise(lit("巨著(>150万)"))
             ).withColumn(
-                # 简介长度
+                # 简介长度 - intro 字段已移除，设为 0
                 "intro_length",
-                when(col("intro").isNotNull(), length(col("intro"))).otherwise(0)
+                lit(0)
             ).withColumn(
                 # 标题长度
                 "title_length",
                 when(col("title").isNotNull(), length(col("title"))).otherwise(0)
             ).withColumn(
-                # 是否包含热门关键词（简化版，实际应用可用NLP）
+                # 是否包含热门关键词（仅分析 title）
                 "has_hot_keywords",
                 when(
-                    col("intro").rlike("系统|逆袭|重生|穿越|霸总|修仙|玄幻|都市|言情") |
                     col("title").rlike("系统|逆袭|重生|穿越|霸总|修仙|玄幻|都市|言情"),
                     lit(1)
                 ).otherwise(lit(0))
@@ -437,11 +455,15 @@ class DWDToADSProcessor:
         try:
             logger.info("开始创建 ads_user_layered_recommendation 表...")
             
+            # 只选取最新数据进行推荐计算
+            window_latest = Window.partitionBy("book_id").orderBy(desc("rank_date"))
+            df_latest = df.withColumn("rn", row_number().over(window_latest)).filter(col("rn") == 1).drop("rn")
+            
             # 创建窗口函数：按分类和性别分区
             window_by_category = Window.partitionBy("category1_name", "gender_type")
             window_by_subcategory = Window.partitionBy("category1_name", "category2_name", "gender_type")
             
-            ads_user_layered_recommendation = df.select(
+            ads_user_layered_recommendation = df_latest.select(
                 col("book_id"),
                 col("title"),
                 col("author"),
@@ -519,7 +541,11 @@ class DWDToADSProcessor:
         try:
             logger.info("开始创建 ads_user_avoid_pitfalls 表...")
             
-            ads_user_avoid_pitfalls = df.select(
+            # 只选取最新数据进行避坑分析
+            window_latest = Window.partitionBy("book_id").orderBy(desc("rank_date"))
+            df_latest = df.withColumn("rn", row_number().over(window_latest)).filter(col("rn") == 1).drop("rn")
+            
+            ads_user_avoid_pitfalls = df_latest.select(
                 col("book_id"),
                 col("title"),
                 col("author"),

@@ -1,6 +1,6 @@
 """
 *@BelongsProject: Python
-*@BelongsPackage: 
+*@BelongsPackage:
 *@Author: 程序员Eighteen
 *@CreateTime: 2025-12-16  11:09
 *@Description: 使用spark SQL 对数据进行处理 - ODS层到DWD层的数据清理
@@ -30,7 +30,7 @@ class ODSToDWDProcessor:
         """
         self.hive_database = hive_database
         self.spark = None
-        
+
     def init_spark(self):
         """初始化Spark会话"""
         try:
@@ -103,6 +103,42 @@ class ODSToDWDProcessor:
                 reduce(lambda x, y: x | y, [col(c).isNotNull() for c in key_fields])
             )
             logger.info(f"删除空行后，剩余 {df.count()} 条数据")
+
+            # 2.2 过滤脏数据
+            # 过滤掉 book_id 为 URL 的行（通常是换行符导致的数据错位）
+            # 过滤掉 rank_date 格式不正确的行
+            original_count = df.count()
+            df = df.filter(~col("book_id").rlike("^https?://")) \
+                   .filter(col("rank_date").rlike(r"^\d{4}-\d{2}-\d{2}$"))
+            
+            filtered_count = df.count()
+            logger.info(f"过滤脏数据（URL book_id 或无效日期）后，剩余 {filtered_count} 条数据，过滤了 {original_count - filtered_count} 条")
+
+            # 2.3 字段逻辑校验与清洗
+            # 修正：根据原数据分析，status 为 '0' 代表 '连载中'，'1' 代表 '已完结'
+            # 之前将其清洗为'未知'是错误的
+            if "status" in df.columns:
+                df = df.withColumn("status", 
+                                 when(col("status") == "0", lit("连载中"))
+                                 .when(col("status") == "1", lit("已完结"))
+                                 .otherwise(col("status")))
+                logger.info("已映射 status 字段值 ('0' -> '连载中', '1' -> '已完结')")
+            
+            # title 为 '0' 或 '1' 时，视为无效标题，可能是数据错位导致，进行过滤
+            # 但考虑到前面已经过滤了 book_id 为 URL 的行，这里作为双重保险
+            df = df.filter(~col("title").isin("0", "1"))
+
+            # 2.5 去重处理：确保同一 book_id 在同一 rank_date 下只有一条记录
+            # 优先保留 updated_at 或 created_at 最新的记录
+            if "rank_date" in df.columns and "updated_at" in df.columns:
+                from pyspark.sql import Window
+                from pyspark.sql.functions import row_number, desc
+                
+                window_spec = Window.partitionBy("book_id", "rank_date").orderBy(desc("updated_at"), desc("created_at"))
+                df = df.withColumn("rn", row_number().over(window_spec)) \
+                       .filter(col("rn") == 1) \
+                       .drop("rn")
+                logger.info(f"按 (book_id, rank_date) 去重后，剩余 {df.count()} 条数据")
             
             # 3. 数值化处理：popularity 和 read_count
             df = df.withColumn("numeric_popularity", self.convert_to_numeric("popularity"))
@@ -165,6 +201,10 @@ class ODSToDWDProcessor:
                 logger.info(f"已处理 popularity 异常值，阈值: [{lower_pop}, {upper_pop}]")
             
             # 8. 字符串字段缺失值填充
+            # 注意：status 字段不应填充"未知"，因为原数据中NULL可能意味着未抓取到或本身无状态
+            # 但为了分析方便，我们保持一致性。
+            # 修正：如果 status 为 NULL，尝试从其他字段推断或保持 NULL，或者统一为 "连载中"（假设大部分为连载）
+            # 这里我们暂时保持"未知"，但在 DWD 层后续分析时要注意
             df = df.fillna({
                 "category1_name": "未知",
                 "category2_name": "未知",

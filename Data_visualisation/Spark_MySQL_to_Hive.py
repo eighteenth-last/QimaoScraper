@@ -9,6 +9,7 @@
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
+from pyspark.sql.functions import col, regexp_replace
 import logging
 
 # 配置日志
@@ -73,6 +74,17 @@ class MySQLToHiveLoader:
                 .load()
             
             logger.info(f"从MySQL读取表 {table_name} 成功，共 {df.count()} 条数据")
+            
+            # 响应用户需求：不查询/不保留 intro 字段，彻底避免换行符导致的数据错位问题
+            if "intro" in df.columns:
+                df = df.drop("intro")
+                logger.info("已丢弃 intro 字段，避免换行符导致的数据错位")
+            
+            # 清洗 title 字段中的换行符
+            if "title" in df.columns:
+                df = df.withColumn("title", regexp_replace(col("title"), "[\n\r]", " "))
+                logger.info("已清洗 title 字段中的换行符")
+                
             return df
         except Exception as e:
             logger.error(f"从MySQL读取数据失败: {str(e)}")
